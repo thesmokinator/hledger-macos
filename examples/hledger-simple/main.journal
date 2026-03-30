@@ -1,0 +1,85 @@
+; hledger-macos example: single-file journal
+; Point Settings > Journal File to this file or its parent directory.
+
+account assets:bank:checking
+account assets:bank:savings
+account expenses:food:groceries
+account expenses:food:restaurant
+account expenses:housing:rent
+account expenses:transport
+account expenses:utilities
+account income:salary
+account liabilities:credit-card
+
+2026-01-01 * Opening balances
+    assets:bank:checking              €5000.00
+    assets:bank:savings               €10000.00
+    equity:opening-balances
+
+2026-01-02 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-01-03 * Rent payment
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-01-05 * Supermarket
+    expenses:food:groceries           €87.50
+    assets:bank:checking
+
+2026-01-07 * Restaurant
+    expenses:food:restaurant          €45.00
+    liabilities:credit-card
+
+2026-01-10 * Electric bill
+    expenses:utilities                €65.00
+    assets:bank:checking
+
+2026-01-15 * Train ticket
+    expenses:transport                €32.00
+    assets:bank:checking
+
+2026-01-20 * Savings transfer
+    assets:bank:savings               €500.00
+    assets:bank:checking
+
+2026-01-25 * Credit card payment
+    liabilities:credit-card           €45.00
+    assets:bank:checking
+
+2026-02-01 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-02-03 * Rent payment
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-02-06 * Supermarket
+    expenses:food:groceries           €92.30
+    assets:bank:checking
+
+2026-02-12 * Restaurant
+    expenses:food:restaurant          €38.00
+    assets:bank:checking
+
+2026-02-15 * Gas bill
+    expenses:utilities                €55.00
+    assets:bank:checking
+
+2026-03-01 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-03-02 * Rent payment
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-03-05 * Supermarket
+    expenses:food:groceries           €78.90
+    assets:bank:checking
+
+2026-03-10 * Restaurant
+    expenses:food:restaurant          €52.00
+    liabilities:credit-card

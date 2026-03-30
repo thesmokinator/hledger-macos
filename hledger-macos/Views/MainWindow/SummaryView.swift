@@ -127,6 +127,10 @@ struct SummaryView: View {
 
     // MARK: - Portfolio Section
 
+    private var showMarketColumns: Bool {
+        portfolio.contains { $0.marketValue != nil } || !appState.config.priceTickers.isEmpty
+    }
+
     private var portfolioSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -141,45 +145,71 @@ struct SummaryView: View {
             }
             .padding(.bottom, 2)
 
-            HStack(spacing: 0) {
-                Text("Asset").frame(minWidth: 80, alignment: .leading)
-                Text("Qty").frame(width: 60, alignment: .trailing)
-                Text("Book Value").frame(width: 110, alignment: .trailing)
-                Text("Market Value").frame(width: 110, alignment: .trailing)
-                Text("Gain/Loss").frame(width: 100, alignment: .trailing)
-            }
-            .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+            // Header
+            portfolioRow(
+                asset: Text("Asset"),
+                qty: Text("Qty"),
+                book: Text("Book Value"),
+                market: showMarketColumns ? Text("Market Value") : nil,
+                gain: showMarketColumns ? Text("Gain/Loss") : nil
+            )
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
 
+            // Rows
             ForEach(portfolio) { row in
-                HStack(spacing: 0) {
-                    Text(row.commodity).font(.callout.weight(.medium))
-                        .frame(minWidth: 80, alignment: .leading)
-                    Text(formatQty(row.quantity)).font(.system(.callout, design: .monospaced))
-                        .frame(width: 60, alignment: .trailing)
-                    Text(formatAmount(row.bookValue, commodity: row.bookCommodity))
-                        .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
-                        .frame(width: 110, alignment: .trailing)
+                portfolioRow(
+                    asset: Text(row.commodity).font(.callout.weight(.medium)),
+                    qty: Text(formatQty(row.quantity)).font(.system(.callout, design: .monospaced)),
+                    book: Text(formatAmount(row.bookValue, commodity: row.bookCommodity))
+                        .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary),
+                    market: showMarketColumns ? marketValueText(row) : nil,
+                    gain: showMarketColumns ? gainLossText(row) : nil
+                )
+                .frame(height: 24)
+            }
 
-                    if let market = row.marketValue {
-                        Text(formatAmount(market, commodity: row.bookCommodity))
-                            .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(market > row.bookValue ? .green : market < row.bookValue ? .red : .primary)
-                            .frame(width: 110, alignment: .trailing)
-                        let gain = market - row.bookValue
-                        Text(formatAmount(gain, commodity: row.bookCommodity))
-                            .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(gain >= 0 ? .green : .red)
-                            .frame(width: 100, alignment: .trailing)
-                    } else {
-                        Text("—").foregroundStyle(.tertiary).frame(width: 110, alignment: .trailing)
-                        Text("—").foregroundStyle(.tertiary).frame(width: 100, alignment: .trailing)
-                    }
-                }
-                .frame(height: 22)
+            // Hint
+            if appState.config.priceTickers.isEmpty && !portfolio.isEmpty {
+                Text("Configure price tickers in Settings > Investments to see market values.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 4)
             }
         }
         .padding(16)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - Portfolio Helpers
+
+    private func portfolioRow(asset: Text, qty: Text, book: Text, market: Text?, gain: Text?) -> some View {
+        HStack(spacing: 0) {
+            asset.frame(maxWidth: .infinity, alignment: .leading)
+            qty.frame(width: 60, alignment: .trailing)
+            book.frame(width: 120, alignment: .trailing)
+            if let market {
+                market.frame(width: 120, alignment: .trailing)
+            }
+            if let gain {
+                gain.frame(width: 120, alignment: .trailing)
+            }
+        }
+    }
+
+    private func marketValueText(_ row: PortfolioRow) -> Text {
+        guard let market = row.marketValue else { return Text("—").foregroundStyle(.tertiary) }
+        return Text(formatAmount(market, commodity: row.bookCommodity))
+            .font(.system(.callout, design: .monospaced))
+            .foregroundStyle(market > row.bookValue ? .green : market < row.bookValue ? .red : .primary)
+    }
+
+    private func gainLossText(_ row: PortfolioRow) -> Text {
+        guard let market = row.marketValue else { return Text("—").foregroundStyle(.tertiary) }
+        let gain = market - row.bookValue
+        return Text(formatAmount(gain, commodity: row.bookCommodity))
+            .font(.system(.callout, design: .monospaced))
+            .foregroundStyle(gain >= 0 ? .green : .red)
     }
 
     // MARK: - Helpers
@@ -221,7 +251,7 @@ struct SummaryView: View {
         }
     }
 
-    private func loadInvestments(backend: HledgerBackend) async {
+    private func loadInvestments(backend: any AccountingBackend) async {
         do {
             let positions = try await backend.loadInvestmentPositions()
             let costs = try await backend.loadInvestmentCost()
@@ -246,7 +276,7 @@ struct SummaryView: View {
         guard !tickers.isEmpty else { return }
 
         isFetchingPrices = true
-        if let pricesFile = await PriceService.getPricesFile(tickers: tickers) {
+        if let pricesFile = await PriceService.getPricesFile(pricehistPath: appState.config.pricehistBinaryPath, tickers: tickers) {
             do {
                 let marketValues = try await backend.loadInvestmentMarketValues(pricesFile: pricesFile)
                 let positions = try await backend.loadInvestmentPositions()

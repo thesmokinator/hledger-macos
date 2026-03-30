@@ -1,0 +1,23 @@
+2026-01-02 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-01-03 * Rent payment
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-01-05 * Supermarket
+    expenses:food:groceries           €95.40
+    assets:bank:checking
+
+2026-01-10 * Netflix
+    expenses:subscriptions            €15.99
+    assets:bank:checking
+
+2026-01-15 * Freelance project
+    assets:bank:checking              €600.00
+    income:freelance
+
+2026-01-20 * Buy XDWD
+    assets:investments:XDWD           5 XDWD @@ €625.00
+    assets:bank:checking

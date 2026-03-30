@@ -42,7 +42,7 @@ final class AppState {
     // MARK: - Config & Backend
 
     var config = AppConfig()
-    var activeBackend: HledgerBackend?
+    var activeBackend: (any AccountingBackend)?
 
     // MARK: - Navigation
 
@@ -101,12 +101,15 @@ final class AppState {
 
     /// Set up the hledger backend.
     func setupBackend() {
-        guard let hledgerPath = detectionResult?.hledgerPath else { return }
-
         let journalURL = JournalFileResolver.resolve(configuredPath: config.journalFilePath)
 
         guard let journalURL else {
             errorMessage = "No journal file found. Configure one in Settings or create ~/.hledger.journal."
+            return
+        }
+
+        guard let hledgerPath = detectionResult?.hledgerPath else {
+            errorMessage = "hledger binary not found."
             return
         }
 

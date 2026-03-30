@@ -106,13 +106,16 @@ struct TransactionFormView: View {
                         }
 
                         formRow("Status:") {
-                            Picker("", selection: $status) {
-                                Text("Unmarked").tag(TransactionStatus.unmarked)
-                                Text("Pending").tag(TransactionStatus.pending)
-                                Text("Cleared").tag(TransactionStatus.cleared)
+                            HStack {
+                                Picker("", selection: $status) {
+                                    Text("Unmarked").tag(TransactionStatus.unmarked)
+                                    Text("Pending").tag(TransactionStatus.pending)
+                                    Text("Cleared").tag(TransactionStatus.cleared)
+                                }
+                                .labelsHidden()
+                                .fixedSize()
+                                Spacer()
                             }
-                            .labelsHidden()
-                            .fixedSize()
                         }
 
                         formRow("Code:") {
@@ -325,7 +328,7 @@ struct TransactionFormView: View {
     private func parseAmountString(_ s: String) -> [Amount] {
         let trimmed = s.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return [] }
-        let (qty, commodity) = HledgerBackend.parseBudgetAmount(trimmed)
+        let (qty, commodity) = AmountParser.parse(trimmed)
         if qty == 0 && commodity.isEmpty { return [] }
         let com = commodity.isEmpty ? appState.config.defaultCommodity : commodity
         let side: CommoditySide = com.first?.isLetter == true && com.count > 1 ? .right : .left

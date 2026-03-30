@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var hledgerPath = ""
     @State private var defaultSection = "summary"
     @State private var investmentsEnabled = false
+    @State private var pricehistPath = ""
     @State private var tickerRows: [TickerRow] = []
 
     @State private var resolvedPath: String?
@@ -153,7 +154,7 @@ struct SettingsView: View {
                 settingsRow("Default commodity") {
                     TextField("e.g. EUR", text: $commodity)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
+                        .frame(width: 150, alignment: .trailing)
                 }
 
                 settingsRow("Accounts view") {
@@ -163,7 +164,7 @@ struct SettingsView: View {
                     }
                     .labelsHidden()
                     .pickerStyle(.segmented)
-                    .frame(width: 120)
+                    .frame(width: 150, alignment: .trailing)
                 }
 
                 settingsRow("Open on launch") {
@@ -173,7 +174,7 @@ struct SettingsView: View {
                         }
                     }
                     .labelsHidden()
-                    .frame(width: 160)
+                    .frame(width: 150, alignment: .trailing)
                 }
             }
         }
@@ -189,17 +190,27 @@ struct SettingsView: View {
             }
 
             if investmentsEnabled {
-                settingsSection("Price Tickers") {
-                    Text("Map journal commodities to Yahoo Finance tickers for market value fetching.")
-                        .font(.caption).foregroundStyle(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: PriceService.findPricehist() != nil ? "checkmark.circle" : "exclamationmark.triangle")
-                            .foregroundStyle(PriceService.findPricehist() != nil ? .green : .orange)
-                        Text("pricehist: \(PriceService.findPricehist() != nil ? "installed" : "not found (pip install pricehist)")")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                settingsSection("pricehist Binary") {
+                    HStack(spacing: 8) {
+                        TextField("Path to pricehist (pip install pricehist)", text: $pricehistPath)
+                            .textFieldStyle(.roundedBorder)
                     }
+
+                    if PriceService.isValid(path: pricehistPath) {
+                        Label("Found", systemImage: "checkmark.circle")
+                            .font(.caption).foregroundStyle(.green)
+                    } else if !pricehistPath.isEmpty {
+                        Label("Not found at this path", systemImage: "xmark.circle")
+                            .font(.caption).foregroundStyle(.red)
+                    } else {
+                        Text("Required for market value fetching. Install with: pip install pricehist")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+
+                settingsSection("Price Tickers") {
+                    Text("Map journal commodities to Yahoo Finance tickers.")
+                        .font(.caption).foregroundStyle(.secondary)
 
                     ForEach(Array(tickerRows.enumerated()), id: \.element.id) { index, _ in
                         HStack(spacing: 8) {
@@ -240,10 +251,10 @@ struct SettingsView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.accentColor)
 
-            Text("hledger for macOS")
+            Text("hledger-macos")
                 .font(.title2.bold())
 
-            Text("A native macOS companion for plain text accounting with hledger")
+            Text("A native macOS companion for plain text accounting")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -252,13 +263,26 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
+            Text("Copyright \u{00A9} 2026 Michele Broggi")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
+            Text("MIT License")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
             Divider().frame(width: 200)
 
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Text("Built with SwiftUI")
                     .font(.caption).foregroundStyle(.secondary)
                 Text("Powered by hledger CLI")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+
+            VStack(spacing: 4) {
+                Link("GitHub Repository", destination: URL(string: "https://github.com/thesmokinator/hledger-macos")!)
+                    .font(.caption)
                 Link("hledger.org", destination: URL(string: "https://hledger.org")!)
                     .font(.caption)
             }
@@ -308,6 +332,7 @@ struct SettingsView: View {
         hledgerPath = appState.config.hledgerBinaryPath
         defaultSection = appState.config.defaultSection
         investmentsEnabled = appState.config.investmentsEnabled
+        pricehistPath = appState.config.pricehistBinaryPath
         tickerRows = appState.config.priceTickers.map { TickerRow(commodity: $0.key, ticker: $0.value) }
         if tickerRows.isEmpty { tickerRows.append(TickerRow()) }
         if hledgerPath.isEmpty, let detected = appState.detectionResult?.hledgerPath {
@@ -328,6 +353,7 @@ struct SettingsView: View {
         appState.config.hledgerBinaryPath = hledgerPath
         appState.config.defaultSection = defaultSection
         appState.config.investmentsEnabled = investmentsEnabled
+        appState.config.pricehistBinaryPath = pricehistPath
         var tickers: [String: String] = [:]
         for row in tickerRows where !row.commodity.isEmpty && !row.ticker.isEmpty {
             tickers[row.commodity] = row.ticker

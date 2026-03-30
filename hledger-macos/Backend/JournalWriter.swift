@@ -26,7 +26,7 @@ enum JournalWriter {
     static func append(
         transaction: Transaction,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         let content = try String(contentsOf: mainJournal, encoding: .utf8)
         let strategy = detectRoutingStrategy(content)
@@ -95,7 +95,7 @@ enum JournalWriter {
         original: Transaction,
         with new: Transaction,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         guard let startPos = original.sourcePosStart, let endPos = original.sourcePosEnd else {
             throw BackendError.commandFailed("Cannot replace transaction without source position")
@@ -135,7 +135,7 @@ enum JournalWriter {
     static func delete(
         transaction: Transaction,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         guard let startPos = transaction.sourcePosStart, let endPos = transaction.sourcePosEnd else {
             throw BackendError.commandFailed("Cannot delete transaction without source position")
@@ -177,7 +177,7 @@ enum JournalWriter {
         transaction: Transaction,
         targetFile: URL,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         let backup = backupPath(for: targetFile)
         try createBackup(source: targetFile, backup: backup)
@@ -205,7 +205,7 @@ enum JournalWriter {
         targetFile: URL,
         targetName: String,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         let mainBackup = backupPath(for: mainJournal)
         try createBackup(source: mainJournal, backup: mainBackup)
@@ -229,7 +229,7 @@ enum JournalWriter {
         transaction: Transaction,
         targetFile: URL,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         do {
             try FileManager.default.createDirectory(
@@ -250,7 +250,7 @@ enum JournalWriter {
         targetFile: URL,
         year: String,
         mainJournal: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         let mainBackup = backupPath(for: mainJournal)
         try createBackup(source: mainJournal, backup: mainBackup)
@@ -397,7 +397,7 @@ enum JournalWriter {
         mainJournal: URL,
         sourceFile: URL,
         backup: URL,
-        validator: HledgerBackend
+        validator: any AccountingBackend
     ) async throws {
         do {
             try await validator.validateJournal()

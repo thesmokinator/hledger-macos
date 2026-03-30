@@ -40,6 +40,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "investmentsEnabled") }
     }
 
+    /// Custom pricehist binary path (empty = not configured).
+    var pricehistBinaryPath: String {
+        get { UserDefaults.standard.string(forKey: "pricehistBinaryPath") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "pricehistBinaryPath") }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {
