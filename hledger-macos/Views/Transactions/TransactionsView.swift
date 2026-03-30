@@ -119,14 +119,17 @@ struct TransactionsView: View {
                 Button(action: { newTransaction() }) {
                     Label("New Transaction", systemImage: "plus")
                 }
-                .keyboardShortcut("n", modifiers: .command)
             }
         }
-        // Hidden keyboard shortcuts (no toolbar button)
+        // Hidden keyboard shortcuts
         .background {
             Group {
                 Button("") { editTransaction(selectedTransaction) }
                     .keyboardShortcut("e", modifiers: .command)
+                Button("") { cloneTransaction(selectedTransaction) }
+                    .keyboardShortcut("d", modifiers: .command)
+                Button("") { if let s = selectedTransaction { confirmDelete(s) } }
+                    .keyboardShortcut(.delete, modifiers: .command)
                 Button("") { goToCurrentMonth() }
                     .keyboardShortcut("t", modifiers: .command)
                 Button("") { selectFirstTransaction() }
@@ -205,7 +208,8 @@ struct TransactionsView: View {
         showingForm = true
     }
 
-    private func cloneTransaction(_ transaction: Transaction) {
+    private func cloneTransaction(_ transaction: Transaction?) {
+        guard let transaction else { return }
         formTransaction = transaction
         formIsClone = true
         showingForm = true
