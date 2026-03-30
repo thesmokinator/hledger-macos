@@ -1,0 +1,295 @@
+/// Transactions view with navigable month, income/expense header, and transaction list.
+
+import SwiftUI
+
+struct TransactionsView: View {
+    @Environment(AppState.self) private var appState
+
+    @State private var selectedTransaction: Transaction?
+    @State private var showingForm = false
+    @State private var formTransaction: Transaction?
+    @State private var formIsClone = false
+    @State private var showingDeleteConfirm = false
+    @State private var transactionToDelete: Transaction?
+
+    @State private var periodSummary: PeriodSummary?
+    @FocusState private var listFocused: Bool
+
+    var body: some View {
+        @Bindable var state = appState
+        VStack(spacing: 0) {
+            // Period navigator
+            HStack {
+                Button(action: { appState.previousMonth() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title3)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.leftArrow, modifiers: [])
+
+                Spacer()
+
+                Text(appState.periodLabel)
+                    .font(.title2.bold())
+
+                Spacer()
+
+                Button(action: { appState.nextMonth() }) {
+                    Image(systemName: "chevron.right")
+                        .font(.title3)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.rightArrow, modifiers: [])
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 16)
+
+            // Income / Expenses cards (always visible)
+            HStack(spacing: 16) {
+                SummaryCard(title: "Income", summary: periodSummary, value: \.income, color: .green)
+                SummaryCard(title: "Expenses", summary: periodSummary, value: \.expenses, color: .red)
+                SummaryCard(
+                    title: "Net", summary: periodSummary, value: \.net,
+                    color: (periodSummary?.net ?? 0) >= 0 ? .green : .red,
+                    subtitle: {
+                        guard let s = periodSummary, s.income > 0 else { return nil }
+                        return "Saving rate: \(NSDecimalNumber(decimal: (s.income - s.expenses) / s.income * 100).intValue)%"
+                    }()
+                )
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+
+            Divider()
+
+            // Transaction list
+            if appState.isLoading {
+                Spacer()
+                ProgressView("Loading transactions...")
+                Spacer()
+            } else if appState.transactions.isEmpty {
+                Spacer()
+                ContentUnavailableView(
+                    "No Transactions",
+                    systemImage: "doc.text",
+                    description: Text("No transactions found for \(appState.periodLabel).")
+                )
+                Spacer()
+            } else {
+                List(appState.transactions, selection: $selectedTransaction) { transaction in
+                    TransactionRowView(transaction: transaction)
+                        .tag(transaction)
+                        .contextMenu {
+                            Button("Edit") { editTransaction(transaction) }
+                            Button("Clone") { cloneTransaction(transaction) }
+                            Divider()
+                            Button("Delete", role: .destructive) { confirmDelete(transaction) }
+                        }
+                }
+                .listStyle(.inset)
+                .focused($listFocused)
+            }
+        }
+        .searchable(text: $state.searchQuery, prompt: "Search: desc:, acct:, amt:, tag:, status:")
+        .searchSuggestions {
+            if appState.searchQuery.isEmpty {
+                Section("Filters") {
+                    searchSuggestion("desc:", label: "Description", icon: "text.quote")
+                    searchSuggestion("acct:", label: "Account", icon: "building.columns")
+                    searchSuggestion("amt:>", label: "Amount greater than", icon: "number")
+                    searchSuggestion("amt:<", label: "Amount less than", icon: "number")
+                    searchSuggestion("tag:", label: "Tag", icon: "tag")
+                    searchSuggestion("status:*", label: "Cleared", icon: "checkmark.circle")
+                    searchSuggestion("status:!", label: "Pending", icon: "exclamationmark.circle")
+                }
+                Section("Shortcuts") {
+                    searchSuggestion("d:", label: "desc: (short)", icon: "text.quote")
+                    searchSuggestion("ac:", label: "acct: (short)", icon: "building.columns")
+                    searchSuggestion("am:", label: "amt: (short)", icon: "number")
+                }
+            }
+        }
+        .onSubmit(of: .search) {
+            Task { await appState.loadTransactions() }
+        }
+        .navigationTitle("Transactions")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { newTransaction() }) {
+                    Label("New Transaction", systemImage: "plus")
+                }
+                .keyboardShortcut("n", modifiers: .command)
+            }
+        }
+        // Hidden keyboard shortcuts (no toolbar button)
+        .background {
+            Group {
+                Button("") { editTransaction(selectedTransaction) }
+                    .keyboardShortcut("e", modifiers: .command)
+                Button("") { goToCurrentMonth() }
+                    .keyboardShortcut("t", modifiers: .command)
+                Button("") { selectFirstTransaction() }
+                    .keyboardShortcut(.tab, modifiers: [])
+            }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+        }
+        .task { await loadAll() }
+        .onChange(of: appState.currentPeriod) {
+            Task { await loadAll() }
+        }
+        .sheet(isPresented: $showingForm) {
+            TransactionFormView(editingTransaction: formTransaction, isClone: formIsClone)
+                .environment(appState)
+        }
+        .alert("Delete Transaction?", isPresented: $showingDeleteConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { Task { await performDelete() } }
+        } message: {
+            if let txn = transactionToDelete {
+                Text("\(txn.date) \(txn.status.symbol) \(txn.description)\n\(txn.postings.map(\.account).joined(separator: "\n"))")
+            }
+        }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadAll() async {
+        async let txns: () = appState.loadTransactions()
+        async let summary: () = loadPeriodSummary()
+        _ = await (txns, summary)
+    }
+
+    private func loadPeriodSummary() async {
+        guard let backend = appState.activeBackend else { return }
+        periodSummary = try? await backend.loadPeriodSummary(period: appState.currentPeriod)
+    }
+
+    private func selectFirstTransaction() {
+        if let first = appState.transactions.first {
+            selectedTransaction = first
+            listFocused = true
+        }
+    }
+
+    // MARK: - Search Suggestion Helper
+
+    private func searchSuggestion(_ query: String, label: String, icon: String) -> some View {
+        Button {
+            appState.searchQuery = query
+        } label: {
+            Label(label, systemImage: icon)
+        }
+        .searchCompletion(query)
+    }
+
+    // MARK: - Actions
+
+    private func goToCurrentMonth() {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM"
+        appState.currentPeriod = f.string(from: Date())
+    }
+
+    private func newTransaction() {
+        formTransaction = nil
+        formIsClone = false
+        showingForm = true
+    }
+
+    private func editTransaction(_ transaction: Transaction?) {
+        guard let transaction else { return }
+        formTransaction = transaction
+        formIsClone = false
+        showingForm = true
+    }
+
+    private func cloneTransaction(_ transaction: Transaction) {
+        formTransaction = transaction
+        formIsClone = true
+        showingForm = true
+    }
+
+    private func confirmDelete(_ transaction: Transaction) {
+        transactionToDelete = transaction
+        showingDeleteConfirm = true
+    }
+
+    private func performDelete() async {
+        guard let txn = transactionToDelete, let backend = appState.activeBackend else { return }
+        do {
+            try await backend.deleteTransaction(txn)
+            await appState.loadTransactions()
+        } catch {
+            appState.errorMessage = error.localizedDescription
+        }
+        transactionToDelete = nil
+    }
+}
+
+// MARK: - Transaction Row
+
+struct TransactionRowView: View {
+    let transaction: Transaction
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(transaction.status.symbol)
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(statusColor)
+                .frame(width: 16)
+
+            Text(transaction.typeIndicator)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(typeColor)
+                .frame(width: 16)
+
+            Text(transaction.date)
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(transaction.description.isEmpty ? "no description" : transaction.description)
+                    .font(transaction.description.isEmpty ? .body.italic() : .body)
+                    .foregroundStyle(transaction.description.isEmpty ? .tertiary : .primary)
+                    .lineLimit(1)
+
+                if !transaction.code.isEmpty {
+                    Text("(\(transaction.code))")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
+
+            Spacer()
+
+            Text(transaction.totalAmount)
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(amountColor)
+        }
+        .padding(.vertical, 4)
+        .frame(minHeight: 36)
+    }
+
+    private var statusColor: Color {
+        switch transaction.status {
+        case .cleared: return .green
+        case .pending: return .orange
+        case .unmarked: return .secondary
+        }
+    }
+
+    private var typeColor: Color {
+        switch transaction.typeIndicator {
+        case "I": return .green
+        case "E": return .red
+        default: return .secondary
+        }
+    }
+
+    private var amountColor: Color {
+        transaction.typeIndicator == "I" ? .green : .primary
+    }
+}

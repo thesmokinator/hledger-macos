@@ -1,59 +1,34 @@
-//
-//  ContentView.swift
-//  hledger-macos
-//
-//  Created by Michele Broggi on 30/03/2026.
-//
+/// Main content view with NavigationSplitView: sidebar + detail.
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Environment(AppState.self) private var appState
 
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            .toolbar {
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
+            SidebarView()
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
         } detail: {
-            Text("Select an item")
+            detailView
         }
     }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+    @ViewBuilder
+    private var detailView: some View {
+        switch appState.selectedSection {
+        case .summary:
+            SummaryView()
+        case .transactions:
+            TransactionsView()
+        case .recurring:
+            RecurringView()
+        case .budget:
+            BudgetView()
+        case .reports:
+            ReportsView()
+        case .accounts:
+            AccountsView()
         }
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
