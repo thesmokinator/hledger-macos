@@ -59,7 +59,3 @@ open hledger-macos.xcodeproj
 ```
 
 Build and run with Xcode (Cmd+R).
-
-## License
-
-[MIT](LICENSE.md)
