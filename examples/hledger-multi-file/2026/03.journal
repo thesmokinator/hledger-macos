@@ -1,0 +1,23 @@
+2026-03-01 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-03-02 * Mortgage payment
+    liabilities:mortgage              €788.00
+    assets:bank:checking
+
+2026-03-03 * Supermarket
+    expenses:food:groceries           €88.60
+    assets:bank:checking
+
+2026-03-08 * Electric bill
+    expenses:utilities                €72.00
+    assets:bank:checking
+
+2026-03-10 * Netflix
+    expenses:subscriptions            €15.99
+    assets:bank:checking
+
+2026-03-15 * Freelance project
+    assets:bank:checking              €450.00
+    income:freelance

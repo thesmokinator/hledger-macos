@@ -2,6 +2,26 @@
 
 import Foundation
 
+/// Thread-safe data accumulator for pipe output.
+nonisolated private final class DataAccumulator: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data = Data()
+
+    func append(_ chunk: Data) {
+        lock.lock()
+        data.append(chunk)
+        lock.unlock()
+    }
+
+    func finalize(_ remaining: Data) -> Data {
+        lock.lock()
+        data.append(remaining)
+        let result = data
+        lock.unlock()
+        return result
+    }
+}
+
 /// Runs an external CLI binary and returns its stdout.
 actor SubprocessRunner {
     let executablePath: String
@@ -11,11 +31,6 @@ actor SubprocessRunner {
     }
 
     /// Run the executable with the given arguments and return stdout.
-    ///
-    /// - Parameter arguments: CLI arguments to pass to the executable.
-    /// - Returns: The stdout output as a string.
-    /// - Throws: `BackendError.binaryNotFound` if the executable doesn't exist,
-    ///           `BackendError.commandFailed` if the process exits with non-zero status.
     @discardableResult
     func run(_ arguments: [String]) async throws -> String {
         let process = Process()
@@ -34,22 +49,16 @@ actor SubprocessRunner {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        // Read data asynchronously BEFORE waiting for termination to avoid
-        // pipe buffer deadlock when output is large.
-        var stdoutData = Data()
-        var stderrData = Data()
+        let stdoutAccumulator = DataAccumulator()
+        let stderrAccumulator = DataAccumulator()
 
         stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
             let chunk = handle.availableData
-            if !chunk.isEmpty {
-                stdoutData.append(chunk)
-            }
+            if !chunk.isEmpty { stdoutAccumulator.append(chunk) }
         }
         stderrPipe.fileHandleForReading.readabilityHandler = { handle in
             let chunk = handle.availableData
-            if !chunk.isEmpty {
-                stderrData.append(chunk)
-            }
+            if !chunk.isEmpty { stderrAccumulator.append(chunk) }
         }
 
         do {
@@ -60,18 +69,16 @@ actor SubprocessRunner {
             throw BackendError.binaryNotFound(executablePath)
         }
 
-        // Wait for process to finish
         return try await withCheckedThrowingContinuation { continuation in
             process.terminationHandler = { _ in
-                // Read any remaining data
-                stdoutData.append(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
-                stderrData.append(stderrPipe.fileHandleForReading.readDataToEndOfFile())
-
                 stdoutPipe.fileHandleForReading.readabilityHandler = nil
                 stderrPipe.fileHandleForReading.readabilityHandler = nil
 
-                let outStr = String(data: stdoutData, encoding: .utf8) ?? ""
-                let errStr = String(data: stderrData, encoding: .utf8) ?? ""
+                let outData = stdoutAccumulator.finalize(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
+                let errData = stderrAccumulator.finalize(stderrPipe.fileHandleForReading.readDataToEndOfFile())
+
+                let outStr = String(data: outData, encoding: .utf8) ?? ""
+                let errStr = String(data: errData, encoding: .utf8) ?? ""
 
                 if process.terminationStatus == 0 {
                     continuation.resume(returning: outStr)

@@ -11,9 +11,9 @@ struct SummaryCard: View {
     var subtitle: String? = nil
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             Text(title)
-                .font(.callout)
+                .font(.body)
                 .foregroundStyle(.secondary)
 
             Group {
@@ -25,16 +25,16 @@ struct SummaryCard: View {
                         .controlSize(.small)
                 }
             }
-            .font(.system(.title, design: .rounded, weight: .bold))
-            .frame(height: 28)
+            .font(.system(size: 28, weight: .bold, design: .rounded))
+            .frame(height: 34)
 
             Text(subtitle ?? " ")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .frame(maxWidth: .infinity, minHeight: 80)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
+        .frame(maxWidth: .infinity, minHeight: 100)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
     }
 }

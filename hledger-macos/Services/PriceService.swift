@@ -1,6 +1,4 @@
 /// Fetches market prices via pricehist CLI and caches them as hledger P-directives.
-///
-/// Ported from hledger-textual/prices.py.
 
 import Foundation
 
@@ -13,33 +11,6 @@ enum PriceService {
         return cacheDir.appendingPathComponent("prices.journal")
     }
 
-    /// Check if pricehist is installed.
-    static func hasPricehist() -> Bool {
-        BinaryDetector.findHledger(customPath: "") != nil // reuse detection pattern
-        // Actually check for pricehist specifically
-        || findPricehist() != nil
-    }
-
-    /// Find pricehist binary path.
-    static func findPricehist() -> String? {
-        let knownPaths = [
-            "/opt/homebrew/bin/pricehist",
-            "/usr/local/bin/pricehist",
-        ]
-        for path in knownPaths {
-            if FileManager.default.isExecutableFile(atPath: path) {
-                return path
-            }
-        }
-        // Check in Python user bin paths
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-        let pyUserBin = homeDir.appendingPathComponent(".local/bin/pricehist")
-        if FileManager.default.fileExists(atPath: pyUserBin.path) {
-            return pyUserBin.path
-        }
-        return nil
-    }
-
     /// Check if cached prices are fresh (written today).
     static func pricesAreFresh() -> Bool {
         guard FileManager.default.fileExists(atPath: cachePath.path) else { return false }
@@ -48,18 +19,22 @@ enum PriceService {
         return Calendar.current.isDateInToday(mtime)
     }
 
+    /// Check if a pricehist path is valid (file exists and is executable).
+    static func isValid(path: String) -> Bool {
+        !path.isEmpty && FileManager.default.isExecutableFile(atPath: path)
+    }
+
     /// Get the prices file URL: return cache if fresh, fetch if stale.
-    /// Returns nil if pricehist is unavailable or no tickers configured.
-    static func getPricesFile(tickers: [String: String]) async -> URL? {
+    /// Returns nil if pricehist path is not configured/valid or no tickers configured.
+    static func getPricesFile(pricehistPath: String, tickers: [String: String]) async -> URL? {
         guard !tickers.isEmpty else { return nil }
+        guard isValid(path: pricehistPath) else { return nil }
 
         if pricesAreFresh() {
             return cachePath
         }
 
-        guard let prichistPath = findPricehist() else { return nil }
-
-        let runner = SubprocessRunner(executablePath: prichistPath)
+        let runner = SubprocessRunner(executablePath: pricehistPath)
         let today = {
             let f = DateFormatter()
             f.dateFormat = "yyyy-MM-dd"
@@ -81,7 +56,6 @@ enum PriceService {
                     lines.append(trimmed)
                 }
             } catch {
-                // Skip failed tickers silently
                 continue
             }
         }

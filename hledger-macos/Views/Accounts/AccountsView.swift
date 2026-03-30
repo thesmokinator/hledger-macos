@@ -128,13 +128,13 @@ struct AccountsView: View {
     // MARK: - Tree Balance Formatting
 
     private func formatNodeBalance(_ raw: String) -> String {
-        let (qty, commodity) = HledgerBackend.parseBudgetAmount(raw)
+        let (qty, commodity) = AmountParser.parse(raw)
         if qty == 0 && commodity.isEmpty { return raw }
         return AmountFormatter.format(qty, commodity: commodity)
     }
 
     private func nodeBalanceColor(_ raw: String) -> Color {
-        let (qty, _) = HledgerBackend.parseBudgetAmount(raw)
+        let (qty, _) = AmountParser.parse(raw)
         return qty < 0 ? .red : .secondary
     }
 }
@@ -147,15 +147,15 @@ struct AccountBalance: Identifiable {
     let rawBalance: String
 
     var parsedAmount: Decimal {
-        HledgerBackend.parseBudgetAmount(rawBalance).0
+        AmountParser.parse(rawBalance).0
     }
 
     var parsedCommodity: String {
-        HledgerBackend.parseBudgetAmount(rawBalance).1
+        AmountParser.parse(rawBalance).1
     }
 
     var formattedBalance: String {
-        let (qty, commodity) = HledgerBackend.parseBudgetAmount(rawBalance)
+        let (qty, commodity) = AmountParser.parse(rawBalance)
         if qty == 0 && commodity.isEmpty { return rawBalance }
         return AmountFormatter.format(qty, commodity: commodity)
     }

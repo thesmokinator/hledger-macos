@@ -1,0 +1,23 @@
+2026-02-01 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-02-02 * Mortgage payment
+    liabilities:mortgage              €788.00
+    assets:bank:checking
+
+2026-02-06 * Supermarket
+    expenses:food:groceries           €110.20
+    assets:bank:checking
+
+2026-02-10 * Netflix
+    expenses:subscriptions            €15.99
+    assets:bank:checking
+
+2026-02-14 * Restaurant
+    expenses:food:restaurant          €65.00
+    liabilities:credit-card
+
+2026-02-20 * Buy XDWD
+    assets:investments:XDWD           3 XDWD @@ €390.00
+    assets:bank:checking
