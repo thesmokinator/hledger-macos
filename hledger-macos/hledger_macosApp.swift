@@ -109,9 +109,11 @@ struct ShortcutsView: View {
 
                     shortcutGroup("Transactions") {
                         shortcutRow("\u{2318}N", "New transaction")
-                        shortcutRow("\u{2318}E", "Edit selected transaction")
-                        shortcutRow("\u{2318}D", "Clone transaction")
-                        shortcutRow("\u{232B}", "Delete transaction")
+                        shortcutRow("\u{2318}E", "Edit selected")
+                        shortcutRow("\u{2318}D", "Clone selected")
+                        shortcutRow("\u{2318}\u{232B}", "Delete selected")
+                        shortcutRow("Tab", "Select first transaction")
+                        shortcutRow("\u{2191} / \u{2193}", "Navigate list")
                     }
 
                     shortcutGroup("General") {
