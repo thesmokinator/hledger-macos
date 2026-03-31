@@ -77,6 +77,9 @@
     "Add Posting" : {
 
     },
+    "Add recurring rules to automate periodic transactions." : {
+
+    },
     "Add Rule" : {
 
     },
@@ -162,7 +165,13 @@
     "Delete Budget Rule?" : {
 
     },
+    "Delete Recurring Rule?" : {
+
+    },
     "Delete Transaction?" : {
+
+    },
+    "Description" : {
 
     },
     "Detect" : {
@@ -189,6 +198,9 @@
     "Edit" : {
 
     },
+    "End date (optional)" : {
+
+    },
     "EUR" : {
 
     },
@@ -205,6 +217,9 @@
 
     },
     "Found" : {
+
+    },
+    "from %@" : {
 
     },
     "Gain/Loss" : {
@@ -255,6 +270,9 @@
     "Loading report..." : {
 
     },
+    "Loading rules..." : {
+
+    },
     "Loading transactions..." : {
 
     },
@@ -292,6 +310,9 @@
 
     },
     "No matching accounts." : {
+
+    },
+    "No Recurring Rules" : {
 
     },
     "No report data for the selected period." : {
@@ -351,14 +372,21 @@
     "Recurring" : {
 
     },
-    "Recurring transactions coming in a future update." : {
-
-    },
     "Reload" : {
 
     },
     "Remove budget for %@?" : {
 
+    },
+    "Remove recurring rule \"%@\" (%@)?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove recurring rule \"%1$@\" (%2$@)?"
+          }
+        }
+      }
     },
     "Reports" : {
 
@@ -370,6 +398,9 @@
 
     },
     "Saved" : {
+
+    },
+    "Schedule" : {
 
     },
     "Search: desc:, acct:, amt:, tag:, status:" : {
@@ -384,6 +415,9 @@
     "Show investments in Summary" : {
 
     },
+    "Start date (YYYY-MM-DD)" : {
+
+    },
     "Startup" : {
 
     },
@@ -391,6 +425,12 @@
 
     },
     "System" : {
+
+    },
+    "to %@" : {
+
+    },
+    "Transaction" : {
 
     },
     "Transaction description" : {
