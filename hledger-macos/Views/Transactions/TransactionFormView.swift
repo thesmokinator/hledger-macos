@@ -19,6 +19,7 @@ struct TransactionFormView: View {
     @State private var postingRows: [PostingRow] = []
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var isPrefilling = true
     @State private var knownAccounts: [String] = []
 
     @FocusState private var focusedField: Field?
@@ -71,7 +72,7 @@ struct TransactionFormView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 60)
                                     .focused($focusedField, equals: .year)
-                                    .onChange(of: dateYear) { filterDigits(&dateYear, max: 4) { focusedField = .month } }
+                                    .onChange(of: dateYear) { guard !isPrefilling else { return }; filterDigits(&dateYear, max: 4) { focusedField = .month } }
 
                                 Text("-").foregroundStyle(.secondary)
 
@@ -79,7 +80,7 @@ struct TransactionFormView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 40)
                                     .focused($focusedField, equals: .month)
-                                    .onChange(of: dateMonth) { filterDigits(&dateMonth, max: 2) { focusedField = .day } }
+                                    .onChange(of: dateMonth) { guard !isPrefilling else { return }; filterDigits(&dateMonth, max: 2) { focusedField = .day } }
 
                                 Text("-").foregroundStyle(.secondary)
 
@@ -87,7 +88,7 @@ struct TransactionFormView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 40)
                                     .focused($focusedField, equals: .day)
-                                    .onChange(of: dateDay) { filterDigits(&dateDay, max: 2) { focusedField = .description } }
+                                    .onChange(of: dateDay) { guard !isPrefilling else { return }; filterDigits(&dateDay, max: 2) { focusedField = .description } }
 
                                 if !dateYear.isEmpty || !dateMonth.isEmpty || !dateDay.isEmpty {
                                     Image(systemName: isDateValid ? "checkmark.circle" : "xmark.circle")
@@ -162,9 +163,11 @@ struct TransactionFormView: View {
                                     .foregroundStyle(.secondary)
                                     .frame(width: 30, alignment: .trailing)
 
-                                TextField("e.g. expenses:food", text: $postingRows[index].account)
-                                    .textFieldStyle(.roundedBorder)
-                                    .focused($focusedField, equals: .postingAccount(index))
+                                AutocompleteField(
+                                    placeholder: "e.g. expenses:food",
+                                    text: $postingRows[index].account,
+                                    suggestions: knownAccounts
+                                )
 
                                 TextField("0.00", text: $postingRows[index].amount)
                                     .textFieldStyle(.roundedBorder)
@@ -223,7 +226,8 @@ struct TransactionFormView: View {
         .task { await loadAutocompleteData() }
         .onAppear {
             prefill()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isPrefilling = false
                 focusedField = .year
             }
         }

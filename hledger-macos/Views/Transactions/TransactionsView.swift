@@ -138,6 +138,12 @@ struct TransactionsView: View {
             .frame(width: 0, height: 0)
             .opacity(0)
         }
+        .onChange(of: appState.showingNewTransaction) {
+            if appState.showingNewTransaction {
+                appState.showingNewTransaction = false
+                newTransaction()
+            }
+        }
         .task { await loadAll() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }

@@ -10,7 +10,9 @@ struct hledger_macosApp: App {
     var body: some Scene {
         Window("hledger", id: "main") {
             Group {
-                if appState.isInitialized {
+                if appState.isChecking {
+                    Color.clear
+                } else if appState.isInitialized {
                     ContentView()
                 } else {
                     OnboardingView()

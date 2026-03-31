@@ -49,19 +49,39 @@ struct ReportsView: View {
         .navigationTitle("Reports")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Picker("Report", selection: $reportType) {
+                Menu {
                     ForEach(ReportType.allCases, id: \.self) { type in
-                        Text(type.displayName).tag(type)
+                        Button {
+                            reportType = type
+                        } label: {
+                            if type == reportType {
+                                Label(type.displayName, systemImage: "checkmark")
+                            } else {
+                                Text(type.displayName)
+                            }
+                        }
                     }
+                } label: {
+                    Text(reportType.displayName)
+                        .font(.callout)
                 }
-                .frame(width: 170)
 
-                Picker("Period", selection: $periodRange) {
+                Menu {
                     ForEach(PeriodRange.allCases) { range in
-                        Text(range.label).tag(range)
+                        Button {
+                            periodRange = range
+                        } label: {
+                            if range == periodRange {
+                                Label(range.label, systemImage: "checkmark")
+                            } else {
+                                Text(range.label)
+                            }
+                        }
                     }
+                } label: {
+                    Text(periodRange.label)
+                        .font(.callout)
                 }
-                .frame(width: 130)
             }
         }
         .task { await loadReport() }
@@ -167,6 +187,7 @@ struct ReportsView: View {
         let now = Date()
         let endComponents = calendar.dateComponents([.year, .month], from: now)
         let startOfMonth = calendar.date(from: endComponents)!
+        // End = first day of next month (exclusive in hledger)
         let endDate = calendar.date(byAdding: .month, value: 1, to: startOfMonth)!
 
         let beginDate: Date
@@ -176,7 +197,9 @@ struct ReportsView: View {
             ytd.day = 1
             beginDate = calendar.date(from: ytd)!
         } else {
-            beginDate = calendar.date(byAdding: .month, value: -periodRange.rawValue, to: startOfMonth)!
+            // -b is inclusive, so for "3 months" we want current month minus 2
+            // e.g. March 2026 with 3 months → Jan 2026 (Jan, Feb, Mar)
+            beginDate = calendar.date(byAdding: .month, value: -(periodRange.rawValue - 1), to: startOfMonth)!
         }
 
         let f = DateFormatter()
