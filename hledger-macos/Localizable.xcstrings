@@ -1,5 +1,443 @@
 {
   "sourceLanguage" : "en",
-  "strings" : {},
+  "strings" : {
+    "" : {
+
+    },
+    "-" : {
+
+    },
+    "—" : {
+
+    },
+    "·" : {
+
+    },
+    "#%lld:" : {
+
+    },
+    "%@ %@ %@\n%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ %3$@\n%4$@"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "© 2026 Michele Broggi" : {
+
+    },
+    "→" : {
+
+    },
+    "⌘%lld" : {
+
+    },
+    "$" : {
+
+    },
+    "£" : {
+
+    },
+    "€" : {
+
+    },
+    "0.00" : {
+
+    },
+    "A macOS companion for plain text accounting" : {
+
+    },
+    "A native macOS companion for plain text accounting" : {
+
+    },
+    "About" : {
+
+    },
+    "Accepts .journal / .hledger / .j files, or a directory containing one." : {
+
+    },
+    "Account" : {
+
+    },
+    "Accounts" : {
+
+    },
+    "Accounts view" : {
+
+    },
+    "Actual" : {
+
+    },
+    "Add budget rules to track spending against targets." : {
+
+    },
+    "Add Posting" : {
+
+    },
+    "Add Rule" : {
+
+    },
+    "Add Ticker" : {
+
+    },
+    "Advanced settings" : {
+
+    },
+    "Amount" : {
+
+    },
+    "Amount: plain number (50.00), currency prefix (%@50.00), or commodity with cost (-5 STCK @@ %@200.00). Leave one amount blank to auto-balance." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Amount: plain number (50.00), currency prefix (%1$@50.00), or commodity with cost (-5 STCK @@ %2$@200.00). Leave one amount blank to auto-balance."
+          }
+        }
+      }
+    },
+    "Appearance" : {
+
+    },
+    "Asset" : {
+
+    },
+    "Book Value" : {
+
+    },
+    "Browse..." : {
+
+    },
+    "Budget" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Category (optional)" : {
+
+    },
+    "Chart" : {
+
+    },
+    "Check again" : {
+
+    },
+    "Cleared" : {
+
+    },
+    "Clone" : {
+
+    },
+    "Configure price tickers in Settings > Investments to see market values." : {
+
+    },
+    "Continue" : {
+
+    },
+    "Custom symbol" : {
+
+    },
+    "Custom..." : {
+
+    },
+    "Dark" : {
+
+    },
+    "DD" : {
+
+    },
+    "Default commodity" : {
+
+    },
+    "Default commodity: %@" : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete Budget Rule?" : {
+
+    },
+    "Delete Transaction?" : {
+
+    },
+    "Detect" : {
+
+    },
+    "Detected: %@" : {
+
+    },
+    "Display" : {
+
+    },
+    "Done" : {
+
+    },
+    "e.g. 500.00" : {
+
+    },
+    "e.g. CHF" : {
+
+    },
+    "e.g. Food, Housing" : {
+
+    },
+    "Edit" : {
+
+    },
+    "EUR" : {
+
+    },
+    "Fetching prices..." : {
+
+    },
+    "Filter accounts..." : {
+
+    },
+    "Filters" : {
+
+    },
+    "Flat" : {
+
+    },
+    "Found" : {
+
+    },
+    "Gain/Loss" : {
+
+    },
+    "GBP" : {
+
+    },
+    "General" : {
+
+    },
+    "GitHub" : {
+
+    },
+    "hledger" : {
+
+    },
+    "hledger Binary" : {
+
+    },
+    "hledger cli" : {
+
+    },
+    "hledger for Mac" : {
+
+    },
+    "hledger.org" : {
+
+    },
+    "Investments" : {
+
+    },
+    "Journal File" : {
+
+    },
+    "Keyboard Shortcuts" : {
+
+    },
+    "Light" : {
+
+    },
+    "Loading accounts..." : {
+
+    },
+    "Loading budget..." : {
+
+    },
+    "Loading report..." : {
+
+    },
+    "Loading transactions..." : {
+
+    },
+    "Market Value" : {
+
+    },
+    "MIT License" : {
+
+    },
+    "MM" : {
+
+    },
+    "Monthly Budget" : {
+
+    },
+    "Net" : {
+
+    },
+    "New Transaction" : {
+
+    },
+    "No Accounts" : {
+
+    },
+    "No accounts found in journal." : {
+
+    },
+    "No Budget Rules" : {
+
+    },
+    "No Data" : {
+
+    },
+    "No journal file found at this path" : {
+
+    },
+    "No matching accounts." : {
+
+    },
+    "No report data for the selected period." : {
+
+    },
+    "No Transactions" : {
+
+    },
+    "No transactions found for %@." : {
+
+    },
+    "Not found — install with `brew install hledger`" : {
+
+    },
+    "Not found at this path" : {
+
+    },
+    "Open on launch" : {
+
+    },
+    "Optional transaction code" : {
+
+    },
+    "Path (empty = auto-detect)" : {
+
+    },
+    "Path to journal file or directory" : {
+
+    },
+    "Path to pricehist binary" : {
+
+    },
+    "Paths" : {
+
+    },
+    "Pending" : {
+
+    },
+    "Period" : {
+
+    },
+    "Portfolio" : {
+
+    },
+    "Postings" : {
+
+    },
+    "Price Tickers" : {
+
+    },
+    "pricehist" : {
+
+    },
+    "Qty" : {
+
+    },
+    "Recurring" : {
+
+    },
+    "Recurring transactions coming in a future update." : {
+
+    },
+    "Reload" : {
+
+    },
+    "Remaining" : {
+
+    },
+    "Remove budget for %@?" : {
+
+    },
+    "Reports" : {
+
+    },
+    "Required for market values. Install: pip install pricehist" : {
+
+    },
+    "Save" : {
+
+    },
+    "Saved" : {
+
+    },
+    "Search: desc:, acct:, amt:, tag:, status:" : {
+
+    },
+    "Sections" : {
+
+    },
+    "Shortcuts" : {
+
+    },
+    "Show investments in Summary" : {
+
+    },
+    "Startup" : {
+
+    },
+    "Summary" : {
+
+    },
+    "System" : {
+
+    },
+    "Transaction description" : {
+
+    },
+    "Transactions" : {
+
+    },
+    "Tree" : {
+
+    },
+    "Type" : {
+
+    },
+    "Unmarked" : {
+
+    },
+    "USD" : {
+
+    },
+    "Used" : {
+
+    },
+    "Version 1.0" : {
+
+    },
+    "View" : {
+
+    },
+    "Welcome to hledger for Mac" : {
+
+    },
+    "XDWD" : {
+
+    },
+    "XDWD.DE" : {
+
+    },
+    "YYYY" : {
+
+    }
+  },
   "version" : "1.0"
 }
