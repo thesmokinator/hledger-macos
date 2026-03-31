@@ -1,6 +1,6 @@
-# hledger-macos
+# hledger for Mac
 
-A native macOS companion app for [hledger](https://hledger.org) plain-text accounting. Manage transactions, view summaries, track investments, and navigate your journal — all from a native SwiftUI interface.
+A native macOS app for [hledger](https://hledger.org) plain-text accounting. Manage transactions, view summaries, track investments, and navigate your journal — all from a native SwiftUI interface.
 
 Built with Swift and SwiftUI. Companion to [hledger-textual](https://github.com/thesmokinator/hledger-textual) (terminal UI).
 

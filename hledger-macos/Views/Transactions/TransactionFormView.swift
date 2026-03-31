@@ -57,7 +57,7 @@ struct TransactionFormView: View {
                         Spacer()
                         Text(title)
                             .font(.headline)
-                            .foregroundColor(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                         Spacer()
                     }
                     .padding(.top, 20)

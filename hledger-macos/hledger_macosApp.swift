@@ -8,7 +8,7 @@ struct hledger_macosApp: App {
     @State private var showingShortcuts = false
 
     var body: some Scene {
-        Window("hledger", id: "main") {
+        Window("hledger for Mac", id: "main") {
             Group {
                 if appState.isChecking {
                     Color.clear
@@ -19,6 +19,7 @@ struct hledger_macosApp: App {
                 }
             }
             .environment(appState)
+            .preferredColorScheme(appState.config.colorScheme)
             .task {
                 await appState.initialize()
             }

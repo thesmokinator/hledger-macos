@@ -27,6 +27,7 @@ struct ReportsView: View {
     @State private var periodRange: PeriodRange = .sixMonths
     @State private var reportData: ReportData?
     @State private var isLoading = false
+    @State private var showingChart = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,6 +50,13 @@ struct ReportsView: View {
         .navigationTitle("Reports")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    showingChart = true
+                } label: {
+                    Label("Chart", systemImage: "chart.bar")
+                }
+                .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+
                 Menu {
                     ForEach(ReportType.allCases, id: \.self) { type in
                         Button {
@@ -87,44 +95,32 @@ struct ReportsView: View {
         .task { await loadReport() }
         .onChange(of: reportType) { Task { await loadReport() } }
         .onChange(of: periodRange) { Task { await loadReport() } }
+        .sheet(isPresented: $showingChart) {
+            if let data = reportData {
+                ReportChartOverlay(reportType: reportType, data: data)
+            }
+        }
     }
 
     // MARK: - Report Content
 
     private func reportContent(_ data: ReportData) -> some View {
         List {
-            // Header
-            HStack(spacing: 0) {
-                Text("Account")
-                    .frame(width: 200, alignment: .leading)
+            ReportHeaderRow(
+                accountLabel: "Account",
+                periodHeaders: data.periodHeaders,
+                formatHeader: formatPeriodHeader
+            )
 
-                ForEach(data.periodHeaders, id: \.self) { header in
-                    Text(formatPeriodHeader(header))
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .listRowSeparator(.visible)
-
-            // Rows
             ForEach(data.rows) { row in
-                HStack(spacing: 0) {
-                    Text(row.account)
-                        .font(row.isSectionHeader || row.isTotal ? .callout.bold() : .callout)
-                        .foregroundColor(row.isSectionHeader ? .accentColor : .primary)
-                        .frame(width: 200, alignment: .leading)
-                        .lineLimit(1)
-
-                    ForEach(Array(row.amounts.enumerated()), id: \.offset) { _, amount in
-                        Text(formatReportAmount(amount))
-                            .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(amountColor(amount, isTotal: row.isTotal))
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                }
-                .padding(.vertical, row.isSectionHeader ? 4 : 1)
-                .listRowBackground(row.isTotal ? Color.secondary.opacity(0.08) : Color.clear)
+                ReportRowView(
+                    account: row.account,
+                    amounts: row.amounts,
+                    isSectionHeader: row.isSectionHeader,
+                    isTotal: row.isTotal,
+                    formatAmount: formatReportAmount,
+                    amountColor: { amountColor($0, isTotal: row.isTotal) }
+                )
             }
         }
         .listStyle(.inset)
@@ -175,7 +171,7 @@ struct ReportsView: View {
                 commodity: commodity
             )
         } catch {
-            print("Report load error: \(error)")
+            appState.errorMessage = error.localizedDescription
             reportData = nil
         }
 
