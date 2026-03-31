@@ -3,7 +3,10 @@
 import Foundation
 
 /// A single recurring transaction rule stored in recurring.journal.
-struct RecurringRule: Identifiable, Sendable {
+struct RecurringRule: Identifiable, Hashable, Sendable {
+    static func == (lhs: RecurringRule, rhs: RecurringRule) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+
     let id: UUID
     var ruleId: String
     var periodExpr: String

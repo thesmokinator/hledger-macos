@@ -71,9 +71,6 @@
     "Accounts view" : {
 
     },
-    "Actual" : {
-
-    },
     "Add budget rules to track spending against targets." : {
 
     },
@@ -360,9 +357,6 @@
     "Reload" : {
 
     },
-    "Remaining" : {
-
-    },
     "Remove budget for %@?" : {
 
     },
@@ -415,9 +409,6 @@
 
     },
     "USD" : {
-
-    },
-    "Used" : {
 
     },
     "Version 1.0" : {
