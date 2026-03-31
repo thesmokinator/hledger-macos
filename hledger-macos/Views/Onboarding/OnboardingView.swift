@@ -20,11 +20,11 @@ struct OnboardingView: View {
             // Icon
             Image(systemName: "text.book.closed")
                 .font(.system(size: 56))
-                .foregroundColor(.accentColor)
+                .foregroundStyle(Color.accentColor)
                 .padding(.bottom, 20)
 
             // Title
-            Text("Welcome to hledger")
+            Text("Welcome to hledger for Mac")
                 .font(.largeTitle.bold())
                 .padding(.bottom, 6)
 

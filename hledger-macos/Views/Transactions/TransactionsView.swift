@@ -138,6 +138,12 @@ struct TransactionsView: View {
             .frame(width: 0, height: 0)
             .opacity(0)
         }
+        .onChange(of: appState.showingNewTransaction) {
+            if appState.showingNewTransaction {
+                appState.showingNewTransaction = false
+                newTransaction()
+            }
+        }
         .task { await loadAll() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
@@ -240,41 +246,42 @@ struct TransactionRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(transaction.status.symbol)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(statusColor)
-                .frame(width: 16)
+                .frame(width: 14)
 
             Text(transaction.typeIndicator)
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(typeColor)
-                .frame(width: 16)
+                .frame(width: 14)
 
             Text(transaction.date)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 4) {
                 Text(transaction.description.isEmpty ? "no description" : transaction.description)
-                    .font(transaction.description.isEmpty ? .body.italic() : .body)
+                    .font(transaction.description.isEmpty ? .callout.italic() : .callout)
                     .foregroundStyle(transaction.description.isEmpty ? .tertiary : .primary)
                     .lineLimit(1)
 
                 if !transaction.code.isEmpty {
-                    Text("(\(transaction.code))")
+                    Text("·")
+                        .foregroundStyle(.quaternary)
+                    Text(transaction.code)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
             }
-            .frame(maxHeight: .infinity, alignment: .center)
 
             Spacer()
 
             Text(transaction.totalAmount)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(amountColor)
         }
-        .padding(.vertical, 4)
-        .frame(minHeight: 36)
+        .padding(.vertical, ListMetrics.rowPadding)
     }
 
     private var statusColor: Color {

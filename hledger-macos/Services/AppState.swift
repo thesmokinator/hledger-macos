@@ -37,6 +37,7 @@ final class AppState {
     // MARK: - Initialization
 
     var isInitialized = false
+    var isChecking = true
     var detectionResult: BinaryDetectionResult?
 
     // MARK: - Config & Backend
@@ -74,6 +75,8 @@ final class AppState {
 
     /// Initialize the app: detect hledger and set up backend.
     func initialize() async {
+        isChecking = true
+
         // Apply configured default section
         if let section = NavigationSection(rawValue: config.defaultSection) {
             selectedSection = section
@@ -86,6 +89,8 @@ final class AppState {
             setupBackend()
             isInitialized = true
         }
+
+        isChecking = false
     }
 
     /// Re-scan for hledger (used from onboarding and settings).

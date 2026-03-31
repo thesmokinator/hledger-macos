@@ -241,7 +241,7 @@ struct SummaryView: View {
             incomeBreakdown = try await incomeTask
             liabilities = try await liabilitiesTask
         } catch {
-            print("Summary load error: \(error)")
+            appState.errorMessage = error.localizedDescription
         }
 
         isLoading = false
@@ -292,7 +292,7 @@ struct SummaryView: View {
                     return updated
                 }
             } catch {
-                print("Market values error: \(error)")
+                print("Market values: \(error.localizedDescription)")
             }
         }
         isFetchingPrices = false

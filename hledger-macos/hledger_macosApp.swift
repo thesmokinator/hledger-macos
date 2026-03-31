@@ -7,18 +7,36 @@ struct hledger_macosApp: App {
     @State private var appState = AppState()
     @State private var showingShortcuts = false
 
+    private func applyAppearance() {
+        switch appState.config.appearance {
+        case "light":
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark":
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        default:
+            NSApp.appearance = nil // system default
+        }
+    }
+
     var body: some Scene {
-        Window("hledger", id: "main") {
+        Window("hledger for Mac", id: "main") {
             Group {
-                if appState.isInitialized {
+                if appState.isChecking {
+                    Color.clear
+                } else if appState.isInitialized {
                     ContentView()
                 } else {
                     OnboardingView()
                 }
             }
             .environment(appState)
+            .preferredColorScheme(appState.config.colorScheme)
             .task {
                 await appState.initialize()
+                applyAppearance()
+            }
+            .onChange(of: appState.config.appearance) {
+                applyAppearance()
             }
             .sheet(isPresented: $showingShortcuts) {
                 ShortcutsView()

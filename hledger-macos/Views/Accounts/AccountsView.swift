@@ -59,16 +59,11 @@ struct AccountsView: View {
             } else {
                 List {
                     ForEach(filteredBalances) { row in
-                        HStack(spacing: 12) {
-                            Text(row.account)
-                                .font(.body)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(row.formattedBalance)
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundStyle(row.balanceColor)
-                        }
-                        .padding(.vertical, 2)
+                        AccountRow(
+                            label: row.account,
+                            value: row.formattedBalance,
+                            valueColor: row.balanceColor
+                        )
                     }
                 }
                 .listStyle(.inset)
@@ -86,16 +81,11 @@ struct AccountsView: View {
             } else {
                 List {
                     OutlineGroup(filteredTree, children: \.optionalChildren) { node in
-                        HStack(spacing: 12) {
-                            Text(node.name)
-                                .font(.body)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(formatNodeBalance(node.balance))
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundStyle(nodeBalanceColor(node.balance))
-                        }
-                        .padding(.vertical, 2)
+                        AccountRow(
+                            label: node.name,
+                            value: formatNodeBalance(node.balance),
+                            valueColor: nodeBalanceColor(node.balance)
+                        )
                     }
                 }
                 .listStyle(.inset)
@@ -115,7 +105,7 @@ struct AccountsView: View {
                 treeNodes = try await backend.loadAccountTreeBalances()
             }
         } catch {
-            print("Accounts load error: \(error)")
+            appState.errorMessage = error.localizedDescription
         }
         isLoading = false
     }

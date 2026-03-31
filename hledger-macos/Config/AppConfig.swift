@@ -46,6 +46,21 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "pricehistBinaryPath") }
     }
 
+    /// Appearance mode: "system", "light", "dark".
+    var appearance: String {
+        get { UserDefaults.standard.string(forKey: "appearance") ?? "system" }
+        set { UserDefaults.standard.set(newValue, forKey: "appearance") }
+    }
+
+    /// Resolved ColorScheme from appearance setting.
+    var colorScheme: ColorScheme? {
+        switch appearance {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil // system
+        }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {
