@@ -270,7 +270,7 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         periodEnd: String?,
         commodity: String?
     ) async throws -> ReportData {
-        var args = [type.rawValue, "-M", "-O", "csv"]
+        var args = [type.rawValue, "-M", "-O", "csv", "--no-elide"]
         if let begin = periodBegin, !begin.isEmpty {
             args.append(contentsOf: ["-b", begin])
         }
@@ -533,27 +533,39 @@ extension HledgerBackend {
     }
 
     /// Parse CSV report output (IS, BS, CF).
+    /// hledger CSV reports have two header rows:
+    ///   Row 1: title row (e.g. "Monthly Income Statement 2025-10-01..2026-03-31")
+    ///   Row 2: column headers ("Account","2025-10","2025-11",...)
     static func parseCSVReport(_ csv: String, title: String) -> ReportData {
         let lines = csv.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        guard let headerLine = lines.first else {
+        guard lines.count >= 2 else {
             return ReportData(title: title)
         }
 
-        let headers = parseCSVLine(headerLine)
+        // Skip title row (line 0), use line 1 as column headers
+        let headers = parseCSVLine(lines[1])
         let periodHeaders = Array(headers.dropFirst())
 
         var rows: [ReportRow] = []
-        for line in lines.dropFirst() {
+        for line in lines.dropFirst(2) {
             let fields = parseCSVLine(line)
             guard !fields.isEmpty else { continue }
-            let account = fields[0]
+            let account = fields[0].trimmingCharacters(in: .whitespaces)
+            guard !account.isEmpty else { continue }
             let amounts = Array(fields.dropFirst())
-            let isTotal = account.lowercased().contains("total") || account.lowercased().contains("net")
+
+            let lc = account.lowercased()
+            let isTotal = lc.contains("total") || lc.contains("net:")
+            let allEmpty = amounts.allSatisfy {
+                let t = $0.trimmingCharacters(in: .whitespaces)
+                return t.isEmpty || t == "0"
+            }
+            let isSectionHeader = !isTotal && allEmpty && !account.contains(":")
 
             rows.append(ReportRow(
                 account: account,
                 amounts: amounts,
-                isSectionHeader: false,
+                isSectionHeader: isSectionHeader,
                 isTotal: isTotal
             ))
         }
