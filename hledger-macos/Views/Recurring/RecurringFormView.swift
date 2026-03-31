@@ -12,8 +12,12 @@ struct RecurringFormView: View {
 
     @State private var periodExpr = "monthly"
     @State private var description = ""
-    @State private var startDate = ""
-    @State private var endDate = ""
+    @State private var startYear = ""
+    @State private var startMonth = ""
+    @State private var startDay = ""
+    @State private var endYear = ""
+    @State private var endMonth = ""
+    @State private var endDay = ""
     @State private var postingRows: [PostingRow] = [PostingRow(), PostingRow()]
     @State private var errorMessage: String?
 
@@ -57,18 +61,11 @@ struct RecurringFormView: View {
                         }
 
                         formRow("Start date:") {
-                            TextField("YYYY-MM-DD", text: $startDate)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 130)
+                            DateInputField(year: $startYear, month: $startMonth, day: $startDay)
                         }
 
                         formRow("End date:") {
-                            HStack {
-                                TextField("YYYY-MM-DD (optional)", text: $endDate)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 180)
-                                Spacer()
-                            }
+                            DateInputField(year: $endYear, month: $endMonth, day: $endDay, optional: true)
                         }
                     }
                     .padding(.horizontal, 24)
@@ -145,7 +142,7 @@ struct RecurringFormView: View {
                 Button("Save") { save() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(description.isEmpty || startDate.isEmpty)
+                    .disabled(description.isEmpty || startYear.isEmpty)
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
@@ -176,8 +173,8 @@ struct RecurringFormView: View {
         if let rule = editingRule {
             periodExpr = rule.periodExpr
             description = rule.description
-            startDate = rule.startDate ?? ""
-            endDate = rule.endDate ?? ""
+            splitDate(rule.startDate, year: &startYear, month: &startMonth, day: &startDay)
+            splitDate(rule.endDate, year: &endYear, month: &endMonth, day: &endDay)
             postingRows = rule.postings.map {
                 PostingRow(
                     account: $0.account,
@@ -187,11 +184,20 @@ struct RecurringFormView: View {
         }
         while postingRows.count < 2 { postingRows.append(PostingRow()) }
 
-        if startDate.isEmpty {
+        if startYear.isEmpty {
             let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd"
-            startDate = f.string(from: Date())
+            f.dateFormat = "yyyy"; startYear = f.string(from: Date())
+            f.dateFormat = "MM"; startMonth = f.string(from: Date())
+            f.dateFormat = "dd"; startDay = f.string(from: Date())
         }
+    }
+
+    private func splitDate(_ date: String?, year: inout String, month: inout String, day: inout String) {
+        guard let date, !date.isEmpty else { return }
+        let parts = date.split(separator: "-").map(String.init)
+        if parts.count > 0 { year = parts[0] }
+        if parts.count > 1 { month = parts[1] }
+        if parts.count > 2 { day = parts[2] }
     }
 
     // MARK: - Save
@@ -217,13 +223,16 @@ struct RecurringFormView: View {
 
         let ruleId = editingRule?.ruleId ?? String(UUID().uuidString.prefix(8)).lowercased()
 
+        let startDateStr = startYear.isEmpty ? nil : "\(startYear)-\(startMonth)-\(startDay)"
+        let endDateStr = endYear.isEmpty ? nil : "\(endYear)-\(endMonth)-\(endDay)"
+
         let rule = RecurringRule(
             ruleId: ruleId,
             periodExpr: periodExpr,
             description: description,
             postings: postings,
-            startDate: startDate.isEmpty ? nil : startDate,
-            endDate: endDate.isEmpty ? nil : endDate
+            startDate: startDateStr,
+            endDate: endDateStr
         )
 
         onSave(rule)

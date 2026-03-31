@@ -62,9 +62,6 @@
     "Accepts .journal / .hledger / .j files, or a directory containing one." : {
 
     },
-    "Account" : {
-
-    },
     "Accounts" : {
 
     },
@@ -120,9 +117,6 @@
     "Cancel" : {
 
     },
-    "Category (optional)" : {
-
-    },
     "Chart" : {
 
     },
@@ -171,9 +165,6 @@
     "Delete Transaction?" : {
 
     },
-    "Description" : {
-
-    },
     "Detect" : {
 
     },
@@ -192,13 +183,10 @@
     "e.g. CHF" : {
 
     },
-    "e.g. Food, Housing" : {
+    "e.g. Food, Housing (optional)" : {
 
     },
     "Edit" : {
-
-    },
-    "End date (optional)" : {
 
     },
     "EUR" : {
@@ -258,6 +246,9 @@
     "Keyboard Shortcuts" : {
 
     },
+    "Leave one amount blank for auto-balance." : {
+
+    },
     "Light" : {
 
     },
@@ -283,9 +274,6 @@
 
     },
     "MM" : {
-
-    },
-    "Monthly Budget" : {
 
     },
     "Net" : {
@@ -372,6 +360,9 @@
     "Recurring" : {
 
     },
+    "Recurring transaction description" : {
+
+    },
     "Reload" : {
 
     },
@@ -400,9 +391,6 @@
     "Saved" : {
 
     },
-    "Schedule" : {
-
-    },
     "Search: desc:, acct:, amt:, tag:, status:" : {
 
     },
@@ -415,9 +403,6 @@
     "Show investments in Summary" : {
 
     },
-    "Start date (YYYY-MM-DD)" : {
-
-    },
     "Startup" : {
 
     },
@@ -428,9 +413,6 @@
 
     },
     "to %@" : {
-
-    },
-    "Transaction" : {
 
     },
     "Transaction description" : {
@@ -467,6 +449,12 @@
 
     },
     "YYYY" : {
+
+    },
+    "YYYY-MM-DD" : {
+
+    },
+    "YYYY-MM-DD (optional)" : {
 
     }
   },
