@@ -317,6 +317,12 @@ struct SettingsView: View {
         appState.config.hledgerBinaryPath = hledgerPath
         appState.config.defaultSection = defaultSection
         appState.config.appearance = appearance
+        // Apply theme immediately
+        switch appearance {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
         appState.config.investmentsEnabled = investmentsEnabled
         appState.config.pricehistBinaryPath = pricehistPath
         var tickers: [String: String] = [:]
