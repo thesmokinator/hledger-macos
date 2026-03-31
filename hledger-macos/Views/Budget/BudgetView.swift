@@ -13,6 +13,8 @@ struct BudgetView: View {
     @State private var showingDeleteConfirm = false
     @State private var ruleToDelete: BudgetRule?
     @State private var knownAccounts: [String] = []
+    @State private var selectedRow: MergedBudgetRow?
+    @FocusState private var listFocused: Bool
 
     @State private var currentPeriod: String = {
         let f = DateFormatter()
@@ -95,6 +97,20 @@ struct BudgetView: View {
                 }
             }
         }
+        .background {
+            Group {
+                Button("") { addRule() }
+                    .keyboardShortcut("n", modifiers: .command)
+                Button("") { if let row = selectedRow { editRule(row.rule) } }
+                    .keyboardShortcut("e", modifiers: .command)
+                Button("") { if let row = selectedRow { confirmDelete(row.rule) } }
+                    .keyboardShortcut(.delete, modifiers: .command)
+                Button("") { selectFirst() }
+                    .keyboardShortcut(.tab, modifiers: [])
+            }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+        }
         .task { await loadData() }
         .onChange(of: currentPeriod) { Task { await loadData() } }
         .sheet(isPresented: $showingForm) {
@@ -118,28 +134,17 @@ struct BudgetView: View {
     // MARK: - Budget List
 
     private var budgetList: some View {
-        List {
-            // Header
-            HStack(spacing: 0) {
-                Text("Account").frame(width: 200, alignment: .leading)
-                Text("Budget").frame(maxWidth: .infinity, alignment: .trailing)
-                Text("Actual").frame(maxWidth: .infinity, alignment: .trailing)
-                Text("Remaining").frame(maxWidth: .infinity, alignment: .trailing)
-                Text("Used").frame(width: 60, alignment: .trailing)
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-
-            ForEach(mergedRows) { row in
-                BudgetRowView(row: row)
-                    .contextMenu {
-                        Button("Edit") { editRule(row.rule) }
-                        Divider()
-                        Button("Delete", role: .destructive) { confirmDelete(row.rule) }
-                    }
-            }
+        List(mergedRows, selection: $selectedRow) { row in
+            BudgetRowView(row: row)
+                .tag(row)
+                .contextMenu {
+                    Button("Edit") { editRule(row.rule) }
+                    Divider()
+                    Button("Delete", role: .destructive) { confirmDelete(row.rule) }
+                }
         }
         .listStyle(.inset)
+        .focused($listFocused)
     }
 
     // MARK: - Data Loading
@@ -180,6 +185,13 @@ struct BudgetView: View {
     }
 
     // MARK: - CRUD Actions
+
+    private func selectFirst() {
+        if let first = mergedRows.first {
+            selectedRow = first
+            listFocused = true
+        }
+    }
 
     private func addRule() {
         editingRule = nil
@@ -237,12 +249,15 @@ struct BudgetView: View {
 
 // MARK: - Merged Budget Row
 
-struct MergedBudgetRow: Identifiable {
+struct MergedBudgetRow: Identifiable, Hashable {
     let id = UUID()
     let rule: BudgetRule
     let actual: Decimal
     let budget: Decimal
     let commodity: String
+
+    static func == (lhs: MergedBudgetRow, rhs: MergedBudgetRow) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 
     var remaining: Decimal { budget - actual }
     var usagePct: Double {
