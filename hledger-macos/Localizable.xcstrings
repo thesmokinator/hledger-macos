@@ -450,12 +450,6 @@
     },
     "YYYY" : {
 
-    },
-    "YYYY-MM-DD" : {
-
-    },
-    "YYYY-MM-DD (optional)" : {
-
     }
   },
   "version" : "1.0"

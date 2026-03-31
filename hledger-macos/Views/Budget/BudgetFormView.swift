@@ -47,15 +47,11 @@ struct BudgetFormView: View {
                         formRow("Amount:") {
                             TextField("e.g. 500.00", text: $amount)
                                 .textFieldStyle(.roundedBorder)
-                                .frame(width: 130)
                         }
 
                         formRow("Category:") {
-                            HStack {
-                                TextField("e.g. Food, Housing (optional)", text: $category)
-                                    .textFieldStyle(.roundedBorder)
-                                Spacer()
-                            }
+                            TextField("e.g. Food, Housing (optional)", text: $category)
+                                .textFieldStyle(.roundedBorder)
                         }
                     }
                     .padding(.horizontal, 24)
