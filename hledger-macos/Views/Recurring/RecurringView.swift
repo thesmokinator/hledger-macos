@@ -13,6 +13,9 @@ struct RecurringView: View {
     @State private var ruleToDelete: RecurringRule?
     @State private var selectedRule: RecurringRule?
     @State private var knownAccounts: [String] = []
+    @State private var isGenerating = false
+    @State private var showingGenerateConfirm = false
+    @State private var pendingSummary: [(RecurringRule, Int)] = []
     @FocusState private var listFocused: Bool
 
     var body: some View {
@@ -35,7 +38,16 @@ struct RecurringView: View {
         }
         .navigationTitle("Recurring")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await previewGenerate() } } label: {
+                    if isGenerating {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label("Generate", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                }
+                .disabled(rules.isEmpty || isGenerating)
+
                 Button { addRule() } label: {
                     Label("Add Rule", systemImage: "plus")
                 }
@@ -43,8 +55,6 @@ struct RecurringView: View {
         }
         .background {
             Group {
-                Button("") { addRule() }
-                    .keyboardShortcut("n", modifiers: .command)
                 Button("") { if let r = selectedRule { editRule(r) } }
                     .keyboardShortcut("e", modifiers: .command)
                 Button("") { if let r = selectedRule { confirmDelete(r) } }
@@ -56,6 +66,12 @@ struct RecurringView: View {
             .opacity(0)
         }
         .task { await loadData() }
+        .onChange(of: appState.showingNewRecurringRule) {
+            if appState.showingNewRecurringRule {
+                appState.showingNewRecurringRule = false
+                addRule()
+            }
+        }
         .sheet(isPresented: $showingForm) {
             RecurringFormView(
                 editingRule: editingRule,
@@ -70,6 +86,17 @@ struct RecurringView: View {
         } message: {
             if let rule = ruleToDelete {
                 Text("Remove recurring rule \"\(rule.description)\" (\(rule.periodExpr))?")
+            }
+        }
+        .alert("Generate Transactions?", isPresented: $showingGenerateConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Generate") { Task { await generateAll() } }
+        } message: {
+            let total = pendingSummary.reduce(0) { $0 + $1.1 }
+            if total == 0 {
+                Text("No pending transactions to generate. All rules are up to date.")
+            } else {
+                Text(generateSummaryText())
             }
         }
     }
@@ -146,6 +173,49 @@ struct RecurringView: View {
         } catch {
             appState.errorMessage = error.localizedDescription
         }
+    }
+
+    private func previewGenerate() async {
+        guard let backend = appState.activeBackend else { return }
+        isGenerating = true
+        var summary: [(RecurringRule, Int)] = []
+        for rule in rules {
+            let pending = await RecurringManager.computePending(rule: rule, backend: backend)
+            if !pending.isEmpty {
+                summary.append((rule, pending.count))
+            }
+        }
+        pendingSummary = summary
+        isGenerating = false
+        showingGenerateConfirm = true
+    }
+
+    private func generateSummaryText() -> String {
+        let lines = pendingSummary.map { rule, count in
+            "\(rule.description): \(count) transaction\(count == 1 ? "" : "s")"
+        }
+        let total = pendingSummary.reduce(0) { $0 + $1.1 }
+        return lines.joined(separator: "\n") + "\n\nTotal: \(total) transaction\(total == 1 ? "" : "s")"
+    }
+
+    private func generateAll() async {
+        guard let backend = appState.activeBackend else { return }
+        isGenerating = true
+        var totalGenerated = 0
+
+        for rule in rules {
+            let pending = await RecurringManager.computePending(rule: rule, backend: backend)
+            if !pending.isEmpty {
+                do {
+                    try await RecurringManager.generateTransactions(rule: rule, dates: pending, backend: backend)
+                    totalGenerated += pending.count
+                } catch {
+                    appState.errorMessage = error.localizedDescription
+                }
+            }
+        }
+
+        isGenerating = false
     }
 
     private func performDelete() async {

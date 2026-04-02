@@ -52,10 +52,7 @@ struct TransactionsView: View {
                 SummaryCard(
                     title: "Net", summary: periodSummary, value: \.net,
                     color: (periodSummary?.net ?? 0) >= 0 ? .green : .red,
-                    subtitle: {
-                        guard let s = periodSummary, s.income > 0 else { return nil }
-                        return "Saving rate: \(NSDecimalNumber(decimal: (s.income - s.expenses) / s.income * 100).intValue)%"
-                    }()
+                    subtitle: SummaryCard.netSubtitle(for: periodSummary)
                 )
             }
             .padding(.horizontal, 16)
@@ -77,15 +74,27 @@ struct TransactionsView: View {
                 )
                 Spacer()
             } else {
-                List(appState.transactions, selection: $selectedTransaction) { transaction in
-                    TransactionRowView(transaction: transaction)
-                        .tag(transaction)
-                        .contextMenu {
-                            Button("Edit") { editTransaction(transaction) }
-                            Button("Clone") { cloneTransaction(transaction) }
-                            Divider()
-                            Button("Delete", role: .destructive) { confirmDelete(transaction) }
-                        }
+                let todayStr = {
+                    let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                    return f.string(from: Date())
+                }()
+                let futureTransactions = appState.transactions.filter { $0.date > todayStr }
+                let pastTransactions = appState.transactions.filter { $0.date <= todayStr }
+
+                List(selection: $selectedTransaction) {
+                    ForEach(futureTransactions) { transaction in
+                        transactionRow(transaction)
+                    }
+
+                    if !futureTransactions.isEmpty && !pastTransactions.isEmpty {
+                        Divider()
+                            .listRowSeparator(.hidden)
+                            .frame(height: 4)
+                    }
+
+                    ForEach(pastTransactions) { transaction in
+                        transactionRow(transaction)
+                    }
                 }
                 .listStyle(.inset)
                 .focused($listFocused)
@@ -115,7 +124,15 @@ struct TransactionsView: View {
         }
         .navigationTitle("Transactions")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Menu {
+                    Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
+                    Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
+                } label: {
+                    Label("Export", systemImage: "arrow.down.doc")
+                }
+                .disabled(appState.transactions.isEmpty)
+
                 Button(action: { newTransaction() }) {
                     Label("New Transaction", systemImage: "plus")
                 }
@@ -182,6 +199,26 @@ struct TransactionsView: View {
         }
     }
 
+    // MARK: - Transaction Row
+
+    @ViewBuilder
+    private func transactionRow(_ transaction: Transaction) -> some View {
+        TransactionRowView(transaction: transaction)
+            .tag(transaction)
+            .contextMenu {
+                Button("Edit") { editTransaction(transaction) }
+                Button("Clone") { cloneTransaction(transaction) }
+                Divider()
+                Menu("Set Status") {
+                    Button("Cleared *") { Task { await toggleStatus(transaction, to: .cleared) } }
+                    Button("Pending !") { Task { await toggleStatus(transaction, to: .pending) } }
+                    Button("Unmarked") { Task { await toggleStatus(transaction, to: .unmarked) } }
+                }
+                Divider()
+                Button("Delete", role: .destructive) { confirmDelete(transaction) }
+            }
+    }
+
     // MARK: - Search Suggestion Helper
 
     private func searchSuggestion(_ query: String, label: String, icon: String) -> some View {
@@ -226,6 +263,18 @@ struct TransactionsView: View {
         showingDeleteConfirm = true
     }
 
+    private func toggleStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async {
+        guard let backend = appState.activeBackend else { return }
+        var updated = transaction
+        updated.status = newStatus
+        do {
+            try await backend.replaceTransaction(transaction, with: updated)
+            await appState.loadTransactions()
+        } catch {
+            appState.errorMessage = error.localizedDescription
+        }
+    }
+
     private func performDelete() async {
         guard let txn = transactionToDelete, let backend = appState.activeBackend else { return }
         do {
@@ -243,12 +292,26 @@ struct TransactionsView: View {
 struct TransactionRowView: View {
     let transaction: Transaction
 
+    private var isFuture: Bool {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        guard let date = f.date(from: transaction.date) else { return false }
+        return date > Date()
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            Text(transaction.status.symbol)
-                .font(.system(.callout, design: .monospaced))
-                .foregroundStyle(statusColor)
-                .frame(width: 14)
+            if isFuture {
+                Image(systemName: "clock")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                    .frame(width: 14)
+            } else {
+                Text(transaction.status.symbol)
+                    .font(.system(.callout, design: .monospaced))
+                    .foregroundStyle(statusColor)
+                    .frame(width: 14)
+            }
 
             Text(transaction.typeIndicator)
                 .font(.system(.caption, design: .monospaced))
@@ -257,12 +320,13 @@ struct TransactionRowView: View {
 
             Text(transaction.date)
                 .font(.system(.callout, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .italic(isFuture)
+                .foregroundStyle(isFuture ? .orange : .secondary)
 
             HStack(spacing: 4) {
                 Text(transaction.description.isEmpty ? "no description" : transaction.description)
-                    .font(transaction.description.isEmpty ? .callout.italic() : .callout)
-                    .foregroundStyle(transaction.description.isEmpty ? .tertiary : .primary)
+                    .font(isFuture ? .callout.italic() : (transaction.description.isEmpty ? .callout.italic() : .callout))
+                    .foregroundStyle(transaction.description.isEmpty ? .tertiary : (isFuture ? .secondary : .primary))
                     .lineLimit(1)
 
                 if !transaction.code.isEmpty {
@@ -279,7 +343,7 @@ struct TransactionRowView: View {
 
             Text(transaction.totalAmount)
                 .font(.system(.callout, design: .monospaced))
-                .foregroundStyle(amountColor)
+                .foregroundStyle(isFuture ? .secondary : amountColor)
         }
         .padding(.vertical, ListMetrics.rowPadding)
     }

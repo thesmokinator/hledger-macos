@@ -66,7 +66,7 @@ struct TransactionFormView: View {
                     // Fields
                     VStack(spacing: 14) {
                         // Date with structured input
-                        formRow("Date:") {
+                        FormRow("Date:") {
                             HStack(spacing: 4) {
                                 TextField("YYYY", text: $dateYear)
                                     .textFieldStyle(.roundedBorder)
@@ -100,13 +100,13 @@ struct TransactionFormView: View {
                             }
                         }
 
-                        formRow("Description:") {
+                        FormRow("Description:") {
                             TextField("Transaction description", text: $description)
                                 .textFieldStyle(.roundedBorder)
                                 .focused($focusedField, equals: .description)
                         }
 
-                        formRow("Status:") {
+                        FormRow("Status:") {
                             HStack {
                                 Picker("", selection: $status) {
                                     Text("Unmarked").tag(TransactionStatus.unmarked)
@@ -119,21 +119,15 @@ struct TransactionFormView: View {
                             }
                         }
 
-                        formRow("Code:") {
+                        FormRow("Code:") {
                             TextField("Optional transaction code", text: $code)
                                 .textFieldStyle(.roundedBorder)
                                 .focused($focusedField, equals: .code)
                         }
 
-                        formRow("Comment:") {
-                            TextEditor(text: $comment)
-                                .font(.body)
-                                .frame(height: 52)
-                                .clipShape(RoundedRectangle(cornerRadius: 5))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .stroke(.quaternary, lineWidth: 1)
-                                )
+                        FormRow("Comment:") {
+                            TextField("Optional comment", text: $comment)
+                                .textFieldStyle(.roundedBorder)
                                 .focused($focusedField, equals: .comment)
                         }
                     }
@@ -230,22 +224,6 @@ struct TransactionFormView: View {
                 isPrefilling = false
                 focusedField = .year
             }
-        }
-    }
-
-    // MARK: - Form Row
-
-    private func formRow<Content: View>(
-        _ label: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(label)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(width: 90, alignment: .trailing)
-                .padding(.top, 6)
-            content()
         }
     }
 

@@ -13,6 +13,7 @@ struct SummaryView: View {
     @State private var portfolio: [PortfolioRow] = []
     @State private var isFetchingPrices = false
     @State private var isLoading = false
+    @State private var portfolioSortByTicker = false
 
     private var currentMonth: String {
         let f = DateFormatter()
@@ -58,6 +59,7 @@ struct SummaryView: View {
                 }
             }
             .padding(.horizontal, 24)
+            .padding(.top, 16)
             .padding(.bottom, 24)
         }
         .navigationTitle("Summary")
@@ -73,15 +75,16 @@ struct SummaryView: View {
             SummaryCard(
                 title: "Net", summary: periodSummary, value: \.net,
                 color: (periodSummary?.net ?? 0) >= 0 ? .green : .red,
-                subtitle: savingRateText
+                subtitle: SummaryCard.netSubtitle(for: periodSummary)
             )
         }
     }
 
-    private var savingRateText: String? {
-        guard let s = periodSummary, s.income > 0 else { return nil }
-        let rate = ((s.income - s.expenses) / s.income * 100) as NSDecimalNumber
-        return "Saving rate: \(rate.intValue)%"
+    private var sortedPortfolio: [PortfolioRow] {
+        if portfolioSortByTicker {
+            return portfolio.sorted { $0.commodity < $1.commodity }
+        }
+        return portfolio.sorted { $0.bookValue > $1.bookValue }
     }
 
     // MARK: - Breakdown Section
@@ -114,7 +117,7 @@ struct SummaryView: View {
                         .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
                         .frame(minWidth: 80, alignment: .trailing)
 
-                    Text("\(Int(pct))%")
+                    Text((pct / 100).formatted(.percent.precision(.fractionLength(0))))
                         .font(.caption).foregroundStyle(.tertiary)
                         .frame(width: 36, alignment: .trailing)
                 }
@@ -135,6 +138,17 @@ struct SummaryView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Investments").font(.headline)
+
+                Button {
+                    portfolioSortByTicker.toggle()
+                } label: {
+                    Image(systemName: portfolioSortByTicker ? "textformat.abc" : "number")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
+                .help(portfolioSortByTicker ? "Sort by book value" : "Sort by ticker")
+
                 Spacer()
                 if isFetchingPrices {
                     HStack(spacing: 4) {
@@ -157,7 +171,7 @@ struct SummaryView: View {
             .foregroundStyle(.secondary)
 
             // Rows
-            ForEach(portfolio) { row in
+            ForEach(sortedPortfolio) { row in
                 portfolioRow(
                     asset: Text(row.commodity).font(.callout.weight(.medium)),
                     qty: Text(formatQty(row.quantity)).font(.system(.callout, design: .monospaced)),
@@ -228,11 +242,11 @@ struct SummaryView: View {
         guard let backend = appState.activeBackend else { return }
         isLoading = true
 
-        let period = currentMonth
-
-        async let summaryTask = backend.loadPeriodSummary(period: period)
-        async let expenseTask = backend.loadExpenseBreakdown(period: period)
-        async let incomeTask = backend.loadIncomeBreakdown(period: period)
+        // Cards: all-time (nil = no period filter)
+        async let summaryTask = backend.loadPeriodSummary(period: nil)
+        // Breakdowns: current month
+        async let expenseTask = backend.loadExpenseBreakdown(period: currentMonth)
+        async let incomeTask = backend.loadIncomeBreakdown(period: currentMonth)
         async let liabilitiesTask = backend.loadLiabilitiesBreakdown()
 
         do {

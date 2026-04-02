@@ -59,10 +59,10 @@ struct AppCommands: Commands {
     @Binding var showingShortcuts: Bool
 
     var body: some Commands {
-        // Replace "New Window" with "New Transaction"
+        // Cmd+N: context-aware "New" action
         CommandGroup(replacing: .newItem) {
-            Button("New Transaction") {
-                appState.showNewTransaction()
+            Button("New...") {
+                appState.triggerNew()
             }
             .keyboardShortcut("n", modifiers: .command)
         }

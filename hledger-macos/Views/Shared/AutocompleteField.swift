@@ -41,13 +41,12 @@ struct AutocompleteField: View {
                 showSuggestions = false
             }
             .onKeyPress(.tab) {
-                // Tab: accept top/only suggestion
-                if !filtered.isEmpty {
+                // Tab: accept suggestion if showing, then let focus advance
+                if showSuggestions && !filtered.isEmpty {
                     text = filtered[selectedIndex]
                     showSuggestions = false
-                    return .handled
                 }
-                return .ignored
+                return .ignored // always let Tab advance focus
             }
             .onKeyPress(.downArrow) {
                 if showSuggestions && selectedIndex < filtered.count - 1 {

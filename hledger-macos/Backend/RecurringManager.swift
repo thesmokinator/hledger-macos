@@ -204,4 +204,103 @@ enum RecurringManager {
         }
         try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
     }
+
+    // MARK: - Transaction Generation
+
+    /// Generate occurrence dates for a rule from start to today.
+    static func generateOccurrences(start: Date, period: String, end: Date) -> [Date] {
+        var dates: [Date] = []
+        let calendar = Calendar.current
+        let canonicalDay = calendar.component(.day, from: start)
+        var current = start
+
+        while current <= end {
+            dates.append(current)
+
+            switch period {
+            case "daily":
+                current = calendar.date(byAdding: .day, value: 1, to: current)!
+            case "weekly":
+                current = calendar.date(byAdding: .weekOfYear, value: 1, to: current)!
+            case "biweekly":
+                current = calendar.date(byAdding: .weekOfYear, value: 2, to: current)!
+            case "monthly":
+                current = advanceMonth(current, by: 1, canonicalDay: canonicalDay)
+            case "bimonthly":
+                current = advanceMonth(current, by: 2, canonicalDay: canonicalDay)
+            case "quarterly":
+                current = advanceMonth(current, by: 3, canonicalDay: canonicalDay)
+            case "yearly":
+                current = advanceMonth(current, by: 12, canonicalDay: canonicalDay)
+            default:
+                return dates
+            }
+        }
+
+        return dates
+    }
+
+    private static func advanceMonth(_ date: Date, by months: Int, canonicalDay: Int) -> Date {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month], from: date)
+        components.month! += months
+        while components.month! > 12 {
+            components.month! -= 12
+            components.year! += 1
+        }
+        let maxDay = calendar.range(of: .day, in: .month, for: calendar.date(from: components)!)!.upperBound - 1
+        components.day = min(canonicalDay, maxDay)
+        return calendar.date(from: components)!
+    }
+
+    /// Compute pending dates for a rule (not yet generated).
+    static func computePending(rule: RecurringRule, backend: any AccountingBackend) async -> [Date] {
+        guard let startStr = rule.startDate else { return [] }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        guard let start = f.date(from: startStr) else { return [] }
+
+        let calendar = Calendar.current
+        let today = Date()
+        let lastDayOfMonth = calendar.range(of: .day, in: .month, for: today)!.upperBound - 1
+        var end = calendar.date(bySetting: .day, value: lastDayOfMonth, of: today)!
+
+        if let endStr = rule.endDate, let endDate = f.date(from: endStr) {
+            end = min(end, endDate)
+        }
+
+        let allDates = generateOccurrences(start: start, period: rule.periodExpr, end: end)
+
+        // Load already-generated transactions tagged with this rule's ID
+        let generated: [Transaction]
+        do {
+            generated = try await backend.loadTransactions(query: "tag:rule-id=\(rule.ruleId)", reversed: false)
+        } catch {
+            generated = []
+        }
+        let generatedDates = Set(generated.map(\.date))
+
+        return allDates.filter { date in
+            !generatedDates.contains(f.string(from: date))
+        }
+    }
+
+    /// Generate and append transactions for pending dates.
+    static func generateTransactions(rule: RecurringRule, dates: [Date], backend: any AccountingBackend) async throws {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+
+        for date in dates {
+            let txn = Transaction(
+                index: 0,
+                date: f.string(from: date),
+                description: rule.description,
+                postings: rule.postings,
+                status: rule.status,
+                code: rule.code,
+                comment: "rule-id:\(rule.ruleId)"
+            )
+            try await backend.appendTransaction(txn)
+        }
+    }
 }
