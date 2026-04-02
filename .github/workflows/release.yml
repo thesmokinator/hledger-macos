@@ -42,6 +42,8 @@ jobs:
 
       - name: Build archive
         run: |
+          VERSION=${GITHUB_REF_NAME#v}
+
           xcodebuild archive \
             -project hledger-macos.xcodeproj \
             -scheme hledger-macos \
@@ -49,7 +51,9 @@ jobs:
             -archivePath $RUNNER_TEMP/hledger-macos.xcarchive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }}
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$VERSION"
 
       - name: Export archive
         run: |

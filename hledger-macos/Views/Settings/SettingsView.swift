@@ -236,7 +236,7 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
-                Text("Version 1.0").foregroundStyle(.tertiary)
+                Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")").foregroundStyle(.tertiary)
                 Text("MIT License").foregroundStyle(.tertiary)
             }
             .font(.caption)
