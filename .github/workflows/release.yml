@@ -129,6 +129,7 @@ jobs:
           files: ${{ env.DMG_PATH }}
           generate_release_notes: true
           draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
