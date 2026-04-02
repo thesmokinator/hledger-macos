@@ -117,6 +117,9 @@
     "Check again" : {
 
     },
+    "Check for Updates..." : {
+
+    },
     "Cleared" : {
 
     },
@@ -130,6 +133,9 @@
 
     },
     "Continue" : {
+
+    },
+    "Could not check for updates: %@" : {
 
     },
     "Custom symbol" : {
@@ -172,6 +178,9 @@
 
     },
     "Done" : {
+
+    },
+    "Download" : {
 
     },
     "e.g. 500.00" : {
@@ -261,6 +270,9 @@
     "Keyboard Shortcuts" : {
 
     },
+    "Later" : {
+
+    },
     "Leave one amount blank for auto-balance." : {
 
     },
@@ -337,6 +349,9 @@
 
     },
     "Not found at this path" : {
+
+    },
+    "OK" : {
 
     },
     "Open on launch" : {
@@ -469,19 +484,38 @@
     "Unmarked" : {
 
     },
+    "Update Available" : {
+
+    },
     "USD" : {
 
     },
     "Version %@" : {
 
     },
+    "Version %@ is available. You're running %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ is available. You're running %2$@."
+          }
+        }
+      }
+    },
     "View" : {
+
+    },
+    "View Release" : {
 
     },
     "Welcome to hledger for Mac" : {
 
     },
     "Yahoo ticker" : {
+
+    },
+    "You're running the latest version (%@)." : {
 
     },
     "YYYY" : {
