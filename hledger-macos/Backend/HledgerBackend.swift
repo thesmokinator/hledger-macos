@@ -23,7 +23,7 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
     }
 
     private func runHledger(_ args: [String]) async throws -> String {
-        var fullArgs = ["-f", journalFile.path]
+        var fullArgs = ["--no-conf", "-f", journalFile.path]
         fullArgs.append(contentsOf: args)
         return try await runner.run(fullArgs)
     }
