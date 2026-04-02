@@ -250,3 +250,77 @@ struct TransactionModelTests {
         #expect(TransactionStatus.unmarked.symbol == "")
     }
 }
+
+// MARK: - UpdateChecker Version Comparison Tests
+
+@Suite("UpdateChecker")
+struct UpdateCheckerTests {
+    // Base version comparisons
+    @Test func sameVersion() {
+        #expect(UpdateChecker.compareVersions("1.0.0", "1.0.0") == .orderedSame)
+    }
+
+    @Test func newerMajor() {
+        #expect(UpdateChecker.compareVersions("1.0.0", "2.0.0") == .orderedAscending)
+    }
+
+    @Test func newerMinor() {
+        #expect(UpdateChecker.compareVersions("0.1.0", "0.2.0") == .orderedAscending)
+    }
+
+    @Test func newerPatch() {
+        #expect(UpdateChecker.compareVersions("0.1.0", "0.1.1") == .orderedAscending)
+    }
+
+    @Test func olderVersion() {
+        #expect(UpdateChecker.compareVersions("1.2.0", "1.1.0") == .orderedDescending)
+    }
+
+    // Pre-release comparisons
+    @Test func stableNewerThanRC() {
+        #expect(UpdateChecker.compareVersions("1.0.0", "1.0.0-rc1") == .orderedDescending)
+    }
+
+    @Test func rcOlderThanStable() {
+        #expect(UpdateChecker.compareVersions("1.0.0-rc1", "1.0.0") == .orderedAscending)
+    }
+
+    @Test func rc1OlderThanRC2() {
+        #expect(UpdateChecker.compareVersions("0.1.0-rc1", "0.1.0-rc2") == .orderedAscending)
+    }
+
+    @Test func rc3NewerThanRC2() {
+        #expect(UpdateChecker.compareVersions("0.1.0-rc3", "0.1.0-rc2") == .orderedDescending)
+    }
+
+    @Test func sameRC() {
+        #expect(UpdateChecker.compareVersions("0.1.0-rc1", "0.1.0-rc1") == .orderedSame)
+    }
+
+    @Test func rcOlderThanNextMinor() {
+        #expect(UpdateChecker.compareVersions("0.1.0-rc5", "0.2.0") == .orderedAscending)
+    }
+
+    @Test func differentBaseWithRC() {
+        #expect(UpdateChecker.compareVersions("0.1.0-rc1", "0.1.1") == .orderedAscending)
+    }
+
+    // Split version
+    @Test func splitStable() {
+        let (base, pre) = UpdateChecker.splitVersion("1.0.0")
+        #expect(base == "1.0.0")
+        #expect(pre == nil)
+    }
+
+    @Test func splitRC() {
+        let (base, pre) = UpdateChecker.splitVersion("0.1.0-rc2")
+        #expect(base == "0.1.0")
+        #expect(pre == "rc2")
+    }
+
+    @Test func splitBeta() {
+        let (base, pre) = UpdateChecker.splitVersion("1.0.0-beta3")
+        #expect(base == "1.0.0")
+        #expect(pre == "beta3")
+    }
+}

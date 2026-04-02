@@ -6,6 +6,8 @@ import SwiftUI
 struct hledger_macosApp: App {
     @State private var appState = AppState()
     @State private var showingShortcuts = false
+    @State private var updateStatus: UpdateStatus?
+    @State private var showingUpdateAlert = false
 
     private func applyAppearance() {
         switch appState.config.appearance {
@@ -34,6 +36,12 @@ struct hledger_macosApp: App {
             .task {
                 await appState.initialize()
                 applyAppearance()
+                // Silent update check at startup
+                let status = await UpdateChecker.check()
+                if case .updateAvailable = status {
+                    updateStatus = status
+                    showingUpdateAlert = true
+                }
             }
             .onChange(of: appState.config.appearance) {
                 applyAppearance()
@@ -41,9 +49,38 @@ struct hledger_macosApp: App {
             .sheet(isPresented: $showingShortcuts) {
                 ShortcutsView()
             }
+            .alert("Update Available", isPresented: $showingUpdateAlert) {
+                if case .updateAvailable(_, let url, let downloadUrl) = updateStatus {
+                    if let downloadUrl {
+                        Button("Download") { NSWorkspace.shared.open(URL(string: downloadUrl)!) }
+                    }
+                    Button("View Release") { NSWorkspace.shared.open(URL(string: url)!) }
+                    Button("Later", role: .cancel) {}
+                } else if case .upToDate = updateStatus {
+                    Button("OK", role: .cancel) {}
+                } else {
+                    Button("OK", role: .cancel) {}
+                }
+            } message: {
+                switch updateStatus {
+                case .updateAvailable(let version, _, _):
+                    Text("Version \(version) is available. You're running \(UpdateChecker.currentVersion).")
+                case .upToDate:
+                    Text("You're running the latest version (\(UpdateChecker.currentVersion)).")
+                case .error(let msg):
+                    Text("Could not check for updates: \(msg)")
+                case nil:
+                    Text("")
+                }
+            }
         }
         .commands {
-            AppCommands(appState: appState, showingShortcuts: $showingShortcuts)
+            AppCommands(appState: appState, showingShortcuts: $showingShortcuts, checkForUpdate: {
+                Task {
+                    updateStatus = await UpdateChecker.check()
+                    showingUpdateAlert = true
+                }
+            })
         }
 
         Settings {
@@ -57,6 +94,7 @@ struct hledger_macosApp: App {
 struct AppCommands: Commands {
     let appState: AppState
     @Binding var showingShortcuts: Bool
+    var checkForUpdate: () -> Void
 
     var body: some Commands {
         // Cmd+N: context-aware "New" action
@@ -88,6 +126,13 @@ struct AppCommands: Commands {
                 .keyboardShortcut("5", modifiers: .command)
             Button("Accounts") { appState.selectedSection = .accounts }
                 .keyboardShortcut("6", modifiers: .command)
+        }
+
+        // App menu > Check for Updates
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates...") {
+                checkForUpdate()
+            }
         }
 
         // Help > Keyboard Shortcuts
