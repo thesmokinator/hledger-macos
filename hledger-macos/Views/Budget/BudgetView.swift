@@ -13,6 +13,7 @@ struct BudgetView: View {
     @State private var showingDeleteConfirm = false
     @State private var ruleToDelete: BudgetRule?
     @State private var knownAccounts: [String] = []
+    @State private var mergedRows: [MergedBudgetRow] = []
     @State private var selectedRow: MergedBudgetRow?
     @FocusState private var listFocused: Bool
 
@@ -29,21 +30,6 @@ struct BudgetView: View {
         let display = DateFormatter()
         display.dateFormat = "MMMM yyyy"
         return display.string(from: date)
-    }
-
-    /// Merged data: rule + actual for each budget account.
-    private var mergedRows: [MergedBudgetRow] {
-        rules.map { rule in
-            let actual = actuals.first { $0.account == rule.account }
-            let actualAmount = actual?.actual ?? 0
-            let budgetAmount = rule.amount.quantity
-            return MergedBudgetRow(
-                rule: rule,
-                actual: actualAmount,
-                budget: budgetAmount,
-                commodity: rule.amount.commodity
-            )
-        }.sorted { $0.rule.account < $1.rule.account }
     }
 
     var body: some View {
@@ -91,7 +77,15 @@ struct BudgetView: View {
         }
         .navigationTitle("Budget")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Menu {
+                    Button("Export as CSV") { ExportService.exportBudget(mergedRows, format: .csv) }
+                    Button("Export as PDF") { ExportService.exportBudget(mergedRows, format: .pdf) }
+                } label: {
+                    Label("Export", systemImage: "arrow.down.doc")
+                }
+                .disabled(mergedRows.isEmpty)
+
                 Button { addRule() } label: {
                     Label("Add Rule", systemImage: "plus")
                 }
@@ -99,8 +93,6 @@ struct BudgetView: View {
         }
         .background {
             Group {
-                Button("") { addRule() }
-                    .keyboardShortcut("n", modifiers: .command)
                 Button("") { if let row = selectedRow { editRule(row.rule) } }
                     .keyboardShortcut("e", modifiers: .command)
                 Button("") { if let row = selectedRow { confirmDelete(row.rule) } }
@@ -113,6 +105,12 @@ struct BudgetView: View {
         }
         .task { await loadData() }
         .onChange(of: currentPeriod) { Task { await loadData() } }
+        .onChange(of: appState.showingNewBudgetRule) {
+            if appState.showingNewBudgetRule {
+                appState.showingNewBudgetRule = false
+                addRule()
+            }
+        }
         .sheet(isPresented: $showingForm) {
             BudgetFormView(
                 editingRule: editingRule,
@@ -162,6 +160,16 @@ struct BudgetView: View {
         } catch {
             appState.errorMessage = error.localizedDescription
         }
+
+        mergedRows = rules.map { rule in
+            let actual = actuals.first { $0.account == rule.account }
+            return MergedBudgetRow(
+                rule: rule,
+                actual: actual?.actual ?? 0,
+                budget: rule.amount.quantity,
+                commodity: rule.amount.commodity
+            )
+        }.sorted { $0.rule.account < $1.rule.account }
 
         isLoading = false
     }
@@ -299,7 +307,7 @@ struct BudgetRowView: View {
                 .foregroundStyle(row.remaining >= 0 ? .green : .red)
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
-            Text("\(Int(row.usagePct))%")
+            Text((row.usagePct / 100).formatted(.percent.precision(.fractionLength(0))))
                 .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(usageColor)
                 .frame(width: 60, alignment: .trailing)

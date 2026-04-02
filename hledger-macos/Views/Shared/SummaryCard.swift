@@ -10,6 +10,17 @@ struct SummaryCard: View {
     let color: Color
     var subtitle: String? = nil
 
+    /// Compute the Net card subtitle from a PeriodSummary.
+    static func netSubtitle(for summary: PeriodSummary?) -> String? {
+        guard let s = summary, s.income > 0 else { return nil }
+        let rate = NSDecimalNumber(decimal: (s.income - s.expenses) / s.income).doubleValue
+        var text = "Saving rate: \(rate.formatted(.percent.precision(.fractionLength(0))))"
+        if s.investments > 0 {
+            text += " · Invested: \(AmountFormatter.format(s.investments, commodity: s.commodity))"
+        }
+        return text
+    }
+
     var body: some View {
         VStack(spacing: 6) {
             Text(title)

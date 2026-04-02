@@ -26,13 +26,7 @@
         }
       }
     },
-    "%lld%%" : {
-
-    },
     "© 2026 Michele Broggi" : {
-
-    },
-    "→" : {
 
     },
     "⌘%lld" : {
@@ -126,6 +120,9 @@
     "Cleared" : {
 
     },
+    "Cleared *" : {
+
+    },
     "Clone" : {
 
     },
@@ -192,6 +189,15 @@
     "EUR" : {
 
     },
+    "Export" : {
+
+    },
+    "Export as CSV" : {
+
+    },
+    "Export as PDF" : {
+
+    },
     "Fetching prices..." : {
 
     },
@@ -199,6 +205,9 @@
 
     },
     "Filters" : {
+
+    },
+    "Find tickers at finance.yahoo.com" : {
 
     },
     "Flat" : {
@@ -217,6 +226,12 @@
 
     },
     "General" : {
+
+    },
+    "Generate" : {
+
+    },
+    "Generate Transactions?" : {
 
     },
     "GitHub" : {
@@ -282,6 +297,9 @@
     "New Transaction" : {
 
     },
+    "New..." : {
+
+    },
     "No Accounts" : {
 
     },
@@ -298,6 +316,9 @@
 
     },
     "No matching accounts." : {
+
+    },
+    "No pending transactions to generate. All rules are up to date." : {
 
     },
     "No Recurring Rules" : {
@@ -321,6 +342,9 @@
     "Open on launch" : {
 
     },
+    "Optional comment" : {
+
+    },
     "Optional transaction code" : {
 
     },
@@ -337,6 +361,9 @@
 
     },
     "Pending" : {
+
+    },
+    "Pending !" : {
 
     },
     "Period" : {
@@ -397,10 +424,19 @@
     "Sections" : {
 
     },
+    "Set Status" : {
+
+    },
     "Shortcuts" : {
 
     },
     "Show investments in Summary" : {
+
+    },
+    "Sort by book value" : {
+
+    },
+    "Sort by ticker" : {
 
     },
     "Startup" : {
@@ -410,6 +446,9 @@
 
     },
     "System" : {
+
+    },
+    "Ticker" : {
 
     },
     "to %@" : {
@@ -442,10 +481,7 @@
     "Welcome to hledger for Mac" : {
 
     },
-    "XDWD" : {
-
-    },
-    "XDWD.DE" : {
+    "Yahoo ticker" : {
 
     },
     "YYYY" : {

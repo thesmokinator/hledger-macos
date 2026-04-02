@@ -180,24 +180,22 @@ struct SettingsView: View {
 
                     Section("Price Tickers") {
                         ForEach(Array(tickerRows.enumerated()), id: \.element.id) { index, _ in
-                            HStack {
-                                TextField("XDWD", text: $tickerRows[index].commodity)
-                                    .frame(width: 70)
-
-                                Text("\u{2192}")
-                                    .foregroundStyle(.tertiary)
-
-                                TextField("XDWD.DE", text: $tickerRows[index].ticker)
-
-                                if tickerRows.count > 1 {
-                                    Button {
-                                        tickerRows.remove(at: index)
-                                    } label: {
-                                        Image(systemName: "minus.circle")
-                                            .foregroundStyle(.red)
+                            LabeledContent {
+                                HStack {
+                                    TextField("", text: $tickerRows[index].ticker, prompt: Text("Yahoo ticker"))
+                                    if tickerRows.count > 1 {
+                                        Button {
+                                            tickerRows.remove(at: index)
+                                        } label: {
+                                            Image(systemName: "minus.circle")
+                                                .foregroundStyle(.red)
+                                        }
+                                        .buttonStyle(.borderless)
                                     }
-                                    .buttonStyle(.borderless)
                                 }
+                            } label: {
+                                TextField("", text: $tickerRows[index].commodity, prompt: Text("Ticker"))
+                                    .frame(width: 80)
                             }
                         }
 
@@ -206,6 +204,10 @@ struct SettingsView: View {
                         } label: {
                             Label("Add Ticker", systemImage: "plus")
                         }
+
+                        Text("Find tickers at finance.yahoo.com")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
                     }
                 }
             }

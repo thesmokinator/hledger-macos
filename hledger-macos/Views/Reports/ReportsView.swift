@@ -50,6 +50,14 @@ struct ReportsView: View {
         .navigationTitle("Reports")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Menu {
+                    Button("Export as CSV") { if let data = reportData { ExportService.exportReport(data, format: .csv) } }
+                    Button("Export as PDF") { if let data = reportData { ExportService.exportReport(data, format: .pdf) } }
+                } label: {
+                    Label("Export", systemImage: "arrow.down.doc")
+                }
+                .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+
                 Button {
                     showingChart = true
                 } label: {

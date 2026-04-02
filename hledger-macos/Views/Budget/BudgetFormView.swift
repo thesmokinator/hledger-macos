@@ -17,7 +17,6 @@ struct BudgetFormView: View {
 
     private var isEditing: Bool { editingRule != nil }
     private var title: String { isEditing ? "Edit Budget Rule" : "New Budget Rule" }
-    private let labelWidth: CGFloat = 90
 
     var body: some View {
         VStack(spacing: 0) {
@@ -36,7 +35,7 @@ struct BudgetFormView: View {
 
                     // Fields
                     VStack(spacing: 14) {
-                        formRow("Account:") {
+                        FormRow("Account:") {
                             AutocompleteField(
                                 placeholder: "e.g. expenses:groceries",
                                 text: $account,
@@ -44,12 +43,12 @@ struct BudgetFormView: View {
                             )
                         }
 
-                        formRow("Amount:") {
+                        FormRow("Amount:") {
                             TextField("e.g. 500.00", text: $amount)
                                 .textFieldStyle(.roundedBorder)
                         }
 
-                        formRow("Category:") {
+                        FormRow("Category:") {
                             TextField("e.g. Food, Housing (optional)", text: $category)
                                 .textFieldStyle(.roundedBorder)
                         }
@@ -84,22 +83,6 @@ struct BudgetFormView: View {
         }
         .frame(width: 480, height: 300)
         .onAppear { prefill() }
-    }
-
-    // MARK: - Form Row
-
-    private func formRow<Content: View>(
-        _ label: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(label)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(width: labelWidth, alignment: .trailing)
-                .padding(.top, 6)
-            content()
-        }
     }
 
     // MARK: - Prefill

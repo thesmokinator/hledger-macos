@@ -62,6 +62,8 @@ final class AppState {
     var errorMessage: String?
     var searchQuery = ""
     var showingNewTransaction = false
+    var showingNewBudgetRule = false
+    var showingNewRecurringRule = false
 
     // MARK: - Period Navigation
 
@@ -182,6 +184,16 @@ final class AppState {
     /// Show new transaction form.
     func showNewTransaction() {
         showingNewTransaction = true
+    }
+
+    /// Context-aware Cmd+N: triggers new item based on current section.
+    func triggerNew() {
+        switch selectedSection {
+        case .transactions: showingNewTransaction = true
+        case .budget: showingNewBudgetRule = true
+        case .recurring: showingNewRecurringRule = true
+        default: showingNewTransaction = true
+        }
     }
 
     // MARK: - Helpers

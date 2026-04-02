@@ -23,7 +23,6 @@ struct RecurringFormView: View {
 
     private var isEditing: Bool { editingRule != nil }
     private var title: String { isEditing ? "Edit Recurring Rule" : "New Recurring Rule" }
-    private let labelWidth: CGFloat = 90
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,7 +41,7 @@ struct RecurringFormView: View {
 
                     // Fields
                     VStack(spacing: 14) {
-                        formRow("Period:") {
+                        FormRow("Period:") {
                             HStack {
                                 Picker("", selection: $periodExpr) {
                                     ForEach(RecurringManager.supportedPeriods, id: \.self) { period in
@@ -55,16 +54,16 @@ struct RecurringFormView: View {
                             }
                         }
 
-                        formRow("Description:") {
+                        FormRow("Description:") {
                             TextField("Recurring transaction description", text: $description)
                                 .textFieldStyle(.roundedBorder)
                         }
 
-                        formRow("Start date:") {
+                        FormRow("Start date:") {
                             DateInputField(year: $startYear, month: $startMonth, day: $startDay)
                         }
 
-                        formRow("End date:") {
+                        FormRow("End date:") {
                             DateInputField(year: $endYear, month: $endMonth, day: $endDay, optional: true)
                         }
                     }
@@ -149,22 +148,6 @@ struct RecurringFormView: View {
         }
         .frame(width: 560, height: 520)
         .onAppear { prefill() }
-    }
-
-    // MARK: - Form Row
-
-    private func formRow<Content: View>(
-        _ label: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(label)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .frame(width: labelWidth, alignment: .trailing)
-                .padding(.top, 6)
-            content()
-        }
     }
 
     // MARK: - Prefill
