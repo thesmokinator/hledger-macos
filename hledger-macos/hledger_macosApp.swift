@@ -6,6 +6,7 @@ import SwiftUI
 struct hledger_macosApp: App {
     @State private var appState = AppState()
     @State private var showingShortcuts = false
+    @State private var showingCommandLog = false
     @State private var updateStatus: UpdateStatus?
     @State private var showingUpdateAlert = false
 
@@ -49,6 +50,9 @@ struct hledger_macosApp: App {
             .sheet(isPresented: $showingShortcuts) {
                 ShortcutsView()
             }
+            .sheet(isPresented: $showingCommandLog) {
+                CommandLogView()
+            }
             .alert("Update Available", isPresented: $showingUpdateAlert) {
                 if case .updateAvailable(_, let url, let downloadUrl) = updateStatus {
                     if let downloadUrl {
@@ -75,7 +79,7 @@ struct hledger_macosApp: App {
             }
         }
         .commands {
-            AppCommands(appState: appState, showingShortcuts: $showingShortcuts, checkForUpdate: {
+            AppCommands(appState: appState, showingShortcuts: $showingShortcuts, showingCommandLog: $showingCommandLog, checkForUpdate: {
                 Task {
                     updateStatus = await UpdateChecker.check()
                     showingUpdateAlert = true
@@ -94,6 +98,7 @@ struct hledger_macosApp: App {
 struct AppCommands: Commands {
     let appState: AppState
     @Binding var showingShortcuts: Bool
+    @Binding var showingCommandLog: Bool
     var checkForUpdate: () -> Void
 
     var body: some Commands {
@@ -135,12 +140,17 @@ struct AppCommands: Commands {
             }
         }
 
-        // Help > Keyboard Shortcuts
+        // Help > Keyboard Shortcuts & Command Log
         CommandGroup(after: .help) {
             Button("Keyboard Shortcuts") {
                 showingShortcuts = true
             }
             .keyboardShortcut("/", modifiers: .command)
+
+            Button("Command Log") {
+                showingCommandLog = true
+            }
+            .keyboardShortcut("l", modifiers: [.command, .option])
         }
 
         SidebarCommands()
