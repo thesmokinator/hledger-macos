@@ -281,11 +281,7 @@ struct TransactionFormView: View {
             postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount)))
         }
 
-        guard !postings.isEmpty else {
-            errorMessage = "At least 1 posting required"
-            isSaving = false
-            return
-        }
+        // hledger accepts transactions with 0 postings
 
         let newTransaction = Transaction(
             index: 0, date: dateString, description: description,
