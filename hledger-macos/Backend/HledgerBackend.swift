@@ -200,7 +200,7 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
                 results.append((account, abs(qty), com))
             }
         }
-        return results.sorted { $0.1 > $1.1 }
+        return results.sorted { $0.0 < $1.0 }
     }
 
     /// Load expense breakdown for a period.
