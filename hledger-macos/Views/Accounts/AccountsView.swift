@@ -118,9 +118,7 @@ struct AccountsView: View {
     // MARK: - Tree Balance Formatting
 
     private func formatNodeBalance(_ raw: String) -> String {
-        let (qty, commodity) = AmountParser.parse(raw)
-        if qty == 0 && commodity.isEmpty { return raw }
-        return AmountFormatter.format(qty, commodity: commodity)
+        raw.trimmingCharacters(in: .whitespaces)
     }
 
     private func nodeBalanceColor(_ raw: String) -> Color {
@@ -145,9 +143,7 @@ struct AccountBalance: Identifiable {
     }
 
     var formattedBalance: String {
-        let (qty, commodity) = AmountParser.parse(rawBalance)
-        if qty == 0 && commodity.isEmpty { return rawBalance }
-        return AmountFormatter.format(qty, commodity: commodity)
+        rawBalance.trimmingCharacters(in: .whitespaces)
     }
 
     var balanceColor: Color {

@@ -148,10 +148,8 @@ struct ReportsView: View {
 
     private func formatReportAmount(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, trimmed != "0" else { return "" }
-        let (qty, commodity) = AmountParser.parse(trimmed)
-        if qty == 0 && commodity.isEmpty { return trimmed }
-        return AmountFormatter.format(qty, commodity: commodity)
+        if trimmed.isEmpty || trimmed == "0" { return "" }
+        return trimmed
     }
 
     private func amountColor(_ amount: String, isTotal: Bool) -> Color {

@@ -36,6 +36,40 @@ struct AmountParserTests {
         #expect(com == "")
     }
 
+    @Test func europeanFormat() {
+        let (qty, com) = AmountParser.parse("€ 1.000,50")
+        #expect(qty == Decimal(string: "1000.5"))
+        #expect(com == "€")
+    }
+
+    @Test func europeanFormatNoThousands() {
+        let (qty, com) = AmountParser.parse("€ 50,00")
+        #expect(qty == Decimal(string: "50"))
+        #expect(com == "€")
+    }
+
+    @Test func usFormat() {
+        let (qty, com) = AmountParser.parse("$1,000.50")
+        #expect(qty == Decimal(string: "1000.5"))
+        #expect(com == "$")
+    }
+
+    @Test func parseNumberEuropean() {
+        #expect(AmountParser.parseNumber("1.000,00") == 1000)
+        #expect(AmountParser.parseNumber("50,00") == 50)
+        #expect(AmountParser.parseNumber("1.234.567,89") == Decimal(string: "1234567.89"))
+    }
+
+    @Test func parseNumberUS() {
+        #expect(AmountParser.parseNumber("1,000.00") == 1000)
+        #expect(AmountParser.parseNumber("50.00") == 50)
+    }
+
+    @Test func parseNumberPlain() {
+        #expect(AmountParser.parseNumber("1000") == 1000)
+        #expect(AmountParser.parseNumber("-500") == -500)
+    }
+
     @Test func commodityWithQuantity() {
         let (qty, com) = AmountParser.parse("29 XDWD")
         #expect(qty == 29)

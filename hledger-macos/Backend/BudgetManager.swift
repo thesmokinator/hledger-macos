@@ -49,7 +49,7 @@ enum BudgetManager {
 
         var rules: [BudgetRule] = []
         var inPeriodic = false
-        let periodicPattern = /^~\s+monthly/
+        let periodicPattern = /^~\s+\S/
         let postingPattern = /^\s{4,}(\S.+?)\s{2,}(\S+)\s*(?:;\s*category:\s*(.+?))?\s*$/
         let balancingPattern = /^\s{4,}Assets:Budget\s*$/
 
