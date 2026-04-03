@@ -22,6 +22,8 @@ struct SettingsView: View {
     @State private var resolvedPath: String?
     @State private var isScanning = false
     @State private var saved = false
+    @State private var showReloadAlert = false
+    @State private var originalJournalPath = ""
 
     var body: some View {
         TabView {
@@ -40,6 +42,12 @@ struct SettingsView: View {
         .frame(width: 520, height: 420)
         .onAppear { loadCurrent() }
         .onChange(of: journalPath) { updateResolvedPath() }
+        .alert("Journal file changed", isPresented: $showReloadAlert) {
+            Button("Reload") { performSave() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("The journal file path has changed. All data will be reloaded from the new file.")
+        }
     }
 
     // MARK: - General Tab
@@ -281,6 +289,7 @@ struct SettingsView: View {
 
     private func loadCurrent() {
         journalPath = appState.config.journalFilePath
+        originalJournalPath = journalPath
         let savedCommodity = appState.config.defaultCommodity
         if ["€", "$", "£", "EUR", "USD", "GBP"].contains(savedCommodity) {
             commodity = savedCommodity
@@ -308,6 +317,14 @@ struct SettingsView: View {
     }
 
     private func save() {
+        if journalPath != originalJournalPath {
+            showReloadAlert = true
+        } else {
+            performSave()
+        }
+    }
+
+    private func performSave() {
         appState.config.journalFilePath = journalPath
         appState.config.defaultCommodity = commodity
         appState.config.accountsViewMode = accountsView
@@ -329,6 +346,7 @@ struct SettingsView: View {
         appState.config.priceTickers = tickers
         appState.setupBackend()
         Task { await appState.reload() }
+        originalJournalPath = journalPath
 
         withAnimation { saved = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

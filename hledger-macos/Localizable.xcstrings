@@ -264,6 +264,9 @@
     "Journal File" : {
 
     },
+    "Journal file changed" : {
+
+    },
     "Keyboard Shortcuts" : {
 
     },
@@ -445,12 +448,6 @@
     "Show investments in Summary" : {
 
     },
-    "Sort by book value" : {
-
-    },
-    "Sort by ticker" : {
-
-    },
     "Startup" : {
 
     },
@@ -460,13 +457,13 @@
     "System" : {
 
     },
+    "The journal file path has changed. All data will be reloaded from the new file." : {
+
+    },
     "Ticker" : {
 
     },
     "to %@" : {
-
-    },
-    "Transaction description" : {
 
     },
     "Transactions" : {

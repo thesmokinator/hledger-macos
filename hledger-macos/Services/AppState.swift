@@ -44,6 +44,7 @@ final class AppState {
 
     var config = AppConfig()
     var activeBackend: (any AccountingBackend)?
+    private(set) var dataVersion = UUID()
 
     // MARK: - Navigation
 
@@ -169,6 +170,7 @@ final class AppState {
         await loadTransactions()
         await loadAccounts()
         await loadStats()
+        dataVersion = UUID()
     }
 
     /// Navigate to previous month.

@@ -13,7 +13,7 @@ struct SummaryView: View {
     @State private var portfolio: [PortfolioRow] = []
     @State private var isFetchingPrices = false
     @State private var isLoading = false
-    @State private var portfolioSortByTicker = false
+    @State private var portfolioSortAscending = true
 
     private var currentMonth: String {
         let f = DateFormatter()
@@ -63,7 +63,9 @@ struct SummaryView: View {
             .padding(.bottom, 24)
         }
         .navigationTitle("Summary")
-        .task { await loadData() }
+        .onAppear { portfolioSortAscending = appState.config.portfolioSortMode == "asc" }
+        .onChange(of: portfolioSortAscending) { appState.config.portfolioSortMode = portfolioSortAscending ? "asc" : "desc" }
+        .task(id: appState.dataVersion) { await loadData() }
     }
 
     // MARK: - Summary Cards
@@ -81,10 +83,9 @@ struct SummaryView: View {
     }
 
     private var sortedPortfolio: [PortfolioRow] {
-        if portfolioSortByTicker {
-            return portfolio.sorted { $0.commodity < $1.commodity }
+        portfolio.sorted {
+            portfolioSortAscending ? $0.commodity < $1.commodity : $0.commodity > $1.commodity
         }
-        return portfolio.sorted { $0.bookValue > $1.bookValue }
     }
 
     // MARK: - Breakdown Section
@@ -139,15 +140,7 @@ struct SummaryView: View {
             HStack {
                 Text("Investments").font(.headline)
 
-                Button {
-                    portfolioSortByTicker.toggle()
-                } label: {
-                    Image(systemName: portfolioSortByTicker ? "textformat.abc" : "number")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help(portfolioSortByTicker ? "Sort by book value" : "Sort by ticker")
+                SortToggleButton(ascending: $portfolioSortAscending)
 
                 Spacer()
                 if isFetchingPrices {

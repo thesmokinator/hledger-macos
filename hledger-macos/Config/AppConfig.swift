@@ -61,6 +61,18 @@ final class AppConfig {
         }
     }
 
+    /// Accounts sort order: "asc" or "desc".
+    var accountsSortOrder: String {
+        get { UserDefaults.standard.string(forKey: "accountsSortOrder") ?? "asc" }
+        set { UserDefaults.standard.set(newValue, forKey: "accountsSortOrder") }
+    }
+
+    /// Portfolio sort order: "asc" or "desc".
+    var portfolioSortMode: String {
+        get { UserDefaults.standard.string(forKey: "portfolioSortMode") ?? "asc" }
+        set { UserDefaults.standard.set(newValue, forKey: "portfolioSortMode") }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {

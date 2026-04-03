@@ -103,7 +103,7 @@ struct BudgetView: View {
             .frame(width: 0, height: 0)
             .opacity(0)
         }
-        .task { await loadData() }
+        .task(id: appState.dataVersion) { await loadData() }
         .onChange(of: currentPeriod) { Task { await loadData() } }
         .onChange(of: appState.showingNewBudgetRule) {
             if appState.showingNewBudgetRule {
