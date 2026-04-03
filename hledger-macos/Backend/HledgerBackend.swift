@@ -305,6 +305,15 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         )
     }
 
+    func updateTransactionStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async throws {
+        try await JournalWriter.updateStatus(
+            transaction: transaction,
+            newStatus: newStatus,
+            mainJournal: journalFile,
+            validator: self
+        )
+    }
+
     func replaceTransaction(_ original: Transaction, with new: Transaction) async throws {
         try await JournalWriter.replace(
             original: original,
