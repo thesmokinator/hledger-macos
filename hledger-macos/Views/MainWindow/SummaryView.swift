@@ -176,11 +176,16 @@ struct SummaryView: View {
                 .frame(height: 24)
             }
 
-            // Hint
+            // Hints
             if appState.config.priceTickers.isEmpty && !portfolio.isEmpty {
                 Text("Configure price tickers in Settings > Investments to see market values.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+                    .padding(.top, 4)
+            } else if showMarketColumns {
+                Text("Market data provided by pricehist via Yahoo Finance. Prices may be delayed.")
+                    .font(.caption2)
+                    .foregroundStyle(.quaternary)
                     .padding(.top, 4)
             }
         }

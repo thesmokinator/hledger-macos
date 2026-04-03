@@ -22,8 +22,9 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         try await runHledger(args)
     }
 
-    private func runHledger(_ args: [String]) async throws -> String {
+    private func runHledger(_ args: [String], extraFiles: [URL] = []) async throws -> String {
         var fullArgs = ["--no-conf", "-f", journalFile.path]
+        for file in extraFiles { fullArgs.append(contentsOf: ["-f", file.path]) }
         fullArgs.append(contentsOf: args)
         return try await runner.run(fullArgs)
     }
@@ -252,8 +253,8 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
     func loadInvestmentMarketValues(pricesFile: URL) async throws -> [String: (Decimal, String)] {
         let output = try await runHledger([
             "balance", "acct:assets:investments", "--flat", "--no-total", "-V",
-            "-O", "csv", "-f", pricesFile.path
-        ])
+            "-O", "csv"
+        ], extraFiles: [pricesFile])
         var results: [String: (Decimal, String)] = [:]
         for (account, balance) in Self.parseCSVAccountBalances(output) {
             let (qty, com) = Self.parseBudgetAmount(balance)

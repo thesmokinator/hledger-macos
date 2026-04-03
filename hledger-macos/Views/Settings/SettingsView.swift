@@ -343,6 +343,9 @@ struct SettingsView: View {
         for row in tickerRows where !row.commodity.isEmpty && !row.ticker.isEmpty {
             tickers[row.commodity] = row.ticker
         }
+        if tickers != appState.config.priceTickers {
+            PriceService.invalidateCache()
+        }
         appState.config.priceTickers = tickers
         appState.setupBackend()
         Task { await appState.reload() }

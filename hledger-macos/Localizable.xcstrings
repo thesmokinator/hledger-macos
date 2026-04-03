@@ -294,6 +294,9 @@
     "Loading transactions..." : {
 
     },
+    "Market data provided by pricehist via Yahoo Finance. Prices may be delayed." : {
+
+    },
     "Market Value" : {
 
     },
