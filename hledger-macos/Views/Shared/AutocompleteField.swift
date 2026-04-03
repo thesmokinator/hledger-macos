@@ -1,5 +1,4 @@
 /// Text field with popover autocomplete suggestions.
-/// Tab accepts the top suggestion (or the only one). Arrow keys + Enter to pick.
 
 import SwiftUI
 
@@ -10,12 +9,13 @@ struct AutocompleteField: View {
 
     @State private var showSuggestions = false
     @State private var selectedIndex = 0
+    @State private var justAccepted = false
     @FocusState private var isFocused: Bool
 
     private var filtered: [String] {
         guard !text.isEmpty else { return [] }
         let query = text.lowercased()
-        return suggestions.filter { $0.lowercased().contains(query) }.prefix(8).map { $0 }
+        return suggestions.filter { $0.lowercased().contains(query) && $0 != text }.prefix(8).map { $0 }
     }
 
     var body: some View {
@@ -23,6 +23,10 @@ struct AutocompleteField: View {
             .textFieldStyle(.roundedBorder)
             .focused($isFocused)
             .onChange(of: text) {
+                if justAccepted {
+                    justAccepted = false
+                    return
+                }
                 selectedIndex = 0
                 showSuggestions = isFocused && !filtered.isEmpty
             }
@@ -34,19 +38,16 @@ struct AutocompleteField: View {
                 }
             }
             .onSubmit {
-                // Enter: accept selected suggestion if showing, otherwise just submit
                 if showSuggestions && !filtered.isEmpty {
-                    text = filtered[selectedIndex]
+                    acceptSuggestion(filtered[selectedIndex])
                 }
                 showSuggestions = false
             }
             .onKeyPress(.tab) {
-                // Tab: accept suggestion if showing, then let focus advance
                 if showSuggestions && !filtered.isEmpty {
-                    text = filtered[selectedIndex]
-                    showSuggestions = false
+                    acceptSuggestion(filtered[selectedIndex])
                 }
-                return .ignored // always let Tab advance focus
+                return .ignored
             }
             .onKeyPress(.downArrow) {
                 if showSuggestions && selectedIndex < filtered.count - 1 {
@@ -73,8 +74,7 @@ struct AutocompleteField: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(filtered.enumerated()), id: \.element) { index, suggestion in
                         Button {
-                            text = suggestion
-                            showSuggestions = false
+                            acceptSuggestion(suggestion)
                         } label: {
                             Text(suggestion)
                                 .font(.callout)
@@ -94,5 +94,11 @@ struct AutocompleteField: View {
                 .frame(width: 280)
                 .padding(.vertical, 4)
             }
+    }
+
+    private func acceptSuggestion(_ suggestion: String) {
+        justAccepted = true
+        text = suggestion
+        showSuggestions = false
     }
 }

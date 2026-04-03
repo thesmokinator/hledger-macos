@@ -281,8 +281,8 @@ struct TransactionFormView: View {
             postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount)))
         }
 
-        guard postings.count >= 2 else {
-            errorMessage = "At least 2 postings required"
+        guard !postings.isEmpty else {
+            errorMessage = "At least 1 posting required"
             isSaving = false
             return
         }

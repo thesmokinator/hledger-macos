@@ -1,41 +1,66 @@
-//
-//  hledger_macosUITests.swift
-//  hledger-macosUITests
-//
-//  Created by Michele Broggi on 30/03/2026.
-//
-
 import XCTest
 
 final class hledger_macosUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
-        continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        continueAfterFailure = true
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
+    /// Captures screenshots of all main sections for documentation.
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testCaptureAllSections() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        // Wait for app to initialize
+        sleep(3)
+
+        let sidebar = app.outlines.firstMatch
+
+        // Summary
+        captureScreenshot(named: "01-summary")
+
+        // Transactions
+        if sidebar.cells.containing(.staticText, identifier: "Transactions").firstMatch.exists {
+            sidebar.cells.containing(.staticText, identifier: "Transactions").firstMatch.click()
+            sleep(2)
+            captureScreenshot(named: "02-transactions")
+        }
+
+        // Recurring
+        if sidebar.cells.containing(.staticText, identifier: "Recurring").firstMatch.exists {
+            sidebar.cells.containing(.staticText, identifier: "Recurring").firstMatch.click()
+            sleep(2)
+            captureScreenshot(named: "03-recurring")
+        }
+
+        // Budget
+        if sidebar.cells.containing(.staticText, identifier: "Budget").firstMatch.exists {
+            sidebar.cells.containing(.staticText, identifier: "Budget").firstMatch.click()
+            sleep(2)
+            captureScreenshot(named: "04-budget")
+        }
+
+        // Reports
+        if sidebar.cells.containing(.staticText, identifier: "Reports").firstMatch.exists {
+            sidebar.cells.containing(.staticText, identifier: "Reports").firstMatch.click()
+            sleep(2)
+            captureScreenshot(named: "05-reports")
+        }
+
+        // Accounts
+        if sidebar.cells.containing(.staticText, identifier: "Accounts").firstMatch.exists {
+            sidebar.cells.containing(.staticText, identifier: "Accounts").firstMatch.click()
+            sleep(2)
+            captureScreenshot(named: "06-accounts")
+        }
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    private func captureScreenshot(named name: String) {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
