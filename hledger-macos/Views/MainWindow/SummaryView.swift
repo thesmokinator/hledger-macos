@@ -240,21 +240,16 @@ struct SummaryView: View {
         guard let backend = appState.activeBackend else { return }
         isLoading = true
 
-        // Cards: all-time (nil = no period filter)
+        // Each section loads independently so one failure doesn't block others
         async let summaryTask = backend.loadPeriodSummary(period: nil)
-        // Breakdowns: current month
         async let expenseTask = backend.loadExpenseBreakdown(period: currentMonth)
         async let incomeTask = backend.loadIncomeBreakdown(period: currentMonth)
         async let liabilitiesTask = backend.loadLiabilitiesBreakdown()
 
-        do {
-            periodSummary = try await summaryTask
-            expenseBreakdown = try await expenseTask
-            incomeBreakdown = try await incomeTask
-            liabilities = try await liabilitiesTask
-        } catch {
-            appState.errorMessage = error.localizedDescription
-        }
+        periodSummary = try? await summaryTask
+        expenseBreakdown = (try? await expenseTask) ?? []
+        incomeBreakdown = (try? await incomeTask) ?? []
+        liabilities = (try? await liabilitiesTask) ?? []
 
         isLoading = false
 
