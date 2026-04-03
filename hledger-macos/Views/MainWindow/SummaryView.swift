@@ -10,6 +10,7 @@ struct SummaryView: View {
     @State private var expenseBreakdown: [(String, Decimal, String)] = []
     @State private var incomeBreakdown: [(String, Decimal, String)] = []
     @State private var liabilities: [(String, Decimal, String)] = []
+    @State private var assets: [(String, Decimal, String)] = []
     @State private var portfolio: [PortfolioRow] = []
     @State private var isFetchingPrices = false
     @State private var isLoading = false
@@ -41,20 +42,15 @@ struct SummaryView: View {
                     portfolioSection
                 }
 
-                // Income & Expenses side by side
-                if !expenseBreakdown.isEmpty || !incomeBreakdown.isEmpty {
-                    HStack(alignment: .top, spacing: 20) {
-                        if !incomeBreakdown.isEmpty {
-                            breakdownSection(title: "Income", items: incomeBreakdown, color: .green)
-                        }
-                        if !expenseBreakdown.isEmpty {
-                            breakdownSection(title: "Expenses", items: expenseBreakdown, color: .red)
-                        }
-                    }
+                // Income & Expenses side by side (always visible)
+                HStack(alignment: .top, spacing: 20) {
+                    breakdownSection(title: "Income", items: incomeBreakdown, color: .green)
+                    breakdownSection(title: "Expenses", items: expenseBreakdown, color: .red)
                 }
 
-                // Liabilities
-                if !liabilities.isEmpty {
+                // Assets & Liabilities side by side (always visible)
+                HStack(alignment: .top, spacing: 20) {
+                    breakdownSection(title: "Assets", items: assets, color: .blue)
                     breakdownSection(title: "Liabilities", items: liabilities, color: .orange)
                 }
             }
@@ -93,6 +89,14 @@ struct SummaryView: View {
     private func breakdownSection(title: String, items: [(String, Decimal, String)], color: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.headline).padding(.bottom, 2)
+
+            if items.isEmpty {
+                Text("No data for this period")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+            }
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
 
@@ -245,11 +249,13 @@ struct SummaryView: View {
         async let expenseTask = backend.loadExpenseBreakdown(period: currentMonth)
         async let incomeTask = backend.loadIncomeBreakdown(period: currentMonth)
         async let liabilitiesTask = backend.loadLiabilitiesBreakdown()
+        async let assetsTask = backend.loadAssetsBreakdown()
 
         periodSummary = try? await summaryTask
         expenseBreakdown = (try? await expenseTask) ?? []
         incomeBreakdown = (try? await incomeTask) ?? []
         liabilities = (try? await liabilitiesTask) ?? []
+        assets = (try? await assetsTask) ?? []
 
         isLoading = false
 

@@ -218,6 +218,11 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         try await loadAccountBreakdown(typeQuery: "type:L", period: nil)
     }
 
+    /// Load assets breakdown (all-time, no period filter).
+    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
+        try await loadAccountBreakdown(typeQuery: "type:A", period: nil)
+    }
+
     // MARK: - Investments
 
     /// Load investment positions: (account, quantity, commodity) for non-currency holdings.

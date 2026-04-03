@@ -64,6 +64,7 @@ protocol AccountingBackend: Sendable {
     func loadExpenseBreakdown(period: String?) async throws -> [(String, Decimal, String)]
     func loadIncomeBreakdown(period: String?) async throws -> [(String, Decimal, String)]
     func loadLiabilitiesBreakdown() async throws -> [(String, Decimal, String)]
+    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)]
 
     // MARK: - Read: Investments
 
