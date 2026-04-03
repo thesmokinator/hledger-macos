@@ -258,10 +258,8 @@ struct TransactionsView: View {
 
     private func toggleStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async {
         guard let backend = appState.activeBackend else { return }
-        var updated = transaction
-        updated.status = newStatus
         do {
-            try await backend.replaceTransaction(transaction, with: updated)
+            try await backend.updateTransactionStatus(transaction, to: newStatus)
             await appState.loadTransactions()
         } catch {
             appState.errorMessage = error.localizedDescription

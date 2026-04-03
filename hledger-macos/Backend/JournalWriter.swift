@@ -129,6 +129,59 @@ enum JournalWriter {
         }
     }
 
+    // MARK: - Status Toggle
+
+    /// Update only the status marker on a transaction's date line.
+    /// Much safer than full replace — doesn't re-format postings or amounts.
+    static func updateStatus(
+        transaction: Transaction,
+        newStatus: TransactionStatus,
+        mainJournal: URL,
+        validator: any AccountingBackend
+    ) async throws {
+        guard let startPos = transaction.sourcePosStart else {
+            throw BackendError.commandFailed("Cannot update status without source position")
+        }
+
+        let sourceFile = URL(fileURLWithPath: startPos.sourceName)
+        let backup = backupPath(for: sourceFile)
+
+        try createBackup(source: sourceFile, backup: backup)
+
+        do {
+            var lines = try String(contentsOf: sourceFile, encoding: .utf8)
+                .components(separatedBy: "\n")
+
+            let lineIndex = startPos.sourceLine - 1
+            guard lineIndex >= 0 && lineIndex < lines.count else {
+                throw BackendError.commandFailed("Transaction source line out of range")
+            }
+
+            let dateLine = lines[lineIndex]
+            // Date line format: "2024-01-01 [*|!] [(code)] description [; comment]"
+            // Match date, then optional status marker
+            let pattern = /^(\d{4}-\d{2}-\d{2})\s+([*!]\s+)?(.*)$/
+            guard let match = dateLine.wholeMatch(of: pattern) else {
+                throw BackendError.commandFailed("Cannot parse transaction date line")
+            }
+
+            let date = String(match.1)
+            let rest = String(match.3)
+            let statusStr = newStatus == .unmarked ? "" : "\(newStatus.symbol) "
+
+            lines[lineIndex] = "\(date) \(statusStr)\(rest)"
+
+            try lines.joined(separator: "\n").write(to: sourceFile, atomically: true, encoding: .utf8)
+            try await validate(mainJournal: mainJournal, sourceFile: sourceFile, backup: backup, validator: validator)
+        } catch let error as BackendError {
+            throw error
+        } catch {
+            restoreBackup(source: sourceFile, backup: backup)
+            cleanupBackup(backup)
+            throw BackendError.commandFailed("Failed to update status: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Delete
 
     /// Delete a transaction from the journal using source positions.

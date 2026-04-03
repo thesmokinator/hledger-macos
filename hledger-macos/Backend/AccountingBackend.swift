@@ -80,6 +80,7 @@ protocol AccountingBackend: Sendable {
     // MARK: - Write
 
     func appendTransaction(_ transaction: Transaction) async throws
+    func updateTransactionStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async throws
     func replaceTransaction(_ original: Transaction, with new: Transaction) async throws
     func deleteTransaction(_ transaction: Transaction) async throws
 }
