@@ -1,0 +1,83 @@
+2026-04-01 * Monthly salary
+    assets:bank:checking              €3200.00
+    income:salary
+
+2026-04-01 * Rent
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-04-02 * Mortgage payment
+    liabilities:mortgage              €950.00
+    assets:bank:checking
+
+2026-04-03 * Supermarket
+    expenses:food:groceries           €92.40
+    assets:bank:checking
+
+2026-04-05 * Electric bill
+    expenses:housing:utilities        €68.00
+    assets:bank:checking
+
+2026-04-07 * Brunch
+    expenses:food:restaurant          €42.00
+    assets:bank:checking
+
+2026-04-08 * Supermarket
+    expenses:food:groceries           €55.30
+    assets:bank:checking
+
+2026-04-10 * Netflix
+    expenses:subscriptions            €15.99
+    assets:bank:checking
+
+2026-04-10 * Spotify
+    expenses:subscriptions            €9.99
+    assets:bank:checking
+
+2026-04-12 * Gas station
+    expenses:transport                €52.00
+    assets:bank:checking
+
+2026-04-14 * Supermarket
+    expenses:food:groceries           €78.60
+    assets:bank:checking
+
+2026-04-15 * Freelance project
+    assets:bank:checking              €700.00
+    income:freelance
+
+2026-04-17 * Dentist
+    expenses:health                   €120.00
+    assets:bank:checking
+
+2026-04-18 * New headphones
+    expenses:shopping                 €89.00
+    liabilities:credit-card
+
+2026-04-20 * Buy XEON
+    assets:investments:XEON           3 XEON @@ €390.00
+    assets:bank:checking
+
+2026-04-22 * Gym
+    expenses:health                   €45.00
+    assets:bank:checking
+
+2026-04-23 * Supermarket
+    expenses:food:groceries           €64.20
+    assets:bank:checking
+
+2026-04-25 * Theatre
+    expenses:entertainment            €38.00
+    assets:bank:checking
+
+2026-04-27 * Restaurant
+    expenses:food:restaurant          €56.00
+    liabilities:credit-card
+
+2026-04-28 * Credit card payment
+    liabilities:credit-card           €145.00
+    assets:bank:checking
+
+2026-04-30 * Savings transfer
+    assets:bank:savings               €450.00
+    assets:bank:checking

@@ -1,0 +1,11 @@
+~ monthly
+    expenses:food:groceries                         €150.00  ; category: Food
+    expenses:food:restaurant                        €80.00  ; category: Food
+    expenses:housing:rent                           €800.00  ; category: Housing
+    expenses:housing:utilities                      €100.00  ; category: Housing
+    expenses:transport                              €60.00
+    expenses:subscriptions                          €30.00
+    expenses:shopping                               €100.00
+    expenses:health                                 €50.00
+    expenses:entertainment                          €50.00
+    Assets:Budget

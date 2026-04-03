@@ -1,0 +1,19 @@
+~ monthly from 2026-01-02  ; rule-id:salary Monthly salary
+    assets:bank:checking                            €3200.00
+    income:salary
+
+~ monthly from 2026-01-03  ; rule-id:rent Rent payment
+    expenses:housing:rent                           €800.00
+    assets:bank:checking
+
+~ monthly from 2026-01-10  ; rule-id:netflix Netflix
+    expenses:subscriptions                          €15.99
+    assets:bank:checking
+
+~ monthly from 2026-02-10  ; rule-id:spotify Spotify
+    expenses:subscriptions                          €9.99
+    assets:bank:checking
+
+~ monthly from 2026-01-30  ; rule-id:mortgage Mortgage payment
+    liabilities:mortgage                            €950.00
+    assets:bank:checking

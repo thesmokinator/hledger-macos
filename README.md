@@ -4,7 +4,7 @@ A native macOS app for [hledger](https://hledger.org) plain-text accounting. Man
 
 Built with Swift and SwiftUI.
 
-![Summary](docs/screenshots/01-summary.png)
+![Summary](screenshots/01.png)
 
 [More screenshots](SCREENSHOTS.md)
 

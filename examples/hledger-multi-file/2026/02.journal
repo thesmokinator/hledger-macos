@@ -3,21 +3,53 @@
     income:salary
 
 2026-02-02 * Mortgage payment
-    liabilities:mortgage              €788.00
+    liabilities:mortgage              €950.00
+    assets:bank:checking
+
+2026-02-03 * Rent payment
+    expenses:housing:rent             €800.00
     assets:bank:checking
 
 2026-02-06 * Supermarket
     expenses:food:groceries           €110.20
     assets:bank:checking
 
+2026-02-08 * Gas bill
+    expenses:housing:utilities        €55.00
+    assets:bank:checking
+
 2026-02-10 * Netflix
     expenses:subscriptions            €15.99
     assets:bank:checking
 
-2026-02-14 * Restaurant
-    expenses:food:restaurant          €65.00
+2026-02-10 * Spotify
+    expenses:subscriptions            €9.99
+    assets:bank:checking
+
+2026-02-14 * Valentine dinner
+    expenses:food:restaurant          €85.00
     liabilities:credit-card
 
-2026-02-20 * Buy XDWD
-    assets:investments:XDWD           3 XDWD @@ €390.00
+2026-02-18 * New shoes
+    expenses:shopping                 €89.00
+    liabilities:credit-card
+
+2026-02-20 * Buy XEON
+    assets:investments:XEON           5 XEON @@ €625.00
+    assets:bank:checking
+
+2026-02-22 * Doctor visit
+    expenses:health                   €35.00
+    assets:bank:checking
+
+2026-02-25 * Cinema
+    expenses:entertainment            €24.00
+    assets:bank:checking
+
+2026-02-28 * Credit card payment
+    liabilities:credit-card           €174.00
+    assets:bank:checking
+
+2026-02-28 * Savings transfer
+    assets:bank:savings               €400.00
     assets:bank:checking

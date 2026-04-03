@@ -120,6 +120,9 @@
     "Check for Updates..." : {
 
     },
+    "CHF, SEK, BTC..." : {
+
+    },
     "Cleared" : {
 
     },
@@ -136,9 +139,6 @@
 
     },
     "Could not check for updates: %@" : {
-
-    },
-    "Custom symbol" : {
 
     },
     "Custom..." : {
@@ -184,9 +184,6 @@
 
     },
     "e.g. 500.00" : {
-
-    },
-    "e.g. CHF" : {
 
     },
     "e.g. Food, Housing (optional)" : {

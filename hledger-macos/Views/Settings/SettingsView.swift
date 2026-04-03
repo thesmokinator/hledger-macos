@@ -60,15 +60,10 @@ struct SettingsView: View {
                     }
 
                     if commodity == "__custom__" || !["€", "$", "£", "EUR", "USD", "GBP"].contains(commodity) {
-                        HStack {
-                            Text("Custom symbol")
-                            Spacer()
-                            TextField("e.g. CHF", text: $customCommodity)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 80)
-                                .onSubmit { commodity = customCommodity }
-                                .onChange(of: customCommodity) { commodity = customCommodity }
-                        }
+                        TextField("", text: $customCommodity, prompt: Text("CHF, SEK, BTC..."))
+                            .multilineTextAlignment(.trailing)
+                            .onSubmit { commodity = customCommodity }
+                            .onChange(of: customCommodity) { commodity = customCommodity }
                     }
 
                     Picker("Accounts view", selection: $accountsView) {

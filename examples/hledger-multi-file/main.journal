@@ -1,18 +1,24 @@
-; hledger-macos example: multi-file journal with glob includes
+; hledger for Mac — demo journal (multi-file with glob routing)
 ; Point Settings > Journal File to this directory.
-; New transactions are automatically routed to YYYY/MM.journal files.
 
 account assets:bank:checking
 account assets:bank:savings
 account assets:investments:XDWD
+account assets:investments:XEON
 account expenses:food:groceries
 account expenses:food:restaurant
 account expenses:housing:rent
-account expenses:utilities
+account expenses:housing:utilities
+account expenses:transport
 account expenses:subscriptions
+account expenses:shopping
+account expenses:health
+account expenses:entertainment
 account income:salary
 account income:freelance
 account liabilities:mortgage
 account liabilities:credit-card
 
+include budget.journal
+include recurring.journal
 include 2026/*.journal

@@ -3,21 +3,61 @@
     income:salary
 
 2026-03-02 * Mortgage payment
-    liabilities:mortgage              €788.00
+    liabilities:mortgage              €950.00
     assets:bank:checking
 
-2026-03-03 * Supermarket
+2026-03-03 * Rent payment
+    expenses:housing:rent             €800.00
+    assets:bank:checking
+
+2026-03-05 * Supermarket
     expenses:food:groceries           €88.60
     assets:bank:checking
 
-2026-03-08 * Electric bill
-    expenses:utilities                €72.00
+2026-03-07 * Water bill
+    expenses:housing:utilities        €42.00
     assets:bank:checking
 
 2026-03-10 * Netflix
     expenses:subscriptions            €15.99
     assets:bank:checking
 
+2026-03-10 * Spotify
+    expenses:subscriptions            €9.99
+    assets:bank:checking
+
+2026-03-12 * Restaurant
+    expenses:food:restaurant          €52.00
+    assets:bank:checking
+
 2026-03-15 * Freelance project
     assets:bank:checking              €450.00
     income:freelance
+
+2026-03-17 * Bus pass
+    expenses:transport                €45.00
+    assets:bank:checking
+
+2026-03-20 * Buy XDWD
+    assets:investments:XDWD           5 XDWD @@ €640.00
+    assets:bank:checking
+
+2026-03-22 * Books
+    expenses:shopping                 €35.00
+    assets:bank:checking
+
+2026-03-25 * Gym membership
+    expenses:health                   €45.00
+    assets:bank:checking
+
+2026-03-28 * Concert tickets
+    expenses:entertainment            €65.00
+    liabilities:credit-card
+
+2026-03-30 * Credit card payment
+    liabilities:credit-card           €65.00
+    assets:bank:checking
+
+2026-03-30 * Savings transfer
+    assets:bank:savings               €500.00
+    assets:bank:checking

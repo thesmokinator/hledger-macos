@@ -1,3 +1,9 @@
+2026-01-01 * Opening balances
+    assets:bank:checking              €8000.00
+    assets:bank:savings               €15000.00
+    liabilities:mortgage              €-120000.00
+    equity:opening-balances
+
 2026-01-02 * Monthly salary
     assets:bank:checking              €3200.00
     income:salary
@@ -10,14 +16,42 @@
     expenses:food:groceries           €95.40
     assets:bank:checking
 
+2026-01-08 * Electric bill
+    expenses:housing:utilities        €72.00
+    assets:bank:checking
+
 2026-01-10 * Netflix
     expenses:subscriptions            €15.99
     assets:bank:checking
+
+2026-01-12 * Restaurant dinner
+    expenses:food:restaurant          €48.00
+    liabilities:credit-card
 
 2026-01-15 * Freelance project
     assets:bank:checking              €600.00
     income:freelance
 
+2026-01-18 * Train ticket
+    expenses:transport                €32.00
+    assets:bank:checking
+
 2026-01-20 * Buy XDWD
-    assets:investments:XDWD           5 XDWD @@ €625.00
+    assets:investments:XDWD           10 XDWD @@ €1250.00
+    assets:bank:checking
+
+2026-01-22 * Gym membership
+    expenses:health                   €45.00
+    assets:bank:checking
+
+2026-01-25 * Credit card payment
+    liabilities:credit-card           €48.00
+    assets:bank:checking
+
+2026-01-28 * Savings transfer
+    assets:bank:savings               €500.00
+    assets:bank:checking
+
+2026-01-30 * Mortgage payment
+    liabilities:mortgage              €950.00
     assets:bank:checking

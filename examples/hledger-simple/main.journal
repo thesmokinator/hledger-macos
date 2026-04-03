@@ -1,4 +1,4 @@
-; hledger-macos example: single-file journal
+; hledger for Mac — demo journal (single file)
 ; Point Settings > Journal File to this file or its parent directory.
 
 account assets:bank:checking
@@ -6,80 +6,275 @@ account assets:bank:savings
 account expenses:food:groceries
 account expenses:food:restaurant
 account expenses:housing:rent
+account expenses:housing:utilities
 account expenses:transport
-account expenses:utilities
+account expenses:subscriptions
+account expenses:shopping
+account expenses:health
+account expenses:entertainment
 account income:salary
+account income:freelance
 account liabilities:credit-card
+account liabilities:car-loan
+
+; === JANUARY 2026 ===
 
 2026-01-01 * Opening balances
     assets:bank:checking              €5000.00
-    assets:bank:savings               €10000.00
+    assets:bank:savings               €12000.00
+    liabilities:car-loan              €-8500.00
     equity:opening-balances
 
 2026-01-02 * Monthly salary
-    assets:bank:checking              €3200.00
+    assets:bank:checking              €2800.00
     income:salary
 
-2026-01-03 * Rent payment
-    expenses:housing:rent             €800.00
+2026-01-03 * Rent
+    expenses:housing:rent             €750.00
     assets:bank:checking
 
-2026-01-05 * Supermarket
-    expenses:food:groceries           €87.50
+2026-01-04 * Supermarket
+    expenses:food:groceries           €67.30
     assets:bank:checking
 
-2026-01-07 * Restaurant
-    expenses:food:restaurant          €45.00
+2026-01-07 * Electric bill
+    expenses:housing:utilities        €65.00
+    assets:bank:checking
+
+2026-01-10 * Netflix
+    expenses:subscriptions            €13.99
+    assets:bank:checking
+
+2026-01-11 * Supermarket
+    expenses:food:groceries           €52.80
+    assets:bank:checking
+
+2026-01-14 * Pizza night
+    expenses:food:restaurant          €32.00
+    assets:bank:checking
+
+2026-01-15 * Freelance invoice
+    assets:bank:checking              €400.00
+    income:freelance
+
+2026-01-17 * Gas station
+    expenses:transport                €55.00
+    assets:bank:checking
+
+2026-01-18 * Supermarket
+    expenses:food:groceries           €71.20
+    assets:bank:checking
+
+2026-01-20 * Car loan payment
+    liabilities:car-loan              €350.00
+    assets:bank:checking
+
+2026-01-22 * Gym
+    expenses:health                   €39.00
+    assets:bank:checking
+
+2026-01-25 * T-shirt online
+    expenses:shopping                 €29.00
     liabilities:credit-card
 
-2026-01-10 * Electric bill
-    expenses:utilities                €65.00
+2026-01-27 * Credit card payment
+    liabilities:credit-card           €29.00
     assets:bank:checking
 
-2026-01-15 * Train ticket
-    expenses:transport                €32.00
+2026-01-28 * Savings
+    assets:bank:savings               €300.00
     assets:bank:checking
 
-2026-01-20 * Savings transfer
-    assets:bank:savings               €500.00
-    assets:bank:checking
-
-2026-01-25 * Credit card payment
-    liabilities:credit-card           €45.00
-    assets:bank:checking
+; === FEBRUARY 2026 ===
 
 2026-02-01 * Monthly salary
-    assets:bank:checking              €3200.00
+    assets:bank:checking              €2800.00
     income:salary
 
-2026-02-03 * Rent payment
-    expenses:housing:rent             €800.00
+2026-02-02 * Rent
+    expenses:housing:rent             €750.00
     assets:bank:checking
 
-2026-02-06 * Supermarket
-    expenses:food:groceries           €92.30
+2026-02-04 * Supermarket
+    expenses:food:groceries           €58.90
     assets:bank:checking
 
-2026-02-12 * Restaurant
+2026-02-06 * Water bill
+    expenses:housing:utilities        €38.00
+    assets:bank:checking
+
+2026-02-10 * Netflix
+    expenses:subscriptions            €13.99
+    assets:bank:checking
+
+2026-02-10 * Spotify
+    expenses:subscriptions            €9.99
+    assets:bank:checking
+
+2026-02-12 * Supermarket
+    expenses:food:groceries           €82.40
+    assets:bank:checking
+
+2026-02-14 * Valentine dinner
+    expenses:food:restaurant          €78.00
+    liabilities:credit-card
+
+2026-02-16 * Bus pass
+    expenses:transport                €45.00
+    assets:bank:checking
+
+2026-02-18 * Supermarket
+    expenses:food:groceries           €63.10
+    assets:bank:checking
+
+2026-02-20 * Car loan payment
+    liabilities:car-loan              €350.00
+    assets:bank:checking
+
+2026-02-22 * Gym
+    expenses:health                   €39.00
+    assets:bank:checking
+
+2026-02-24 * Movie tickets
+    expenses:entertainment            €22.00
+    assets:bank:checking
+
+2026-02-25 * New jacket
+    expenses:shopping                 €120.00
+    liabilities:credit-card
+
+2026-02-27 * Credit card payment
+    liabilities:credit-card           €198.00
+    assets:bank:checking
+
+2026-02-28 * Savings
+    assets:bank:savings               €250.00
+    assets:bank:checking
+
+; === MARCH 2026 ===
+
+2026-03-01 * Monthly salary
+    assets:bank:checking              €2800.00
+    income:salary
+
+2026-03-02 * Rent
+    expenses:housing:rent             €750.00
+    assets:bank:checking
+
+2026-03-03 * Supermarket
+    expenses:food:groceries           €74.50
+    assets:bank:checking
+
+2026-03-05 * Internet bill
+    expenses:housing:utilities        €35.00
+    assets:bank:checking
+
+2026-03-07 * Sushi restaurant
+    expenses:food:restaurant          €45.00
+    assets:bank:checking
+
+2026-03-10 * Netflix
+    expenses:subscriptions            €13.99
+    assets:bank:checking
+
+2026-03-10 * Spotify
+    expenses:subscriptions            €9.99
+    assets:bank:checking
+
+2026-03-12 * Supermarket
+    expenses:food:groceries           €91.30
+    assets:bank:checking
+
+2026-03-15 * Freelance invoice
+    assets:bank:checking              €550.00
+    income:freelance
+
+2026-03-16 * Gas station
+    expenses:transport                €48.00
+    assets:bank:checking
+
+2026-03-18 * Supermarket
+    expenses:food:groceries           €55.80
+    assets:bank:checking
+
+2026-03-20 * Car loan payment
+    liabilities:car-loan              €350.00
+    assets:bank:checking
+
+2026-03-22 * Gym
+    expenses:health                   €39.00
+    assets:bank:checking
+
+2026-03-24 * Concert
+    expenses:entertainment            €55.00
+    liabilities:credit-card
+
+2026-03-25 * Books
+    expenses:shopping                 €42.00
+    assets:bank:checking
+
+2026-03-27 * Credit card payment
+    liabilities:credit-card           €55.00
+    assets:bank:checking
+
+2026-03-28 * Savings
+    assets:bank:savings               €400.00
+    assets:bank:checking
+
+; === APRIL 2026 ===
+
+2026-04-01 * Monthly salary
+    assets:bank:checking              €2800.00
+    income:salary
+
+2026-04-01 * Rent
+    expenses:housing:rent             €750.00
+    assets:bank:checking
+
+2026-04-02 * Supermarket
+    expenses:food:groceries           €83.20
+    assets:bank:checking
+
+2026-04-03 * Electric bill
+    expenses:housing:utilities        €71.00
+    assets:bank:checking
+
+2026-04-05 * Restaurant
     expenses:food:restaurant          €38.00
     assets:bank:checking
 
-2026-02-15 * Gas bill
-    expenses:utilities                €55.00
+2026-04-07 * Supermarket
+    expenses:food:groceries           €66.40
     assets:bank:checking
 
-2026-03-01 * Monthly salary
-    assets:bank:checking              €3200.00
-    income:salary
-
-2026-03-02 * Rent payment
-    expenses:housing:rent             €800.00
+2026-04-10 * Netflix
+    expenses:subscriptions            €13.99
     assets:bank:checking
 
-2026-03-05 * Supermarket
-    expenses:food:groceries           €78.90
+2026-04-10 * Spotify
+    expenses:subscriptions            €9.99
     assets:bank:checking
 
-2026-03-10 * Restaurant
-    expenses:food:restaurant          €52.00
-    liabilities:credit-card
+2026-04-12 * Gas station
+    expenses:transport                €52.00
+    assets:bank:checking
+
+2026-04-15 * Dentist
+    expenses:health                   €85.00
+    assets:bank:checking
+
+2026-04-18 * Supermarket
+    expenses:food:groceries           €72.90
+    assets:bank:checking
+
+2026-04-20 * Car loan payment
+    liabilities:car-loan              €350.00
+    assets:bank:checking
+
+2026-04-22 * Gym
+    expenses:health                   €39.00
+    assets:bank:checking
+
+2026-04-25 * Museum
+    expenses:entertainment            €18.00
+    assets:bank:checking
