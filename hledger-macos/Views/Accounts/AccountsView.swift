@@ -5,6 +5,7 @@ import SwiftUI
 struct AccountsView: View {
     @Environment(AppState.self) private var appState
     @State private var viewMode = "flat"
+    @State private var sortAscending = true
     @State private var treeNodes: [AccountNode] = []
     @State private var searchText = ""
     @State private var isLoading = false
@@ -45,11 +46,31 @@ struct AccountsView: View {
                 .pickerStyle(.segmented)
             }
         }
-        .task { await loadData() }
+        .task(id: appState.dataVersion) { await loadData() }
+        .onAppear { sortAscending = appState.config.accountsSortOrder == "asc" }
+        .onChange(of: sortAscending) { appState.config.accountsSortOrder = sortAscending ? "asc" : "desc" }
         .onChange(of: viewMode) { Task { await loadData() } }
     }
 
     // MARK: - Flat View
+
+    private var groupedBalances: [(key: String, rows: [AccountBalance])] {
+        var groups: [(key: String, rows: [AccountBalance])] = []
+        var currentKey = ""
+        var currentRows: [AccountBalance] = []
+        for row in filteredBalances {
+            let topLevel = row.account.split(separator: ":").first.map(String.init) ?? row.account
+            if topLevel != currentKey {
+                if !currentRows.isEmpty { groups.append((key: currentKey, rows: currentRows)) }
+                currentKey = topLevel
+                currentRows = []
+            }
+            currentRows.append(row)
+        }
+        if !currentRows.isEmpty { groups.append((key: currentKey, rows: currentRows)) }
+        if !sortAscending { groups.reverse() }
+        return groups
+    }
 
     private var flatView: some View {
         Group {
@@ -58,12 +79,23 @@ struct AccountsView: View {
                     description: Text(searchText.isEmpty ? "No accounts found in journal." : "No matching accounts."))
             } else {
                 List {
-                    ForEach(filteredBalances) { row in
-                        AccountRow(
-                            label: row.account,
-                            value: row.formattedBalance,
-                            valueColor: row.balanceColor
-                        )
+                    ForEach(groupedBalances, id: \.key) { group in
+                        Section {
+                            ForEach(group.rows) { row in
+                                AccountRow(
+                                    label: row.account,
+                                    value: row.formattedBalance,
+                                    valueColor: row.balanceColor
+                                )
+                            }
+                        } header: {
+                            HStack {
+                                Text(group.key)
+                                if group.key == groupedBalances.first?.key {
+                                    SortToggleButton(ascending: $sortAscending)
+                                }
+                            }
+                        }
                     }
                 }
                 .listStyle(.inset)

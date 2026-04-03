@@ -264,6 +264,9 @@
     "Journal File" : {
 
     },
+    "Journal file changed" : {
+
+    },
     "Keyboard Shortcuts" : {
 
     },
@@ -289,6 +292,9 @@
 
     },
     "Loading transactions..." : {
+
+    },
+    "Market data provided by pricehist via Yahoo Finance. Prices may be delayed." : {
 
     },
     "Market Value" : {
@@ -445,12 +451,6 @@
     "Show investments in Summary" : {
 
     },
-    "Sort by book value" : {
-
-    },
-    "Sort by ticker" : {
-
-    },
     "Startup" : {
 
     },
@@ -460,13 +460,13 @@
     "System" : {
 
     },
+    "The journal file path has changed. All data will be reloaded from the new file." : {
+
+    },
     "Ticker" : {
 
     },
     "to %@" : {
-
-    },
-    "Transaction description" : {
 
     },
     "Transactions" : {

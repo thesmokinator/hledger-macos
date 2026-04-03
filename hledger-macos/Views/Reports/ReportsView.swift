@@ -100,7 +100,7 @@ struct ReportsView: View {
                 }
             }
         }
-        .task { await loadReport() }
+        .task(id: appState.dataVersion) { await loadReport() }
         .onChange(of: reportType) { Task { await loadReport() } }
         .onChange(of: periodRange) { Task { await loadReport() } }
         .sheet(isPresented: $showingChart) {
@@ -120,7 +120,7 @@ struct ReportsView: View {
                 formatHeader: formatPeriodHeader
             )
 
-            ForEach(data.rows) { row in
+            ForEach(Array(data.rows.enumerated()), id: \.element.id) { index, row in
                 ReportRowView(
                     account: row.account,
                     amounts: row.amounts,
@@ -129,6 +129,9 @@ struct ReportsView: View {
                     formatAmount: formatReportAmount,
                     amountColor: { amountColor($0, isTotal: row.isTotal) }
                 )
+                if row.isTotal && index + 1 < data.rows.count && !data.rows[index + 1].isTotal {
+                    Spacer().frame(height: 8).listRowSeparator(.hidden)
+                }
             }
         }
         .listStyle(.inset)

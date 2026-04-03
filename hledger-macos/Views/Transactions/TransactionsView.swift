@@ -6,9 +6,7 @@ struct TransactionsView: View {
     @Environment(AppState.self) private var appState
 
     @State private var selectedTransaction: Transaction?
-    @State private var showingForm = false
-    @State private var formTransaction: Transaction?
-    @State private var formIsClone = false
+    @State private var formConfig: FormConfig?
     @State private var showingDeleteConfirm = false
     @State private var transactionToDelete: Transaction?
 
@@ -161,12 +159,12 @@ struct TransactionsView: View {
                 newTransaction()
             }
         }
-        .task { await loadAll() }
+        .task(id: appState.dataVersion) { await loadAll() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
         }
-        .sheet(isPresented: $showingForm) {
-            TransactionFormView(editingTransaction: formTransaction, isClone: formIsClone)
+        .sheet(item: $formConfig) { config in
+            TransactionFormView(editingTransaction: config.transaction, isClone: config.isClone)
                 .environment(appState)
         }
         .alert("Delete Transaction?", isPresented: $showingDeleteConfirm) {
@@ -239,23 +237,17 @@ struct TransactionsView: View {
     }
 
     private func newTransaction() {
-        formTransaction = nil
-        formIsClone = false
-        showingForm = true
+        formConfig = FormConfig(transaction: nil, isClone: false)
     }
 
     private func editTransaction(_ transaction: Transaction?) {
         guard let transaction else { return }
-        formTransaction = transaction
-        formIsClone = false
-        showingForm = true
+        formConfig = FormConfig(transaction: transaction, isClone: false)
     }
 
     private func cloneTransaction(_ transaction: Transaction?) {
         guard let transaction else { return }
-        formTransaction = transaction
-        formIsClone = true
-        showingForm = true
+        formConfig = FormConfig(transaction: transaction, isClone: true)
     }
 
     private func confirmDelete(_ transaction: Transaction) {
@@ -285,6 +277,14 @@ struct TransactionsView: View {
         }
         transactionToDelete = nil
     }
+}
+
+// MARK: - Form Config
+
+struct FormConfig: Identifiable {
+    let id = UUID()
+    let transaction: Transaction?
+    let isClone: Bool
 }
 
 // MARK: - Transaction Row

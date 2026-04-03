@@ -21,6 +21,7 @@ struct TransactionFormView: View {
     @State private var errorMessage: String?
     @State private var isPrefilling = true
     @State private var knownAccounts: [String] = []
+    @State private var knownDescriptions: [String] = []
 
     @FocusState private var focusedField: Field?
 
@@ -101,9 +102,11 @@ struct TransactionFormView: View {
                         }
 
                         FormRow("Description:") {
-                            TextField("Transaction description", text: $description)
-                                .textFieldStyle(.roundedBorder)
-                                .focused($focusedField, equals: .description)
+                            AutocompleteField(
+                                placeholder: "Transaction description",
+                                text: $description,
+                                suggestions: knownDescriptions
+                            )
                         }
 
                         FormRow("Status:") {
@@ -267,6 +270,7 @@ struct TransactionFormView: View {
     private func loadAutocompleteData() async {
         guard let backend = appState.activeBackend else { return }
         knownAccounts = (try? await backend.loadAccounts()) ?? []
+        knownDescriptions = (try? await backend.loadDescriptions()) ?? []
     }
 
     // MARK: - Save

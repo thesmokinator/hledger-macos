@@ -42,7 +42,7 @@ struct ReportChartOverlay: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
-        .frame(width: 640, height: 420)
+        .frame(width: 860, height: 560)
         .background(.ultraThinMaterial)
     }
 

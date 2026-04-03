@@ -65,7 +65,7 @@ struct RecurringView: View {
             .frame(width: 0, height: 0)
             .opacity(0)
         }
-        .task { await loadData() }
+        .task(id: appState.dataVersion) { await loadData() }
         .onChange(of: appState.showingNewRecurringRule) {
             if appState.showingNewRecurringRule {
                 appState.showingNewRecurringRule = false
