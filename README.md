@@ -6,7 +6,12 @@ Built with Swift and SwiftUI.
 
 ![Summary](screenshots/01.png)
 
-[More screenshots](SCREENSHOTS.md)
+| | | |
+|:---:|:---:|:---:|
+| [![Transactions](screenshots/02.png)](screenshots/02.png) | [![New transaction](screenshots/03.png)](screenshots/03.png) | [![Income Statement](screenshots/04.png)](screenshots/04.png) |
+| Transactions | New transaction | Income Statement |
+| [![Income Statement chart](screenshots/05.png)](screenshots/05.png) | [![Accounts](screenshots/06.png)](screenshots/06.png) | |
+| Income Statement chart | Accounts | |
 
 ## Stack
 
