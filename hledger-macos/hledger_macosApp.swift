@@ -140,8 +140,14 @@ struct AppCommands: Commands {
             }
         }
 
-        // Help > Keyboard Shortcuts & Command Log
-        CommandGroup(after: .help) {
+        // Help > Keyboard Shortcuts, Command Log, Wiki
+        CommandGroup(replacing: .help) {
+            Button("hledger for Mac Help") {
+                NSWorkspace.shared.open(URL(string: "https://github.com/thesmokinator/hledger-macos/wiki")!)
+            }
+
+            Divider()
+
             Button("Keyboard Shortcuts") {
                 showingShortcuts = true
             }
