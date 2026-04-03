@@ -155,10 +155,14 @@ struct ReportsView: View {
         return trimmed
     }
 
+    private func isNegativeAmount(_ text: String) -> Bool {
+        text.contains("-")
+    }
+
     private func amountColor(_ amount: String, isTotal: Bool) -> Color {
         let trimmed = amount.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty || trimmed == "0" { return .gray }
-        if trimmed.hasPrefix("-") { return .red }
+        if isNegativeAmount(trimmed) { return .red }
         if isTotal { return .primary }
         return .secondary
     }
