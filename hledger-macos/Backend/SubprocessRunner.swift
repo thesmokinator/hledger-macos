@@ -80,6 +80,16 @@ actor SubprocessRunner {
                 let outStr = String(data: outData, encoding: .utf8) ?? ""
                 let errStr = String(data: errData, encoding: .utf8) ?? ""
 
+                let cmd = ([process.executableURL?.lastPathComponent ?? "?"] + (process.arguments ?? [])).joined(separator: " ")
+                Task { @MainActor in
+                    CommandLog.shared.log(
+                        command: cmd,
+                        exitCode: process.terminationStatus,
+                        stdout: outStr,
+                        stderr: errStr
+                    )
+                }
+
                 if process.terminationStatus == 0 {
                     continuation.resume(returning: outStr)
                 } else {
