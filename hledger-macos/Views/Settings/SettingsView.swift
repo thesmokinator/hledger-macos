@@ -244,6 +244,14 @@ struct SettingsView: View {
                     Toggle("Enable AI Assistant", isOn: $aiEnabled)
 
                     if aiEnabled {
+                        Label {
+                            Text("Experimental feature. Responses may be inaccurate or incomplete. Always verify data against your journal.")
+                                .font(.caption)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                        }
+
                         if AppleFoundationModelProvider.isAvailable {
                             Label("Using Apple Intelligence (built-in)", systemImage: "checkmark.circle")
                                 .foregroundStyle(.green)
