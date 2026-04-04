@@ -154,32 +154,15 @@ struct TransactionFormView: View {
                             .padding(.bottom, 8)
 
                         ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
-                            HStack(spacing: 8) {
-                                Text("#\(index + 1):")
-                                    .font(.callout.monospacedDigit())
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 30, alignment: .trailing)
-
-                                AutocompleteField(
-                                    placeholder: "e.g. expenses:food",
-                                    text: $postingRows[index].account,
-                                    suggestions: knownAccounts
-                                )
-
-                                TextField("0.00", text: $postingRows[index].amount)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 130)
-                                    .focused($focusedField, equals: .postingAmount(index))
-
-                                if postingRows.count > 2 {
-                                    Button {
-                                        postingRows.remove(at: index)
-                                    } label: {
-                                        Image(systemName: "minus.circle").foregroundStyle(.red)
-                                    }
-                                    .buttonStyle(.borderless)
-                                }
-                            }
+                            PostingRowField(
+                                index: index,
+                                account: $postingRows[index].account,
+                                amount: $postingRows[index].amount,
+                                comment: $postingRows[index].comment,
+                                suggestions: knownAccounts,
+                                showRemove: postingRows.count > 2,
+                                onRemove: { postingRows.remove(at: index) }
+                            )
                         }
 
                         Button {
@@ -249,7 +232,7 @@ struct TransactionFormView: View {
             status = txn.status
             code = txn.code
             comment = txn.comment
-            postingRows = txn.postings.map { PostingRow(account: $0.account, amount: $0.amounts.first.map { $0.formatted() } ?? "") }
+            postingRows = txn.postings.map { PostingRow(account: $0.account, amount: $0.amounts.first.map { $0.formatted() } ?? "", comment: $0.comment, balanceAssertion: $0.balanceAssertion) }
         }
 
         while postingRows.count < 2 { postingRows.append(PostingRow()) }
@@ -282,7 +265,7 @@ struct TransactionFormView: View {
 
         var postings: [Posting] = []
         for row in postingRows where !row.account.isEmpty {
-            postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount)))
+            postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount), comment: row.comment, balanceAssertion: row.balanceAssertion))
         }
 
         // hledger accepts transactions with 0 postings
@@ -322,4 +305,6 @@ struct PostingRow: Identifiable {
     let id = UUID()
     var account: String = ""
     var amount: String = ""
+    var comment: String = ""
+    var balanceAssertion: String = ""
 }

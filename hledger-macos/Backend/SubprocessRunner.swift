@@ -38,7 +38,14 @@ actor SubprocessRunner {
         process.arguments = arguments
 
         var env = ProcessInfo.processInfo.environment
-        let extraPaths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"]
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let extraPaths = [
+            "\(home)/.local/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+        ]
         let currentPath = env["PATH"] ?? "/usr/bin:/bin"
         let allPaths = extraPaths + currentPath.split(separator: ":").map(String.init)
         env["PATH"] = allPaths.joined(separator: ":")

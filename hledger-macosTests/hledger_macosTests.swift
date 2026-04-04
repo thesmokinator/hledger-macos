@@ -81,6 +81,68 @@ struct AmountParserTests {
         #expect(qty == Decimal(string: "-174420.00"))
         #expect(com == "€")
     }
+
+    // Roundtrip: Amount.formatted() -> AmountParser.parse()
+    // These test the exact strings that Amount.formatted() produces
+    // for negative amounts, which must survive re-parsing.
+
+    @Test func negativeSignBeforeCurrency() {
+        // Amount.formatted() produces "-€50.00" for negative left-side commodity
+        let (qty, com) = AmountParser.parse("-€50.00")
+        #expect(qty == Decimal(string: "-50.00"))
+        #expect(com == "€")
+    }
+
+    @Test func negativeSignBeforeDollar() {
+        let (qty, com) = AmountParser.parse("-$1000.00")
+        #expect(qty == Decimal(string: "-1000.00"))
+        #expect(com == "$")
+    }
+
+    @Test func negativeSignBeforePound() {
+        let (qty, com) = AmountParser.parse("-£25.50")
+        #expect(qty == Decimal(string: "-25.50"))
+        #expect(com == "£")
+    }
+
+    @Test func negativeRightSideCommodity() {
+        // Amount.formatted() produces "-50.00 EUR" for negative right-side commodity
+        let (qty, com) = AmountParser.parse("-50.00 EUR")
+        #expect(qty == Decimal(string: "-50.00"))
+        #expect(com == "EUR")
+    }
+
+    @Test func roundtripPositiveLeftSide() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "50.00")!, style: AmountStyle(commoditySide: .left, precision: 2))
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "50.00"))
+        #expect(com == "€")
+    }
+
+    @Test func roundtripNegativeLeftSide() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "-50.00")!, style: AmountStyle(commoditySide: .left, precision: 2))
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "-50.00"))
+        #expect(com == "€")
+    }
+
+    @Test func roundtripPositiveRightSide() {
+        let amount = Amount(commodity: "EUR", quantity: Decimal(string: "1234.56")!, style: AmountStyle(commoditySide: .right, precision: 2))
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "1234.56"))
+        #expect(com == "EUR")
+    }
+
+    @Test func roundtripNegativeRightSide() {
+        let amount = Amount(commodity: "EUR", quantity: Decimal(string: "-1234.56")!, style: AmountStyle(commoditySide: .right, precision: 2))
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "-1234.56"))
+        #expect(com == "EUR")
+    }
 }
 
 // MARK: - AmountFormatter Tests
