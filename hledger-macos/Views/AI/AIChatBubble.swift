@@ -10,7 +10,7 @@ struct AIChatBubble: View {
             if message.role == .user { Spacer(minLength: 60) }
 
             VStack(alignment: message.role == .user ? .trailing : .leading, spacing: Theme.Spacing.xs) {
-                Text(message.content.isEmpty && message.isStreaming ? " " : message.content)
+                Text(markdownContent)
                     .textSelection(.enabled)
                     .font(.body)
                     .padding(.horizontal, Theme.Spacing.md)
@@ -33,6 +33,15 @@ struct AIChatBubble: View {
 
             if message.role == .assistant { Spacer(minLength: 60) }
         }
+    }
+
+    /// Render message content as markdown when possible, falling back to plain text.
+    private var markdownContent: AttributedString {
+        let raw = message.content.isEmpty && message.isStreaming ? " " : message.content
+        if let attributed = try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+            return attributed
+        }
+        return AttributedString(raw)
     }
 
     private var streamingIndicator: some View {
