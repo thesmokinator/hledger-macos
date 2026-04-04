@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var investmentsEnabled = false
     @State private var pricehistPath = ""
     @State private var tickerRows: [TickerRow] = []
+    @State private var aiEnabled = false
 
     @State private var resolvedPath: String?
     @State private var isScanning = false
@@ -37,6 +38,9 @@ struct SettingsView: View {
 
             investmentsTab
                 .tabItem { Label("Investments", systemImage: "chart.line.uptrend.xyaxis") }
+
+            aiTab
+                .tabItem { Label("AI Assistant", systemImage: "sparkles") }
 
             aboutTab
                 .tabItem { Label("About", systemImage: "info.circle") }
@@ -231,6 +235,54 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - AI Tab
+
+    private var aiTab: some View {
+        VStack(spacing: 0) {
+            Form {
+                Section("AI Assistant") {
+                    Toggle("Enable AI Assistant", isOn: $aiEnabled)
+
+                    if aiEnabled {
+                        if AppleFoundationModelProvider.isAvailable {
+                            Label("Using Apple Intelligence (built-in)", systemImage: "checkmark.circle")
+                                .foregroundStyle(.green)
+                                .font(.caption)
+                        } else {
+                            Label("Apple Intelligence is not available on this device", systemImage: "xmark.circle")
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                        }
+                    }
+                }
+
+                Section("Privacy") {
+                    Label {
+                        Text("All processing happens locally on your Mac using Apple Intelligence. No financial data is sent to external servers.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "lock.shield")
+                            .foregroundStyle(.green)
+                    }
+                }
+
+                Section("Usage") {
+                    Text("When enabled, an AI button appears at the bottom-left of the main window. You can also press \u{2318}\u{21E7}A to toggle the assistant.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text("The assistant can answer questions about your journal: account balances, spending patterns, transaction summaries, and more.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .formStyle(.grouped)
+
+            saveBar
+        }
+    }
+
     // MARK: - About Tab
 
     private var aboutTab: some View {
@@ -315,6 +367,7 @@ struct SettingsView: View {
         appearance = appState.config.appearance
         barChartMode = appState.config.barChartMode
         investmentsEnabled = appState.config.investmentsEnabled
+        aiEnabled = appState.config.aiEnabled
         pricehistPath = appState.config.pricehistBinaryPath
         tickerRows = appState.config.priceTickers.map { TickerRow(commodity: $0.key, ticker: $0.value) }
         if tickerRows.isEmpty { tickerRows.append(TickerRow()) }
@@ -353,6 +406,7 @@ struct SettingsView: View {
         }
         appState.config.barChartMode = barChartMode
         appState.config.investmentsEnabled = investmentsEnabled
+        appState.config.aiEnabled = aiEnabled
         appState.config.pricehistBinaryPath = pricehistPath
         var tickers: [String: String] = [:]
         for row in tickerRows where !row.commodity.isEmpty && !row.ticker.isEmpty {

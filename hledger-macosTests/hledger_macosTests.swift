@@ -420,3 +420,174 @@ struct UpdateCheckerTests {
         #expect(pre == "beta3")
     }
 }
+
+// MARK: - TransactionSearchTool Query Formatting Tests
+
+@Suite("TransactionSearchTool.formatQuery")
+struct TransactionSearchQueryTests {
+    @Test func plainTextBecomesDescQuery() {
+        #expect(TransactionSearchTool.formatQuery("Lidl") == "desc:Lidl")
+    }
+
+    @Test func plainTextWithSpaces() {
+        #expect(TransactionSearchTool.formatQuery("Grenke Italia") == "desc:Grenke Italia")
+    }
+
+    @Test func greaterThanBecomesAmtQuery() {
+        #expect(TransactionSearchTool.formatQuery(">500") == "amt:>500")
+    }
+
+    @Test func lessThanBecomesAmtQuery() {
+        #expect(TransactionSearchTool.formatQuery("<100") == "amt:<100")
+    }
+
+    @Test func numberBecomesAmtQuery() {
+        #expect(TransactionSearchTool.formatQuery("500") == "amt:500")
+    }
+
+    @Test func existingPrefixPassedThrough() {
+        #expect(TransactionSearchTool.formatQuery("desc:restaurant") == "desc:restaurant")
+    }
+
+    @Test func acctPrefixPassedThrough() {
+        #expect(TransactionSearchTool.formatQuery("acct:expenses:food") == "acct:expenses:food")
+    }
+
+    @Test func datePrefixPassedThrough() {
+        #expect(TransactionSearchTool.formatQuery("date:2026-03") == "date:2026-03")
+    }
+
+    @Test func amtPrefixPassedThrough() {
+        #expect(TransactionSearchTool.formatQuery("amt:>500") == "amt:>500")
+    }
+
+    @Test func trimming() {
+        #expect(TransactionSearchTool.formatQuery("  Lidl  ") == "desc:Lidl")
+    }
+}
+
+// MARK: - AI Tool Tests with Mock Backend
+
+/// Minimal mock backend for testing tool output formatting.
+struct MockBackend: AccountingBackend {
+    var binaryPath: String { "/usr/bin/hledger" }
+    var journalFile: URL { URL(fileURLWithPath: "/tmp/test.journal") }
+
+    func validateJournal() async throws {}
+    func version() async throws -> String { "1.40" }
+
+    func loadTransactions(query: String?, reversed: Bool) async throws -> [Transaction] {
+        if query?.contains("desc:Lidl") == true {
+            return [
+                Transaction(index: 0, date: "2026-04-01", description: "Lidl",
+                            postings: [Posting(account: "Expenses:Groceries",
+                                               amounts: [Amount(commodity: "€", quantity: 45.20)])])
+            ]
+        }
+        return []
+    }
+
+    func loadDescriptions() async throws -> [String] { ["Lidl", "Amazon"] }
+    func loadAccounts() async throws -> [String] { ["Assets:Bank", "Expenses:Groceries"] }
+    func loadAccountBalances() async throws -> [(String, String)] {
+        [("Assets:Bank", "€8198.21"), ("Assets:Cash", "€153.40")]
+    }
+    func loadAccountTreeBalances() async throws -> [AccountNode] { [] }
+    func loadCommodities() async throws -> [String] { ["€"] }
+    func loadJournalStats() async throws -> JournalStats {
+        JournalStats(transactionCount: 100, accountCount: 20, commodities: ["€"])
+    }
+    func loadPeriodSummary(period: String?) async throws -> PeriodSummary {
+        PeriodSummary(income: 7341.75, expenses: 1747.95, commodity: "€")
+    }
+    func loadExpenseBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+        [("Expenses:School", 407, "€"), ("Expenses:Groceries", 319.17, "€")]
+    }
+    func loadIncomeBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+        [("Income:Salary", 7302, "€"), ("Income:Other", 39.75, "€")]
+    }
+    func loadLiabilitiesBreakdown() async throws -> [(String, Decimal, String)] {
+        [("Liabilities:Mortgage", -150000, "€")]
+    }
+    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
+        [("Assets:Bank", Decimal(string: "8198.21")!, "€"), ("Assets:Cash", Decimal(string: "153.40")!, "€")]
+    }
+    func loadInvestmentPositions() async throws -> [(String, Decimal, String)] { [] }
+    func loadInvestmentCost() async throws -> [String: (Decimal, String)] { [:] }
+    func loadInvestmentMarketValues(pricesFile: URL) async throws -> [String: (Decimal, String)] { [:] }
+    func loadReport(type: ReportType, periodBegin: String?, periodEnd: String?, commodity: String?) async throws -> ReportData {
+        ReportData(title: "Test")
+    }
+    func loadBudgetReport(period: String) async throws -> [BudgetRow] { [] }
+    func appendTransaction(_ transaction: Transaction) async throws {}
+    func updateTransactionStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async throws {}
+    func replaceTransaction(_ original: Transaction, with new: Transaction) async throws {}
+    func deleteTransaction(_ transaction: Transaction) async throws {}
+}
+
+@Suite("HledgerTools")
+struct HledgerToolTests {
+    let backend = MockBackend()
+
+    @Test func expenseBreakdownReturnsData() async throws {
+        let tool = ExpenseBreakdownTool(backend: backend)
+        let result = try await tool.call(arguments: PeriodQuery(period: "2026-04"))
+        #expect(result.contains("Expenses:School"))
+        #expect(result.contains("407"))
+        #expect(result.contains("Expenses:Groceries"))
+        #expect(result.contains("319.17"))
+        #expect(result.contains("Total expenses"))
+    }
+
+    @Test func incomeBreakdownReturnsData() async throws {
+        let tool = IncomeBreakdownTool(backend: backend)
+        let result = try await tool.call(arguments: PeriodQuery(period: "2026-04"))
+        #expect(result.contains("Income:Salary"))
+        #expect(result.contains("7302"))
+        #expect(result.contains("Total income"))
+    }
+
+    @Test func periodSummaryReturnsData() async throws {
+        let tool = PeriodSummaryTool(backend: backend)
+        let result = try await tool.call(arguments: PeriodQuery(period: "2026-04"))
+        #expect(result.contains("7341.75"))
+        #expect(result.contains("1747.95"))
+        #expect(result.contains("Net"))
+    }
+
+    @Test func accountBalancesReturnsAll() async throws {
+        let tool = AccountBalancesTool(backend: backend)
+        let result = try await tool.call(arguments: EmptyQuery())
+        #expect(result.contains("Assets:Bank"))
+        #expect(result.contains("€8198.21"))
+        #expect(result.contains("Assets:Cash"))
+    }
+
+    @Test func assetsReturnsData() async throws {
+        let tool = AssetsBreakdownTool(backend: backend)
+        let result = try await tool.call(arguments: EmptyQuery())
+        #expect(result.contains("Assets:Bank"))
+        #expect(result.contains("8198.21"))
+    }
+
+    @Test func liabilitiesReturnsData() async throws {
+        let tool = LiabilitiesBreakdownTool(backend: backend)
+        let result = try await tool.call(arguments: EmptyQuery())
+        #expect(result.contains("Liabilities:Mortgage"))
+        #expect(result.contains("-150000"))
+    }
+
+    @Test func transactionSearchFindsLidl() async throws {
+        let tool = TransactionSearchTool(backend: backend)
+        let result = try await tool.call(arguments: TextQuery(text: "Lidl"))
+        #expect(result.contains("Lidl"))
+        #expect(result.contains("45.2"))
+        #expect(result.contains("Found 1 transaction"))
+    }
+
+    @Test func transactionSearchEmptyResult() async throws {
+        let tool = TransactionSearchTool(backend: backend)
+        let result = try await tool.call(arguments: TextQuery(text: "nonexistent"))
+        #expect(result.contains("No transactions found"))
+    }
+}

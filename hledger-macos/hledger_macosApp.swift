@@ -2,6 +2,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let toggleAIChat = Notification.Name("toggleAIChat")
+}
+
 @main
 struct hledger_macosApp: App {
     @State private var appState = AppState()
@@ -147,6 +151,15 @@ struct AppCommands: Commands {
             }
         }
 
+        // Tools > AI Assistant
+        CommandMenu("Tools") {
+            Button("AI Assistant") {
+                NotificationCenter.default.post(name: .toggleAIChat, object: nil)
+            }
+            .keyboardShortcut("a", modifiers: [.command, .shift])
+            .disabled(!appState.config.aiEnabled)
+        }
+
         // Help > Keyboard Shortcuts, Command Log, Wiki
         CommandGroup(replacing: .help) {
             Button("hledger for Mac Help") {
@@ -203,6 +216,7 @@ struct ShortcutsView: View {
                     }
 
                     shortcutGroup("General") {
+                        shortcutRow("\u{2318}\u{21E7}A", "Toggle AI Assistant")
                         shortcutRow("\u{2318},", "Settings")
                         shortcutRow("\u{2318}/", "Show this panel")
                     }

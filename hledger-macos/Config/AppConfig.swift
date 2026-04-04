@@ -85,6 +85,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "portfolioSortMode") }
     }
 
+    /// Whether the AI assistant is enabled.
+    var aiEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "aiEnabled") as? Bool ?? false }
+        set { UserDefaults.standard.set(newValue, forKey: "aiEnabled") }
+    }
+
     /// Default report type: "is" (Income Statement), "bs" (Balance Sheet), "cf" (Cash Flow).
     var defaultReportType: String {
         get { UserDefaults.standard.string(forKey: "defaultReportType") ?? "is" }
