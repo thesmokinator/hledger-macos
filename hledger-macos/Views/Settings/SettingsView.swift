@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var defaultSection = "summary"
     @State private var appearance = "system"
     @State private var customCommodity = ""
+    @State private var treeExpanded = false
     @State private var investmentsEnabled = false
     @State private var pricehistPath = ""
     @State private var tickerRows: [TickerRow] = []
@@ -77,6 +78,10 @@ struct SettingsView: View {
                     Picker("Accounts view", selection: $accountsView) {
                         Text("Flat").tag("flat")
                         Text("Tree").tag("tree")
+                    }
+
+                    if accountsView == "tree" {
+                        Toggle("Expand tree by default", isOn: $treeExpanded)
                     }
 
                     Picker("Appearance", selection: $appearance) {
@@ -298,6 +303,7 @@ struct SettingsView: View {
             customCommodity = savedCommodity
         }
         accountsView = appState.config.accountsViewMode
+        treeExpanded = appState.config.accountsTreeExpanded
         hledgerPath = appState.config.hledgerBinaryPath
         defaultSection = appState.config.defaultSection
         appearance = appState.config.appearance
@@ -328,6 +334,7 @@ struct SettingsView: View {
         appState.config.journalFilePath = journalPath
         appState.config.defaultCommodity = commodity
         appState.config.accountsViewMode = accountsView
+        appState.config.accountsTreeExpanded = treeExpanded
         appState.config.hledgerBinaryPath = hledgerPath
         appState.config.defaultSection = defaultSection
         appState.config.appearance = appearance

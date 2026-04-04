@@ -114,6 +114,17 @@ struct AccountsView: View {
             if filteredTree.isEmpty {
                 ContentUnavailableView("No Accounts", systemImage: "building.columns",
                     description: Text(searchText.isEmpty ? "No accounts found in journal." : "No matching accounts."))
+            } else if appState.config.accountsTreeExpanded {
+                List {
+                    OutlineGroup(filteredTree, children: \.optionalChildren) { node in
+                        AccountRow(
+                            label: node.name,
+                            value: formatNodeBalance(node.balance),
+                            valueColor: nodeBalanceColor(node.balance)
+                        )
+                    }
+                }
+                .listStyle(.inset)
             } else {
                 List(filteredTree, children: \.optionalChildren) { node in
                     AccountRow(
