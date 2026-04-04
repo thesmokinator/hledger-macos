@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import hledger_macos
+@testable import hledger_for_Mac
 
 // MARK: - AmountParser Tests
 
@@ -448,7 +448,7 @@ struct MockBackend: AccountingBackend {
         [("Liabilities:Mortgage", -150000, "€")]
     }
     func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
-        [("Assets:Bank", 8198.21, "€"), ("Assets:Cash", 153.40, "€")]
+        [("Assets:Bank", Decimal(string: "8198.21")!, "€"), ("Assets:Cash", Decimal(string: "153.40")!, "€")]
     }
     func loadInvestmentPositions() async throws -> [(String, Decimal, String)] { [] }
     func loadInvestmentCost() async throws -> [String: (Decimal, String)] { [:] }
