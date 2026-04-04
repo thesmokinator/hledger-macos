@@ -367,7 +367,7 @@ extension HledgerBackend {
             postings: postings,
             status: status,
             code: data["tcode"] as? String ?? "",
-            comment: (data["tcomment"] as? String ?? "").trimmingCharacters(in: .whitespaces),
+            comment: (data["tcomment"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
             date2: data["tdate2"] as? String,
             sourcePosStart: sourcePosStart,
             sourcePosEnd: sourcePosEnd,
@@ -380,11 +380,22 @@ extension HledgerBackend {
         let statusStr = data["pstatus"] as? String ?? "Unmarked"
         let status = TransactionStatus(rawValue: statusStr) ?? .unmarked
 
+        // Parse balance assertion: { "baamount": [{...}], "baexact": false }
+        var balanceAssertion = ""
+        if let ba = data["pbalanceassertion"] as? [String: Any],
+           let baAmounts = ba["baamount"] as? [[String: Any]],
+           let first = baAmounts.first {
+            let baAmount = parseAmount(first)
+            let exact = ba["baexact"] as? Bool ?? false
+            balanceAssertion = "\(exact ? "==" : "=") \(baAmount.formatted())"
+        }
+
         return Posting(
             account: data["paccount"] as? String ?? "",
             amounts: amounts,
-            comment: (data["pcomment"] as? String ?? "").trimmingCharacters(in: .whitespaces),
-            status: status
+            comment: (data["pcomment"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+            status: status,
+            balanceAssertion: balanceAssertion
         )
     }
 

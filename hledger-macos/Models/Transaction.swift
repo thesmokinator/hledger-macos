@@ -140,19 +140,22 @@ struct Posting: Codable, Hashable, Identifiable, Sendable {
     var amounts: [Amount] = []
     var comment: String = ""
     var status: TransactionStatus = .unmarked
+    var balanceAssertion: String = ""
 
     init(
         id: UUID = UUID(),
         account: String,
         amounts: [Amount] = [],
         comment: String = "",
-        status: TransactionStatus = .unmarked
+        status: TransactionStatus = .unmarked,
+        balanceAssertion: String = ""
     ) {
         self.id = id
         self.account = account
         self.amounts = amounts
         self.comment = comment
         self.status = status
+        self.balanceAssertion = balanceAssertion
     }
 }
 
