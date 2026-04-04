@@ -1,4 +1,4 @@
-/// Main AI assistant service — orchestrates chat, context building, and model inference.
+/// Main AI assistant service — orchestrates chat, tool calling, and model inference.
 
 import SwiftUI
 
@@ -23,6 +23,10 @@ final class AIAssistant {
     func send(_ text: String, appState: AppState) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        guard let backend = appState.activeBackend else {
+            errorMessage = "No accounting backend available."
+            return
+        }
 
         // Add user message
         messages.append(ChatMessage(role: .user, content: trimmed))
@@ -35,18 +39,21 @@ final class AIAssistant {
         isGenerating = true
         errorMessage = nil
 
+        let systemPrompt = JournalContextBuilder.buildSystemPrompt(from: appState)
+        let conversationMessages = messages.filter { $0.role != .system && !$0.isStreaming }
+            + [ChatMessage(role: .user, content: trimmed)]
+
         generationTask = Task {
             do {
-                let systemPrompt = JournalContextBuilder.buildSystemPrompt(from: appState)
-                let conversationMessages = messages.filter { $0.role != .system && !$0.isStreaming }
-                    + [ChatMessage(role: .user, content: trimmed)]
-
-                let stream = provider.generate(systemPrompt: systemPrompt, messages: conversationMessages)
+                let stream = provider.generate(
+                    systemPrompt: systemPrompt,
+                    messages: conversationMessages,
+                    backend: backend
+                )
 
                 var lastText = ""
                 for try await text in stream {
                     if Task.isCancelled { break }
-                    // Apple FM streams cumulative text, so replace rather than append
                     lastText = text
                     messages[assistantIndex].content = lastText
                 }
@@ -73,7 +80,6 @@ final class AIAssistant {
         generationTask = nil
         isGenerating = false
 
-        // Mark any streaming message as done
         if let index = messages.lastIndex(where: { $0.isStreaming }) {
             messages[index].isStreaming = false
             if messages[index].content.isEmpty {

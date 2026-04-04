@@ -1,5 +1,5 @@
 /// Apple Foundation Models implementation of AIModelProvider.
-/// Uses the on-device Apple Intelligence model available on macOS 26+.
+/// Uses the on-device Apple Intelligence model with tool calling for accurate data.
 
 import Foundation
 import FoundationModels
@@ -11,12 +11,14 @@ struct AppleFoundationModelProvider: AIModelProvider {
 
     static var displayName: String { "Apple Intelligence" }
 
-    func generate(systemPrompt: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error> {
+    func generate(systemPrompt: String, messages: [ChatMessage], backend: any AccountingBackend) -> AsyncThrowingStream<String, Error> {
         let (stream, continuation) = AsyncThrowingStream<String, Error>.makeStream()
+        let tools = HledgerTools.all(for: backend)
 
         let task = Task {
             do {
                 let session = LanguageModelSession(
+                    tools: tools,
                     instructions: systemPrompt
                 )
 
@@ -36,9 +38,9 @@ struct AppleFoundationModelProvider: AIModelProvider {
                     return
                 }
 
-                let stream = session.streamResponse(to: lastMessage.content)
+                let responseStream = session.streamResponse(to: lastMessage.content)
 
-                for try await partial in stream {
+                for try await partial in responseStream {
                     if Task.isCancelled { break }
                     continuation.yield(partial.content)
                 }

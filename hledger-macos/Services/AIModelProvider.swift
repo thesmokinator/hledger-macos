@@ -12,8 +12,8 @@ protocol AIModelProvider: Sendable {
     static var displayName: String { get }
 
     /// Generate a streaming response for the given conversation.
-    /// Returns an AsyncThrowingStream that yields text chunks as they are generated.
-    func generate(systemPrompt: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error>
+    /// The backend is provided so the provider can create tools for tool calling.
+    func generate(systemPrompt: String, messages: [ChatMessage], backend: any AccountingBackend) -> AsyncThrowingStream<String, Error>
 }
 
 /// Errors from AI model operations.
