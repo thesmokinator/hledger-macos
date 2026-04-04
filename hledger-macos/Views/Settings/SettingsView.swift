@@ -181,7 +181,7 @@ struct SettingsView: View {
                                 .foregroundStyle(.red)
                                 .font(.caption)
                         }
-                        Text("Required for market values. Install: pip install pricehist")
+                        Text("Required for market values. Install: pipx install pricehist (or pip install pricehist)")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
