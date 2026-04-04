@@ -97,8 +97,8 @@ struct SummaryView: View {
                 Text(title).font(.headline)
                 SortToggleButton(
                     ascending: $breakdownSortByAmount,
-                    ascLabel: "Sort alphabetically",
-                    descLabel: "Sort by amount"
+                    modeA: .byAmount,
+                    modeB: .byName
                 )
             }
             .padding(.bottom, 2)
