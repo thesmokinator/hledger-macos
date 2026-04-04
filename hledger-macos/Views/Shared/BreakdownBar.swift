@@ -16,6 +16,8 @@ struct BreakdownRow: View {
     let mode: String
     var isMultiCurrency: Bool = false
 
+    @State private var showingMultiCurrencyInfo = false
+
     private var isFixed: Bool { mode == "fixed" }
 
     var body: some View {
@@ -53,10 +55,16 @@ struct BreakdownRow: View {
             Text(account)
                 .font(.callout).lineLimit(1)
             if isMultiCurrency {
-                Image(systemName: "info.circle")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .help("This account has balances in multiple currencies. See Accounts for full details.")
+                Image(systemName: "info.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .onTapGesture { showingMultiCurrencyInfo.toggle() }
+                    .popover(isPresented: $showingMultiCurrencyInfo) {
+                        Text("This account has balances in multiple currencies. Only the default currency is shown here. See Accounts for full details.")
+                            .font(.callout)
+                            .padding(12)
+                            .frame(width: 280)
+                    }
             }
         }
     }
