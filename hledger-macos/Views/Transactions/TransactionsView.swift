@@ -159,7 +159,8 @@ struct TransactionsView: View {
                 newTransaction()
             }
         }
-        .task(id: appState.dataVersion) { await loadAll() }
+        .task { await loadAll() }
+        .task(id: appState.dataVersion) { await loadPeriodSummary() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
         }
