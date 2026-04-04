@@ -1,11 +1,27 @@
 /// Debug panel showing all hledger commands executed during this session.
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct CommandLogView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedEntry: CommandLogEntry?
+    @State private var filter: LogFilter = .all
     private let log = CommandLog.shared
+
+    private enum LogFilter: String, CaseIterable {
+        case all = "All"
+        case errors = "Errors"
+        case success = "Success"
+    }
+
+    private var filteredEntries: [CommandLogEntry] {
+        switch filter {
+        case .all: return log.entries
+        case .errors: return log.entries.filter(\.isError)
+        case .success: return log.entries.filter { !$0.isError }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,15 +29,19 @@ struct CommandLogView: View {
             HStack {
                 Text("Command Log")
                     .font(.headline)
-                Text("\(log.entries.count) commands")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if log.errorCount > 0 {
-                    Text("\(log.errorCount) errors")
-                        .font(.caption)
-                        .foregroundStyle(.red)
+
+                Picker("", selection: $filter) {
+                    ForEach(LogFilter.allCases, id: \.self) { f in
+                        Text(filterLabel(f)).tag(f)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .frame(width: 220)
+
                 Spacer()
+
+                Button("Export") { exportLog() }
+                    .controlSize(.small)
                 Button("Clear") { log.clear() }
                     .controlSize(.small)
             }
@@ -30,15 +50,15 @@ struct CommandLogView: View {
 
             Divider()
 
-            if log.entries.isEmpty {
+            if filteredEntries.isEmpty {
                 Spacer()
-                Text("No commands executed yet.")
+                Text(filter == .all ? "No commands executed yet." : "No \(filter.rawValue.lowercased()) to show.")
                     .foregroundStyle(.secondary)
                 Spacer()
             } else {
                 HSplitView {
                     // Command list
-                    List(log.entries.reversed(), selection: $selectedEntry) { entry in
+                    List(filteredEntries.reversed(), selection: $selectedEntry) { entry in
                         HStack(spacing: 8) {
                             Image(systemName: entry.isError ? "xmark.circle.fill" : "checkmark.circle.fill")
                                 .foregroundStyle(entry.isError ? .red : .green)
@@ -87,6 +107,36 @@ struct CommandLogView: View {
         }
         .frame(width: 900, height: 500)
     }
+
+    private func filterLabel(_ f: LogFilter) -> String {
+        switch f {
+        case .all: return "All (\(log.entries.count))"
+        case .errors: return "Errors (\(log.errorCount))"
+        case .success: return "Success (\(log.entries.count - log.errorCount))"
+        }
+    }
+
+    // MARK: - Export
+
+    private func exportLog() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType.log]
+        panel.nameFieldStringValue = "hledger-commands.log"
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        var lines: [String] = []
+        for entry in log.entries {
+            lines.append("[\(entry.timestampFormatted)] [exit:\(entry.exitCode)] \(entry.command)")
+            if !entry.stderr.isEmpty {
+                lines.append("  STDERR: \(entry.stderr)")
+            }
+        }
+
+        try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    // MARK: - Detail
 
     private func entryDetail(_ entry: CommandLogEntry) -> some View {
         ScrollView {
