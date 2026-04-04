@@ -8,21 +8,7 @@ struct SummaryView: View {
 
     @State private var portfolioSortAscending = true
     @State private var breakdownSortByAmount = true
-
-    private var currentMonth: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM"
-        return f.string(from: Date())
-    }
-
-    private var currentMonthLabel: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM"
-        guard let date = f.date(from: currentMonth) else { return currentMonth }
-        let display = DateFormatter()
-        display.dateFormat = "MMMM yyyy"
-        return display.string(from: date)
-    }
+    @State private var summaryPeriod = "month"
 
     var body: some View {
         ScrollView {
@@ -53,14 +39,29 @@ struct SummaryView: View {
         }
         .navigationTitle("Summary")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
+
+                Picker("Period", selection: $summaryPeriod) {
+                    Text("Current month").tag("month")
+                    Text("3 months").tag("3m")
+                    Text("6 months").tag("6m")
+                    Text("12 months").tag("12m")
+                    Text("Year to date").tag("ytd")
+                }
             }
         }
-        .onAppear { portfolioSortAscending = appState.config.portfolioSortMode == "asc" }
+        .onAppear {
+            portfolioSortAscending = appState.config.portfolioSortMode == "asc"
+            summaryPeriod = appState.config.summaryPeriod
+        }
         .onChange(of: portfolioSortAscending) { appState.config.portfolioSortMode = portfolioSortAscending ? "asc" : "desc" }
+        .onChange(of: summaryPeriod) {
+            appState.config.summaryPeriod = summaryPeriod
+            Task { await appState.loadSummary() }
+        }
         .task { await appState.loadSummary() }
     }
 

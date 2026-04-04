@@ -61,6 +61,12 @@ final class AppConfig {
         }
     }
 
+    /// Summary period filter: "month", "3m", "6m", "12m", "ytd".
+    var summaryPeriod: String {
+        get { UserDefaults.standard.string(forKey: "summaryPeriod") ?? "month" }
+        set { UserDefaults.standard.set(newValue, forKey: "summaryPeriod") }
+    }
+
     /// Whether the accounts tree view starts fully expanded.
     var accountsTreeExpanded: Bool {
         get { UserDefaults.standard.object(forKey: "accountsTreeExpanded") as? Bool ?? false }

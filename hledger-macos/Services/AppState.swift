@@ -178,23 +178,47 @@ final class AppState {
         }
     }
 
-    /// Load summary data (all-time + current month breakdowns).
+    /// Resolve the summary period filter to an hledger period string.
+    private func resolveSummaryPeriod() -> String? {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        let today = Date()
+
+        switch config.summaryPeriod {
+        case "month":
+            let mf = DateFormatter(); mf.dateFormat = "yyyy-MM"
+            return mf.string(from: today)
+        case "3m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -3, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "6m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -6, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "12m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -12, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "ytd":
+            let year = Calendar.current.component(.year, from: today)
+            return "\(year)-01-01..\(f.string(from: today))"
+        default:
+            return nil
+        }
+    }
+
+    /// Load summary data (period-filtered breakdowns + all-time balances).
     func loadSummary() async {
         guard let backend = activeBackend else { return }
 
-        let currentMonth: String = {
-            let f = DateFormatter(); f.dateFormat = "yyyy-MM"
-            return f.string(from: Date())
-        }()
+        let period = resolveSummaryPeriod()
 
-        async let allTimeSummary = backend.loadPeriodSummary(period: nil)
-        async let monthSummary = backend.loadPeriodSummary(period: currentMonth)
-        async let expenses = backend.loadExpenseBreakdown(period: currentMonth)
-        async let income = backend.loadIncomeBreakdown(period: currentMonth)
+        async let periodSummary = backend.loadPeriodSummary(period: period)
+        async let monthSummary = backend.loadPeriodSummary(period: currentPeriod)
+        async let expenses = backend.loadExpenseBreakdown(period: period)
+        async let income = backend.loadIncomeBreakdown(period: period)
         async let liabs = backend.loadLiabilitiesBreakdown()
         async let assts = backend.loadAssetsBreakdown()
 
-        summaryAllTime = try? await allTimeSummary
+        summaryAllTime = try? await periodSummary
         summaryCurrentMonth = try? await monthSummary
         expenseBreakdown = (try? await expenses) ?? []
         incomeBreakdown = (try? await income) ?? []
