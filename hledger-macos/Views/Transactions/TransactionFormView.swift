@@ -249,7 +249,7 @@ struct TransactionFormView: View {
             status = txn.status
             code = txn.code
             comment = txn.comment
-            postingRows = txn.postings.map { PostingRow(account: $0.account, amount: $0.amounts.first.map { $0.formatted() } ?? "") }
+            postingRows = txn.postings.map { PostingRow(account: $0.account, amount: $0.amounts.first.map { $0.formatted() } ?? "", comment: $0.comment, balanceAssertion: $0.balanceAssertion) }
         }
 
         while postingRows.count < 2 { postingRows.append(PostingRow()) }
@@ -282,7 +282,7 @@ struct TransactionFormView: View {
 
         var postings: [Posting] = []
         for row in postingRows where !row.account.isEmpty {
-            postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount)))
+            postings.append(Posting(account: row.account, amounts: parseAmountString(row.amount), comment: row.comment, balanceAssertion: row.balanceAssertion))
         }
 
         // hledger accepts transactions with 0 postings
@@ -322,4 +322,6 @@ struct PostingRow: Identifiable {
     let id = UUID()
     var account: String = ""
     var amount: String = ""
+    var comment: String = ""
+    var balanceAssertion: String = ""
 }

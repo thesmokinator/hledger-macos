@@ -64,6 +64,10 @@ enum TransactionFormatter {
             line = "    \(paddedAccount)  \(paddedAmount)"
         }
 
+        if !posting.balanceAssertion.isEmpty {
+            line += " \(posting.balanceAssertion)"
+        }
+
         if !posting.comment.isEmpty {
             line += "  ; \(posting.comment)"
         }
