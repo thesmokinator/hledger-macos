@@ -26,12 +26,6 @@
         }
       }
     },
-    "%lld commands" : {
-
-    },
-    "%lld errors" : {
-
-    },
     "© 2026 Michele Broggi" : {
 
     },
@@ -71,10 +65,16 @@
     "Accepts .journal / .hledger / .j files, or a directory containing one." : {
 
     },
+    "Account" : {
+
+    },
     "Accounts" : {
 
     },
     "Accounts view" : {
+
+    },
+    "Actual" : {
 
     },
     "Add budget rules to track spending against targets." : {
@@ -112,6 +112,9 @@
 
     },
     "Asset" : {
+
+    },
+    "Bar charts" : {
 
     },
     "Book Value" : {
@@ -198,13 +201,13 @@
     "Detected: %@" : {
 
     },
-    "Display" : {
-
-    },
     "Done" : {
 
     },
     "Download" : {
+
+    },
+    "Dynamic" : {
 
     },
     "e.g. 500.00" : {
@@ -241,6 +244,9 @@
 
     },
     "Find tickers at finance.yahoo.com" : {
+
+    },
+    "Fixed width" : {
 
     },
     "Flat" : {
@@ -300,6 +306,9 @@
     "Keyboard Shortcuts" : {
 
     },
+    "Last month" : {
+
+    },
     "Later" : {
 
     },
@@ -346,6 +355,9 @@
 
     },
     "New..." : {
+
+    },
+    "No %@ to show." : {
 
     },
     "No Accounts" : {
@@ -429,6 +441,9 @@
     "Portfolio" : {
 
     },
+    "Posting comment" : {
+
+    },
     "Postings" : {
 
     },
@@ -450,6 +465,9 @@
     "Reload" : {
 
     },
+    "Remaining" : {
+
+    },
     "Remove budget for %@?" : {
 
     },
@@ -466,7 +484,7 @@
     "Reports" : {
 
     },
-    "Required for market values. Install: pip install pricehist" : {
+    "Required for market values. Install: pipx install pricehist (or pip install pricehist)" : {
 
     },
     "Save" : {
@@ -505,6 +523,12 @@
     "The journal file path has changed. All data will be reloaded from the new file." : {
 
     },
+    "Theme" : {
+
+    },
+    "This account has balances in multiple currencies. See Accounts for full details." : {
+
+    },
     "Ticker" : {
 
     },
@@ -524,6 +548,9 @@
 
     },
     "Update Available" : {
+
+    },
+    "Usage" : {
 
     },
     "USD" : {

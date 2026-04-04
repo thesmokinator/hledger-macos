@@ -278,3 +278,21 @@ account liabilities:car-loan
 2026-04-25 * Museum
     expenses:entertainment            €18.00
     assets:bank:checking
+
+; === EDGE CASES: comments, balance assertions, multi-commodity ===
+
+2026-04-26 * Weekly groceries  ; family shopping trip
+    expenses:food:groceries                         €95.50  ; organic produce
+    assets:bank:checking  ; paid with debit card
+
+2026-04-27 * Salary with assertion
+    assets:bank:checking              €2800.00 = €12449.77
+    income:salary
+
+2026-04-28 * Freelance USD payment  ; foreign client
+    assets:bank:checking              $500.00
+    income:freelance
+
+2026-04-29 * Amazon US purchase
+    expenses:shopping                 $35.00
+    assets:bank:checking              €-32.50

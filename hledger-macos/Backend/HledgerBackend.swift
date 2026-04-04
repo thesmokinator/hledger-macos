@@ -402,7 +402,7 @@ extension HledgerBackend {
             postings: postings,
             status: status,
             code: data["tcode"] as? String ?? "",
-            comment: (data["tcomment"] as? String ?? "").trimmingCharacters(in: .whitespaces),
+            comment: (data["tcomment"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
             date2: data["tdate2"] as? String,
             sourcePosStart: sourcePosStart,
             sourcePosEnd: sourcePosEnd,
@@ -428,7 +428,7 @@ extension HledgerBackend {
         return Posting(
             account: data["paccount"] as? String ?? "",
             amounts: amounts,
-            comment: (data["pcomment"] as? String ?? "").trimmingCharacters(in: .whitespaces),
+            comment: (data["pcomment"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
             status: status,
             balanceAssertion: balanceAssertion
         )

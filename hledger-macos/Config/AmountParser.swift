@@ -9,14 +9,15 @@ enum AmountParser {
         let trimmed = s.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, trimmed != "0" else { return (0, "") }
 
-        // Left-side commodity: €500.00 or €500,00
-        if let match = trimmed.firstMatch(of: /^([^\d\s.\-]+)\s*(-?[\d.,]+)$/) {
-            let commodity = String(match.1)
-            let qty = parseNumber(String(match.2))
+        // Left-side commodity: €500.00, €-500.00, -€500.00
+        if let match = trimmed.firstMatch(of: /^(-?)([^\d\s.\-]+)\s*(-?[\d.,]+)$/) {
+            let sign = String(match.1)
+            let commodity = String(match.2)
+            let qty = parseNumber(sign + String(match.3))
             return (qty, commodity)
         }
 
-        // Right-side commodity: 500.00 EUR or 500,00 EUR
+        // Right-side commodity: 500.00 EUR, -500.00 EUR
         if let match = trimmed.firstMatch(of: /^(-?[\d.,]+)\s*([^\d\s.\-]+)$/) {
             let qty = parseNumber(String(match.1))
             let commodity = String(match.2)

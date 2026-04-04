@@ -83,31 +83,15 @@ struct RecurringFormView: View {
                             .padding(.bottom, 8)
 
                         ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
-                            HStack(spacing: 8) {
-                                Text("#\(index + 1):")
-                                    .font(.callout.monospacedDigit())
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 30, alignment: .trailing)
-
-                                AutocompleteField(
-                                    placeholder: "e.g. expenses:food",
-                                    text: $postingRows[index].account,
-                                    suggestions: knownAccounts
-                                )
-
-                                TextField("0.00", text: $postingRows[index].amount)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 130)
-
-                                if postingRows.count > 2 {
-                                    Button {
-                                        postingRows.remove(at: index)
-                                    } label: {
-                                        Image(systemName: "minus.circle").foregroundStyle(.red)
-                                    }
-                                    .buttonStyle(.borderless)
-                                }
-                            }
+                            PostingRowField(
+                                index: index,
+                                account: $postingRows[index].account,
+                                amount: $postingRows[index].amount,
+                                comment: .constant(""),
+                                suggestions: knownAccounts,
+                                showRemove: postingRows.count > 2,
+                                onRemove: { postingRows.remove(at: index) }
+                            )
                         }
 
                         Button {
