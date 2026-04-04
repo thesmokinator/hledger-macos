@@ -43,7 +43,11 @@ final class AIAssistant {
         let conversationMessages = messages.filter { $0.role != .system && !$0.isStreaming }
             + [ChatMessage(role: .user, content: trimmed)]
 
+        let log = CommandLog.shared
+
         generationTask = Task {
+            log.log(command: "[AI] Query: \(trimmed)", exitCode: 0, stdout: "", stderr: "")
+
             do {
                 let stream = provider.generate(
                     systemPrompt: systemPrompt,
@@ -61,13 +65,18 @@ final class AIAssistant {
                 messages[assistantIndex].isStreaming = false
                 if messages[assistantIndex].content.isEmpty {
                     messages[assistantIndex].content = "I couldn't generate a response. Please try again."
+                    log.log(command: "[AI] Response", exitCode: 1, stdout: "", stderr: "Empty response")
+                } else {
+                    log.log(command: "[AI] Response", exitCode: 0, stdout: lastText, stderr: "")
                 }
             } catch {
                 messages[assistantIndex].isStreaming = false
+                let errorDesc = error.localizedDescription
                 if messages[assistantIndex].content.isEmpty {
-                    messages[assistantIndex].content = "Sorry, something went wrong: \(error.localizedDescription)"
+                    messages[assistantIndex].content = "Sorry, something went wrong: \(errorDesc)"
                 }
-                errorMessage = error.localizedDescription
+                errorMessage = errorDesc
+                log.log(command: "[AI] Error", exitCode: 1, stdout: "", stderr: errorDesc)
             }
 
             isGenerating = false
