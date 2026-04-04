@@ -27,6 +27,7 @@ struct ReportsView: View {
 
     @State private var reportType: ReportType = .incomeStatement
     @State private var periodRange: PeriodRange = .sixMonths
+    @State private var didApplyDefaults = false
     @State private var reportData: ReportData?
     @State private var isLoading = false
     @State private var showingChart = false
@@ -106,9 +107,26 @@ struct ReportsView: View {
                 }
             }
         }
-        .task(id: appState.dataVersion) { await loadReport() }
-        .onChange(of: reportType) { Task { await loadReport() } }
-        .onChange(of: periodRange) { Task { await loadReport() } }
+        .task(id: appState.dataVersion) {
+            if !didApplyDefaults {
+                if let type = ReportType(rawValue: appState.config.defaultReportType) {
+                    reportType = type
+                }
+                if let range = PeriodRange(rawValue: appState.config.defaultReportPeriod) {
+                    periodRange = range
+                }
+                didApplyDefaults = true
+            }
+            await loadReport()
+        }
+        .onChange(of: reportType) {
+            appState.config.defaultReportType = reportType.rawValue
+            Task { await loadReport() }
+        }
+        .onChange(of: periodRange) {
+            appState.config.defaultReportPeriod = periodRange.rawValue
+            Task { await loadReport() }
+        }
         .sheet(isPresented: $showingChart) {
             if let data = reportData {
                 ReportChartOverlay(reportType: reportType, data: data)
