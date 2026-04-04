@@ -14,14 +14,14 @@ struct BreakdownRow: View {
     let barRatio: Double
     let color: Color
     let mode: String
+    var isMultiCurrency: Bool = false
 
     private var isFixed: Bool { mode == "fixed" }
 
     var body: some View {
         HStack(spacing: 12) {
             if isFixed {
-                Text(account)
-                    .font(.callout).lineLimit(1)
+                accountLabel
                     .frame(width: 160, alignment: .leading)
 
                 BreakdownBar(ratio: barRatio, color: color)
@@ -31,8 +31,7 @@ struct BreakdownRow: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 100, alignment: .trailing)
             } else {
-                Text(account)
-                    .font(.callout).lineLimit(1)
+                accountLabel
 
                 BreakdownBar(ratio: barRatio, color: color)
 
@@ -47,6 +46,19 @@ struct BreakdownRow: View {
             }
         }
         .frame(height: 20)
+    }
+
+    private var accountLabel: some View {
+        HStack(spacing: 4) {
+            Text(account)
+                .font(.callout).lineLimit(1)
+            if isMultiCurrency {
+                Image(systemName: "info.circle")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .help("This account has balances in multiple currencies. See Accounts for full details.")
+            }
+        }
     }
 }
 

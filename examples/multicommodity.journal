@@ -1,0 +1,48 @@
+; Test journal covering multi-commodity edge cases for hledger
+
+; --- Account with single commodity (should work fine)
+2026-01-01 * Opening Bank
+    Assets:Bank                          €10000.00
+    Equity:Opening
+
+; --- Account with non-currency commodity (XEON, SWDA)
+2026-01-01 * Buy XEON
+    Assets:Investments:XEON              180 XEON @@ €26757.13
+    Assets:Bank
+
+2026-01-01 * Buy SWDA
+    Assets:Investments:SWDA              1 SWDA @@ €112.16
+    Assets:Bank
+
+; --- Account that accumulates MULTIPLE commodities (the problematic case)
+; This wallet receives both EUR and USD
+2026-02-01 * Freelance EUR
+    Assets:Wallet                        €500.00
+    Income:Freelance
+
+2026-02-15 * Freelance USD
+    Assets:Wallet                        $300.00
+    Income:Freelance
+
+; --- Expense in foreign currency
+2026-03-01 * Hotel in London
+    Expenses:Travel                      £250.00
+    Assets:Bank                          €-290.00
+
+; --- Expense with multiple currencies on same account over time
+2026-03-10 * Amazon US
+    Expenses:Shopping                    $50.00
+    Assets:Bank                          €-46.50
+
+2026-03-15 * Amazon IT
+    Expenses:Shopping                    €35.00
+    Assets:Bank
+
+; --- Income from multiple sources in different currencies
+2026-04-01 * Salary EUR
+    Assets:Bank                          €3000.00
+    Income:Salary
+
+2026-04-02 * Dividend USD
+    Assets:Bank                          $120.00
+    Income:Dividends
