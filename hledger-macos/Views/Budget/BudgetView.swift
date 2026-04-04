@@ -136,14 +136,19 @@ struct BudgetView: View {
     // MARK: - Budget List
 
     private var budgetList: some View {
-        List(mergedRows, selection: $selectedRow) { row in
-            BudgetRowView(row: row)
-                .tag(row)
-                .contextMenu {
-                    Button("Edit") { editRule(row.rule) }
-                    Divider()
-                    Button("Delete", role: .destructive) { confirmDelete(row.rule) }
-                }
+        List(selection: $selectedRow) {
+            BudgetHeaderRow()
+                .listRowSeparator(.hidden)
+
+            ForEach(mergedRows) { row in
+                BudgetRowView(row: row)
+                    .tag(row)
+                    .contextMenu {
+                        Button("Edit") { editRule(row.rule) }
+                        Divider()
+                        Button("Delete", role: .destructive) { confirmDelete(row.rule) }
+                    }
+            }
         }
         .listStyle(.inset)
         .focused($listFocused)
@@ -275,6 +280,28 @@ struct MergedBudgetRow: Identifiable, Hashable {
     var usagePct: Double {
         guard budget != 0 else { return 0 }
         return NSDecimalNumber(decimal: actual / budget * 100).doubleValue
+    }
+}
+
+// MARK: - Budget Header Row
+
+struct BudgetHeaderRow: View {
+    var body: some View {
+        HStack(spacing: 0) {
+            Text("Account")
+                .frame(width: 200, alignment: .leading)
+            Text("Budget")
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Text("Actual")
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Text("Remaining")
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            Text("Usage")
+                .frame(width: 60, alignment: .trailing)
+        }
+        .font(.caption.weight(.medium))
+        .foregroundStyle(.secondary)
+        .padding(.vertical, ListMetrics.rowPadding)
     }
 }
 
