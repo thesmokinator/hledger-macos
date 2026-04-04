@@ -124,21 +124,14 @@ struct SummaryView: View {
                 let pct = total > 0 ? Double(truncating: (amount / total * 100) as NSDecimalNumber) : 0
                 let barRatio = maxAmount > 0 ? Double(truncating: (amount / maxAmount) as NSDecimalNumber) : 0
 
-                HStack(spacing: 12) {
-                    Text(account)
-                        .font(.callout).lineLimit(1)
-                        .frame(width: 160, alignment: .leading)
-
-                    BreakdownBar(ratio: appState.config.barChartMode == "fixed" ? 1.0 : barRatio, color: color)
-
-                    Text(formatAmount(amount, commodity: commodity))
-                        .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
-                        .frame(minWidth: 80, alignment: .trailing)
-
-                    Text((pct / 100).formatted(.percent.precision(.fractionLength(0))))
-                        .font(.caption).foregroundStyle(.tertiary)
-                        .frame(width: 36, alignment: .trailing)
-                }
+                BreakdownRow(
+                    account: account,
+                    amount: formatAmount(amount, commodity: commodity),
+                    percentage: pct,
+                    barRatio: barRatio,
+                    color: color,
+                    mode: appState.config.barChartMode
+                )
                 .frame(height: 20)
             }
         }

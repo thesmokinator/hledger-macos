@@ -1,8 +1,56 @@
-/// Reusable horizontal bar for breakdown sections.
-/// Width is proportional to the ratio (0..1) of the available space.
+/// Reusable components for breakdown sections in Summary.
+/// BreakdownRow renders a full row (label + bar + amount) in dynamic or fixed mode.
+/// BreakdownBar renders the proportional colored bar.
 
 import SwiftUI
 
+/// A single row in a breakdown section.
+/// Dynamic: label (natural width), bar (proportional), amount, percentage.
+/// Fixed: label (160px), bar (proportional), amount (100px). No percentage.
+struct BreakdownRow: View {
+    let account: String
+    let amount: String
+    let percentage: Double
+    let barRatio: Double
+    let color: Color
+    let mode: String
+
+    private var isFixed: Bool { mode == "fixed" }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if isFixed {
+                Text(account)
+                    .font(.callout).lineLimit(1)
+                    .frame(width: 160, alignment: .leading)
+
+                BreakdownBar(ratio: barRatio, color: color)
+
+                Text(amount)
+                    .font(.system(.callout, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 100, alignment: .trailing)
+            } else {
+                Text(account)
+                    .font(.callout).lineLimit(1)
+
+                BreakdownBar(ratio: barRatio, color: color)
+
+                Text(amount)
+                    .font(.system(.callout, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 80, alignment: .trailing)
+
+                Text((percentage / 100).formatted(.percent.precision(.fractionLength(0))))
+                    .font(.caption).foregroundStyle(.tertiary)
+                    .frame(width: 36, alignment: .trailing)
+            }
+        }
+        .frame(height: 20)
+    }
+}
+
+/// Proportional colored bar.
 struct BreakdownBar: View {
     let ratio: Double
     let color: Color
