@@ -130,17 +130,21 @@ struct TransactionSearchTool: Tool {
     var name: String { "searchTransactions" }
     var description: String { "Search for transactions by a keyword (store name, description, etc). Call this when the user wants to find specific transactions or payments. Just pass the search text (e.g. 'Lidl', 'restaurant')." }
 
-    @concurrent func call(arguments: TextQuery) async throws -> String {
-        // Auto-format: if no hledger prefix, treat as description search
-        let raw = arguments.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let query: String
-        if raw.contains(":") {
-            query = raw
-        } else if raw.first?.isNumber == true || raw.hasPrefix(">") || raw.hasPrefix("<") {
-            query = "amt:\(raw)"
+    /// Convert user text into an hledger query. Exported for testing.
+    static func formatQuery(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.contains(":") {
+            return trimmed
+        } else if trimmed.first?.isNumber == true || trimmed.hasPrefix(">") || trimmed.hasPrefix("<") {
+            return "amt:\(trimmed)"
         } else {
-            query = "desc:\(raw)"
+            return "desc:\(trimmed)"
         }
+    }
+
+    @concurrent func call(arguments: TextQuery) async throws -> String {
+        let raw = arguments.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = Self.formatQuery(raw)
 
         let transactions = try await backend.loadTransactions(query: query, reversed: true)
         if transactions.isEmpty { return "No transactions found for '\(raw)'." }

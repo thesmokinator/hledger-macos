@@ -18,7 +18,7 @@ struct AIChatOverlay: View {
             Divider()
             inputBar
         }
-        .frame(width: 380)
+        .frame(width: 440)
         .frame(maxHeight: .infinity)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
@@ -81,6 +81,7 @@ struct AIChatOverlay: View {
                         }
                     }
                     .padding(Theme.Spacing.lg)
+                    .padding(.bottom, Theme.Spacing.sm)
                 }
             }
             .onChange(of: assistant.messages.count) {

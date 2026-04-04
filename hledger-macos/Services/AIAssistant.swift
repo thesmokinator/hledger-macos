@@ -65,7 +65,7 @@ final class AIAssistant {
             } catch {
                 messages[assistantIndex].isStreaming = false
                 if messages[assistantIndex].content.isEmpty {
-                    messages[assistantIndex].content = "An error occurred."
+                    messages[assistantIndex].content = "Sorry, something went wrong: \(error.localizedDescription)"
                 }
                 errorMessage = error.localizedDescription
             }
