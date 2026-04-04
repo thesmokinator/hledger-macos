@@ -12,10 +12,16 @@ struct PeriodQuery {
     var period: String
 }
 
-@Generable(description: "A search query for transactions")
-struct TransactionQuery {
-    @Guide(description: "hledger query: use desc:keyword for description, acct:name for account, amt:>100 for amount filters")
-    var query: String
+@Generable(description: "A text query to search transactions")
+struct TextQuery {
+    @Guide(description: "The search text, e.g. a store name like Lidl, or a description keyword")
+    var text: String
+}
+
+@Generable(description: "No arguments needed")
+struct EmptyQuery {
+    @Guide(description: "Ignored, pass any value")
+    var unused: String?
 }
 
 // MARK: - Tools
@@ -25,15 +31,15 @@ struct PeriodSummaryTool: Tool {
     let backend: any AccountingBackend
 
     var name: String { "getPeriodSummary" }
-    var description: String { "Get total income, expenses, and net for a given month. Use this when the user asks about income, expenses, or net for a specific period." }
+    var description: String { "Get total income, total expenses, and net balance for a specific month. Call this when the user asks for a financial overview or balance of a month." }
 
     @concurrent func call(arguments: PeriodQuery) async throws -> String {
         let summary = try await backend.loadPeriodSummary(period: arguments.period)
         return """
         Period: \(arguments.period)
-        Income: \(summary.income) \(summary.commodity)
-        Expenses: \(summary.expenses) \(summary.commodity)
-        Net: \(summary.net) \(summary.commodity)
+        Total income: \(summary.income) \(summary.commodity)
+        Total expenses: \(summary.expenses) \(summary.commodity)
+        Net (income minus expenses): \(summary.net) \(summary.commodity)
         """
     }
 }
@@ -42,14 +48,16 @@ struct PeriodSummaryTool: Tool {
 struct ExpenseBreakdownTool: Tool {
     let backend: any AccountingBackend
 
-    var name: String { "getExpenseBreakdown" }
-    var description: String { "Get expenses broken down by account for a given month. Use this when the user asks about spending categories or top expenses." }
+    var name: String { "getExpenses" }
+    var description: String { "Get all EXPENSE categories and how much was spent in each for a given month. Call this when the user asks about spending, costs, expenses, what they spent money on, or top expenses. Do NOT use this for income." }
 
     @concurrent func call(arguments: PeriodQuery) async throws -> String {
         let breakdown = try await backend.loadExpenseBreakdown(period: arguments.period)
         if breakdown.isEmpty { return "No expenses found for \(arguments.period)." }
         let lines = breakdown.map { "\($0.0): \($0.1) \($0.2)" }
-        return "Expenses for \(arguments.period):\n" + lines.joined(separator: "\n")
+        let total = breakdown.reduce(Decimal.zero) { $0 + $1.1 }
+        let commodity = breakdown.first?.2 ?? ""
+        return "Expenses for \(arguments.period):\n" + lines.joined(separator: "\n") + "\nTotal expenses: \(total) \(commodity)"
     }
 }
 
@@ -57,32 +65,31 @@ struct ExpenseBreakdownTool: Tool {
 struct IncomeBreakdownTool: Tool {
     let backend: any AccountingBackend
 
-    var name: String { "getIncomeBreakdown" }
-    var description: String { "Get income broken down by source account for a given month. Use this when the user asks about income sources." }
+    var name: String { "getIncome" }
+    var description: String { "Get all INCOME sources and how much was earned from each for a given month. Call this ONLY when the user asks about income, salary, earnings, or revenue. Do NOT use this for expenses or spending." }
 
     @concurrent func call(arguments: PeriodQuery) async throws -> String {
         let breakdown = try await backend.loadIncomeBreakdown(period: arguments.period)
         if breakdown.isEmpty { return "No income found for \(arguments.period)." }
         let lines = breakdown.map { "\($0.0): \($0.1) \($0.2)" }
-        return "Income for \(arguments.period):\n" + lines.joined(separator: "\n")
+        let total = breakdown.reduce(Decimal.zero) { $0 + $1.1 }
+        let commodity = breakdown.first?.2 ?? ""
+        return "Income for \(arguments.period):\n" + lines.joined(separator: "\n") + "\nTotal income: \(total) \(commodity)"
     }
 }
 
-/// Get current account balances.
+/// Get all account balances.
 struct AccountBalancesTool: Tool {
     let backend: any AccountingBackend
 
     var name: String { "getAccountBalances" }
-    var description: String { "Get all account balances (all-time). Use this when the user asks about account balances, net worth, or how much is in a specific account." }
+    var description: String { "Get all account balances. Call this when the user asks about a specific account balance, how much is in their bank account, or their net worth. Returns all accounts with their current balance." }
 
-    @concurrent func call(arguments: TransactionQuery) async throws -> String {
+    @concurrent func call(arguments: EmptyQuery) async throws -> String {
         let balances = try await backend.loadAccountBalances()
         if balances.isEmpty { return "No account balances found." }
-        let query = arguments.query.lowercased()
-        let filtered = query.isEmpty ? balances : balances.filter { $0.0.lowercased().contains(query) }
-        if filtered.isEmpty { return "No accounts matching '\(arguments.query)'." }
-        let lines = filtered.map { "\($0.0): \($0.1)" }
-        return "Account balances:\n" + lines.joined(separator: "\n")
+        let lines = balances.map { "\($0.0): \($0.1)" }
+        return "All account balances:\n" + lines.joined(separator: "\n")
     }
 }
 
@@ -91,9 +98,9 @@ struct AssetsBreakdownTool: Tool {
     let backend: any AccountingBackend
 
     var name: String { "getAssets" }
-    var description: String { "Get all asset accounts and their current balances. Use this when the user asks about assets or savings." }
+    var description: String { "Get all asset accounts (bank, cash, investments) with current balances. Call this when the user asks about their assets, savings, patrimony, or wealth." }
 
-    @concurrent func call(arguments: PeriodQuery) async throws -> String {
+    @concurrent func call(arguments: EmptyQuery) async throws -> String {
         let assets = try await backend.loadAssetsBreakdown()
         if assets.isEmpty { return "No assets found." }
         let lines = assets.map { "\($0.0): \($0.1) \($0.2)" }
@@ -106,9 +113,9 @@ struct LiabilitiesBreakdownTool: Tool {
     let backend: any AccountingBackend
 
     var name: String { "getLiabilities" }
-    var description: String { "Get all liability accounts (debts, loans, mortgages). Use this when the user asks about debts or liabilities." }
+    var description: String { "Get all liability accounts (debts, loans, mortgages, credit cards). Call this when the user asks about debts, how much they owe, or liabilities." }
 
-    @concurrent func call(arguments: PeriodQuery) async throws -> String {
+    @concurrent func call(arguments: EmptyQuery) async throws -> String {
         let liabilities = try await backend.loadLiabilitiesBreakdown()
         if liabilities.isEmpty { return "No liabilities found." }
         let lines = liabilities.map { "\($0.0): \($0.1) \($0.2)" }
@@ -116,22 +123,33 @@ struct LiabilitiesBreakdownTool: Tool {
     }
 }
 
-/// Search transactions.
+/// Search transactions by description.
 struct TransactionSearchTool: Tool {
     let backend: any AccountingBackend
 
     var name: String { "searchTransactions" }
-    var description: String { "Search transactions by description, account, amount, or date. Use hledger query syntax: desc:keyword, acct:name, date:YYYY-MM, amt:>100. Use this when the user asks about specific transactions or wants to find payments." }
+    var description: String { "Search for transactions by a keyword (store name, description, etc). Call this when the user wants to find specific transactions or payments. Just pass the search text (e.g. 'Lidl', 'restaurant')." }
 
-    @concurrent func call(arguments: TransactionQuery) async throws -> String {
-        let transactions = try await backend.loadTransactions(query: arguments.query, reversed: true)
-        if transactions.isEmpty { return "No transactions found for query '\(arguments.query)'." }
+    @concurrent func call(arguments: TextQuery) async throws -> String {
+        // Auto-format: if no hledger prefix, treat as description search
+        let raw = arguments.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query: String
+        if raw.contains(":") {
+            query = raw
+        } else if raw.first?.isNumber == true || raw.hasPrefix(">") || raw.hasPrefix("<") {
+            query = "amt:\(raw)"
+        } else {
+            query = "desc:\(raw)"
+        }
+
+        let transactions = try await backend.loadTransactions(query: query, reversed: true)
+        if transactions.isEmpty { return "No transactions found for '\(raw)'." }
         let lines = transactions.prefix(30).map { txn in
             let amount = txn.postings.first(where: { !$0.amounts.isEmpty })?.amounts.first
             let amtStr = amount.map { "\($0.quantity) \($0.commodity)" } ?? ""
             return "\(txn.date) \(txn.description) \(amtStr)"
         }
-        var result = "Found \(transactions.count) transactions:\n" + lines.joined(separator: "\n")
+        var result = "Found \(transactions.count) transaction(s):\n" + lines.joined(separator: "\n")
         if transactions.count > 30 {
             result += "\n... and \(transactions.count - 30) more"
         }
