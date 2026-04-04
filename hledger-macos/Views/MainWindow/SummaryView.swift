@@ -125,14 +125,23 @@ struct SummaryView: View {
                         .font(.callout).lineLimit(1)
                         .frame(minWidth: 100, alignment: .leading)
 
-                    GeometryReader { geo in
+                    if appState.config.barChartMode == "fixed" {
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.15)).frame(height: 6)
                             RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.6))
-                                .frame(width: max(0, geo.size.width * CGFloat(barRatio)), height: 6)
+                                .frame(width: max(0, 120 * CGFloat(barRatio)), height: 6)
                         }
+                        .frame(width: 120, height: 6, alignment: .leading)
+                    } else {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.15)).frame(height: 6)
+                                RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.6))
+                                    .frame(width: max(0, geo.size.width * CGFloat(barRatio)), height: 6)
+                            }
+                        }
+                        .frame(height: 6)
                     }
-                    .frame(height: 6)
 
                     Text(formatAmount(amount, commodity: commodity))
                         .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
