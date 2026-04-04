@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var appearance = "system"
     @State private var customCommodity = ""
     @State private var treeExpanded = false
+    @State private var barChartMode = "dynamic"
     @State private var investmentsEnabled = false
     @State private var pricehistPath = ""
     @State private var tickerRows: [TickerRow] = []
@@ -60,7 +61,13 @@ struct SettingsView: View {
     private var generalTab: some View {
         VStack(spacing: 0) {
             Form {
-                Section("Display") {
+                Section("Appearance") {
+                    Picker("Theme", selection: $appearance) {
+                        Text("System").tag("system")
+                        Text("Light").tag("light")
+                        Text("Dark").tag("dark")
+                    }
+
                     Picker("Default commodity", selection: $commodity) {
                         Text("€").tag("€")
                         Text("$").tag("$")
@@ -88,10 +95,9 @@ struct SettingsView: View {
                         Toggle("Expand tree by default", isOn: $treeExpanded)
                     }
 
-                    Picker("Appearance", selection: $appearance) {
-                        Text("System").tag("system")
-                        Text("Light").tag("light")
-                        Text("Dark").tag("dark")
+                    Picker("Bar charts", selection: $barChartMode) {
+                        Text("Dynamic").tag("dynamic")
+                        Text("Fixed width").tag("fixed")
                     }
                 }
 
@@ -359,6 +365,7 @@ struct SettingsView: View {
         hledgerPath = appState.config.hledgerBinaryPath
         defaultSection = appState.config.defaultSection
         appearance = appState.config.appearance
+        barChartMode = appState.config.barChartMode
         investmentsEnabled = appState.config.investmentsEnabled
         aiEnabled = appState.config.aiEnabled
         pricehistPath = appState.config.pricehistBinaryPath
@@ -397,6 +404,7 @@ struct SettingsView: View {
         case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
         default: NSApp.appearance = nil
         }
+        appState.config.barChartMode = barChartMode
         appState.config.investmentsEnabled = investmentsEnabled
         appState.config.aiEnabled = aiEnabled
         appState.config.pricehistBinaryPath = pricehistPath

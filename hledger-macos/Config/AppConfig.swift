@@ -91,6 +91,24 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "aiEnabled") }
     }
 
+    /// Default report type: "is" (Income Statement), "bs" (Balance Sheet), "cf" (Cash Flow).
+    var defaultReportType: String {
+        get { UserDefaults.standard.string(forKey: "defaultReportType") ?? "is" }
+        set { UserDefaults.standard.set(newValue, forKey: "defaultReportType") }
+    }
+
+    /// Default report period range: 2, 3, 6, 12, or 0 (YTD).
+    var defaultReportPeriod: Int {
+        get { UserDefaults.standard.object(forKey: "defaultReportPeriod") as? Int ?? 6 }
+        set { UserDefaults.standard.set(newValue, forKey: "defaultReportPeriod") }
+    }
+
+    /// Bar chart mode in Summary breakdowns: "dynamic" (fills available space) or "fixed" (consistent width).
+    var barChartMode: String {
+        get { UserDefaults.standard.string(forKey: "barChartMode") ?? "dynamic" }
+        set { UserDefaults.standard.set(newValue, forKey: "barChartMode") }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {

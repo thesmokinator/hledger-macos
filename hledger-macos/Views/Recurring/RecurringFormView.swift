@@ -8,6 +8,7 @@ struct RecurringFormView: View {
     let knownAccounts: [String]
     let onSave: (RecurringRule) -> Void
 
+    @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
 
     @State private var periodExpr = "monthly"
@@ -192,9 +193,10 @@ struct RecurringFormView: View {
                 postings.append(Posting(account: row.account))
             } else {
                 let (qty, commodity) = AmountParser.parse(row.amount)
+                let com = commodity.isEmpty ? appState.config.defaultCommodity : commodity
                 postings.append(Posting(
                     account: row.account,
-                    amounts: [Amount(commodity: commodity, quantity: qty)]
+                    amounts: [Amount(commodity: com, quantity: qty)]
                 ))
             }
         }

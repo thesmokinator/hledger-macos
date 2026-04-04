@@ -83,6 +83,7 @@ struct RecurringView: View {
             ) { newRule in
                 Task { await saveRule(newRule) }
             }
+            .environment(appState)
         }
         .alert("Delete Recurring Rule?", isPresented: $showingDeleteConfirm) {
             Button("Cancel", role: .cancel) {}
@@ -111,6 +112,8 @@ struct RecurringView: View {
         List(rules, selection: $selectedRule) { rule in
             RecurringRuleRow(rule: rule)
                 .tag(rule)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { editRule(rule) }
                 .contextMenu {
                     Button("Edit") { editRule(rule) }
                     Divider()

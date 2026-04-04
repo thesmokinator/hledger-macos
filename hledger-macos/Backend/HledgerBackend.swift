@@ -295,7 +295,7 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
 
     func loadBudgetReport(period: String) async throws -> [BudgetRow] {
         let output = try await runHledger(
-            "balance", "--budget", "-p", period, "-O", "csv", "--no-total", "Expenses"
+            "balance", "--budget", "--flat", "-p", period, "-O", "csv", "--no-total", "Expenses"
         )
         return Self.parseCSVBudgetReport(output)
     }
