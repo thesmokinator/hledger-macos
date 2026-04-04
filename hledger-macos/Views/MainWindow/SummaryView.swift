@@ -24,13 +24,17 @@ struct SummaryView: View {
                 // Income & Expenses side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
                     breakdownSection(title: "Income", items: appState.incomeBreakdown, color: .green)
+                        .frame(maxWidth: .infinity)
                     breakdownSection(title: "Expenses", items: appState.expenseBreakdown, color: .red)
+                        .frame(maxWidth: .infinity)
                 }
 
                 // Assets & Liabilities side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
                     breakdownSection(title: "Assets", items: appState.assets, color: .blue)
+                        .frame(maxWidth: .infinity)
                     breakdownSection(title: "Liabilities", items: appState.liabilities, color: .orange)
+                        .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 24)
