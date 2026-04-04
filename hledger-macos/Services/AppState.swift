@@ -57,6 +57,17 @@ final class AppState {
     var accountBalances: [(String, String)] = []
     var journalStats: JournalStats?
 
+    // MARK: - Summary Data (cached)
+
+    var summaryAllTime: PeriodSummary?
+    var summaryCurrentMonth: PeriodSummary?
+    var expenseBreakdown: [(String, Decimal, String)] = []
+    var incomeBreakdown: [(String, Decimal, String)] = []
+    var liabilities: [(String, Decimal, String)] = []
+    var assets: [(String, Decimal, String)] = []
+    var portfolio: [PortfolioRow] = []
+    var isFetchingPrices = false
+
     // MARK: - UI State
 
     var isLoading = false
@@ -94,6 +105,11 @@ final class AppState {
         }
 
         isChecking = false
+
+        // Load data in background after UI is visible
+        if result.isFound {
+            await reload()
+        }
     }
 
     /// Re-scan for hledger (used from onboarding and settings).
@@ -165,11 +181,125 @@ final class AppState {
         }
     }
 
-    /// Reload all data for the current view.
+    /// Resolve the summary period filter to an hledger period string.
+    private func resolveSummaryPeriod() -> String? {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        let today = Date()
+
+        switch config.summaryPeriod {
+        case "month":
+            let mf = DateFormatter(); mf.dateFormat = "yyyy-MM"
+            return mf.string(from: today)
+        case "3m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -3, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "6m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -6, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "12m":
+            guard let start = Calendar.current.date(byAdding: .month, value: -12, to: today) else { return nil }
+            return "\(f.string(from: start))..\(f.string(from: today))"
+        case "ytd":
+            let year = Calendar.current.component(.year, from: today)
+            return "\(year)-01-01..\(f.string(from: today))"
+        default:
+            return nil
+        }
+    }
+
+    /// Load summary data (period-filtered breakdowns + all-time balances).
+    func loadSummary() async {
+        guard let backend = activeBackend else { return }
+
+        let period = resolveSummaryPeriod()
+
+        async let periodSummary = backend.loadPeriodSummary(period: period)
+        async let monthSummary = backend.loadPeriodSummary(period: currentPeriod)
+        async let expenses = backend.loadExpenseBreakdown(period: period)
+        async let income = backend.loadIncomeBreakdown(period: period)
+        async let liabs = backend.loadLiabilitiesBreakdown()
+        async let assts = backend.loadAssetsBreakdown()
+
+        summaryAllTime = try? await periodSummary
+        summaryCurrentMonth = try? await monthSummary
+        expenseBreakdown = (try? await expenses) ?? []
+        incomeBreakdown = (try? await income) ?? []
+        liabilities = (try? await liabs) ?? []
+        assets = (try? await assts) ?? []
+
+        if config.investmentsEnabled {
+            await loadInvestments(backend: backend)
+        }
+    }
+
+    /// Load investment portfolio data.
+    private func loadInvestments(backend: any AccountingBackend) async {
+        do {
+            let positions = try await backend.loadInvestmentPositions()
+            let costs = try await backend.loadInvestmentCost()
+
+            var grouped: [String: (Decimal, Decimal, String)] = [:]
+            for (account, qty, commodity) in positions {
+                let existing = grouped[commodity] ?? (0, 0, "")
+                let cost = costs[account]
+                let bookVal = cost?.0 ?? 0
+                let bookCom = cost?.1 ?? ""
+                grouped[commodity] = (existing.0 + qty, existing.1 + bookVal, bookCom.isEmpty ? existing.2 : bookCom)
+            }
+
+            portfolio = grouped.map { commodity, values in
+                PortfolioRow(commodity: commodity, quantity: values.0, bookValue: values.1, bookCommodity: values.2)
+            }.sorted { $0.commodity < $1.commodity }
+        } catch {
+            return
+        }
+
+        let tickers = config.priceTickers
+        guard !tickers.isEmpty else { return }
+
+        isFetchingPrices = true
+        if let pricesFile = await PriceService.getPricesFile(pricehistPath: config.pricehistBinaryPath, tickers: tickers) {
+            do {
+                let marketValues = try await backend.loadInvestmentMarketValues(pricesFile: pricesFile)
+                let positions = try await backend.loadInvestmentPositions()
+
+                var commodityMarket: [String: Decimal] = [:]
+                for (account, _, commodity) in positions {
+                    if let mv = marketValues[account] { commodityMarket[commodity, default: 0] += mv.0 }
+                }
+
+                portfolio = portfolio.map { row in
+                    var updated = row
+                    if let mv = commodityMarket[row.commodity] { updated.marketValue = mv }
+                    return updated
+                }
+            } catch {
+                print("Market values: \(error.localizedDescription)")
+            }
+        }
+        isFetchingPrices = false
+    }
+
+    /// Load period summary for transaction view cards.
+    func loadPeriodSummary() async {
+        guard let backend = activeBackend else { return }
+        summaryCurrentMonth = try? await backend.loadPeriodSummary(period: currentPeriod)
+    }
+
+    /// Light reload after a transaction write (add/edit/delete/status).
+    func reloadAfterWrite() async {
+        async let txns: () = loadTransactions()
+        async let summary: () = loadPeriodSummary()
+        _ = await (txns, summary)
+    }
+
+    /// Full reload of all data.
     func reload() async {
         await loadTransactions()
         await loadAccounts()
         await loadStats()
+        await loadSummary()
         dataVersion = UUID()
     }
 

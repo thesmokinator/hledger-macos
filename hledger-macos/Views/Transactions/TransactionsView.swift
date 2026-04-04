@@ -10,7 +10,6 @@ struct TransactionsView: View {
     @State private var showingDeleteConfirm = false
     @State private var transactionToDelete: Transaction?
 
-    @State private var periodSummary: PeriodSummary?
     @FocusState private var listFocused: Bool
 
     var body: some View {
@@ -45,12 +44,12 @@ struct TransactionsView: View {
 
             // Income / Expenses cards (always visible)
             HStack(spacing: 16) {
-                SummaryCard(title: "Income", summary: periodSummary, value: \.income, color: .green)
-                SummaryCard(title: "Expenses", summary: periodSummary, value: \.expenses, color: .red)
+                SummaryCard(title: "Income", summary: appState.summaryCurrentMonth, value: \.income, color: .green)
+                SummaryCard(title: "Expenses", summary: appState.summaryCurrentMonth, value: \.expenses, color: .red)
                 SummaryCard(
-                    title: "Net", summary: periodSummary, value: \.net,
-                    color: (periodSummary?.net ?? 0) >= 0 ? .green : .red,
-                    subtitle: SummaryCard.netSubtitle(for: periodSummary)
+                    title: "Net", summary: appState.summaryCurrentMonth, value: \.net,
+                    color: (appState.summaryCurrentMonth?.net ?? 0) >= 0 ? .green : .red,
+                    subtitle: SummaryCard.netSubtitle(for: appState.summaryCurrentMonth)
                 )
             }
             .padding(.horizontal, 16)
@@ -123,6 +122,10 @@ struct TransactionsView: View {
         .navigationTitle("Transactions")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Menu {
                     Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
                     Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
@@ -160,7 +163,6 @@ struct TransactionsView: View {
             }
         }
         .task { await loadAll() }
-        .task(id: appState.dataVersion) { await loadPeriodSummary() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
         }
@@ -182,13 +184,8 @@ struct TransactionsView: View {
 
     private func loadAll() async {
         async let txns: () = appState.loadTransactions()
-        async let summary: () = loadPeriodSummary()
+        async let summary: () = appState.loadPeriodSummary()
         _ = await (txns, summary)
-    }
-
-    private func loadPeriodSummary() async {
-        guard let backend = appState.activeBackend else { return }
-        periodSummary = try? await backend.loadPeriodSummary(period: appState.currentPeriod)
     }
 
     private func selectFirstTransaction() {
@@ -262,7 +259,7 @@ struct TransactionsView: View {
         guard let backend = appState.activeBackend else { return }
         do {
             try await backend.updateTransactionStatus(transaction, to: newStatus)
-            await appState.loadTransactions()
+            await appState.reloadAfterWrite()
         } catch {
             appState.errorMessage = error.localizedDescription
         }
@@ -272,7 +269,7 @@ struct TransactionsView: View {
         guard let txn = transactionToDelete, let backend = appState.activeBackend else { return }
         do {
             try await backend.deleteTransaction(txn)
-            await appState.loadTransactions()
+            await appState.reloadAfterWrite()
         } catch {
             appState.errorMessage = error.localizedDescription
         }

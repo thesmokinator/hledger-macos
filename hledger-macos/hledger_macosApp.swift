@@ -25,7 +25,14 @@ struct hledger_macosApp: App {
         Window("hledger for Mac", id: "main") {
             Group {
                 if appState.isChecking {
-                    Color.clear
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text("Loading...")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if appState.isInitialized {
                     ContentView()
                 } else {

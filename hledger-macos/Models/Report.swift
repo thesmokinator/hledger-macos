@@ -81,3 +81,13 @@ struct JournalStats: Sendable {
     var accountCount: Int
     var commodities: [String] = []
 }
+
+/// A row in the portfolio/investments section.
+struct PortfolioRow: Identifiable {
+    let id = UUID()
+    let commodity: String
+    let quantity: Decimal
+    let bookValue: Decimal
+    let bookCommodity: String
+    var marketValue: Decimal?
+}

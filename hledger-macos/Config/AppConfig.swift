@@ -61,6 +61,18 @@ final class AppConfig {
         }
     }
 
+    /// Summary period filter: "month", "3m", "6m", "12m", "ytd".
+    var summaryPeriod: String {
+        get { UserDefaults.standard.string(forKey: "summaryPeriod") ?? "month" }
+        set { UserDefaults.standard.set(newValue, forKey: "summaryPeriod") }
+    }
+
+    /// Whether the accounts tree view starts fully expanded.
+    var accountsTreeExpanded: Bool {
+        get { UserDefaults.standard.object(forKey: "accountsTreeExpanded") as? Bool ?? false }
+        set { UserDefaults.standard.set(newValue, forKey: "accountsTreeExpanded") }
+    }
+
     /// Accounts sort order: "asc" or "desc".
     var accountsSortOrder: String {
         get { UserDefaults.standard.string(forKey: "accountsSortOrder") ?? "asc" }

@@ -39,11 +39,15 @@ struct RecurringView: View {
         .navigationTitle("Recurring")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Button { Task { await previewGenerate() } } label: {
                     if isGenerating {
                         ProgressView().controlSize(.small)
                     } else {
-                        Label("Generate", systemImage: "arrow.triangle.2.circlepath")
+                        Label("Generate", systemImage: "play.fill")
                     }
                 }
                 .disabled(rules.isEmpty || isGenerating)

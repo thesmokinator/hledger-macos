@@ -6,30 +6,9 @@ import SwiftUI
 struct SummaryView: View {
     @Environment(AppState.self) private var appState
 
-    @State private var periodSummary: PeriodSummary?
-    @State private var expenseBreakdown: [(String, Decimal, String)] = []
-    @State private var incomeBreakdown: [(String, Decimal, String)] = []
-    @State private var liabilities: [(String, Decimal, String)] = []
-    @State private var assets: [(String, Decimal, String)] = []
-    @State private var portfolio: [PortfolioRow] = []
-    @State private var isFetchingPrices = false
-    @State private var isLoading = false
     @State private var portfolioSortAscending = true
-
-    private var currentMonth: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM"
-        return f.string(from: Date())
-    }
-
-    private var currentMonthLabel: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM"
-        guard let date = f.date(from: currentMonth) else { return currentMonth }
-        let display = DateFormatter()
-        display.dateFormat = "MMMM yyyy"
-        return display.string(from: date)
-    }
+    @State private var breakdownSortByAmount = true
+    @State private var summaryPeriod = "month"
 
     var body: some View {
         ScrollView {
@@ -38,20 +17,20 @@ struct SummaryView: View {
                 summaryCards
 
                 // Investments / Portfolio (first, as net worth snapshot)
-                if appState.config.investmentsEnabled && !portfolio.isEmpty {
+                if appState.config.investmentsEnabled && !appState.portfolio.isEmpty {
                     portfolioSection
                 }
 
                 // Income & Expenses side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
-                    breakdownSection(title: "Income", items: incomeBreakdown, color: .green)
-                    breakdownSection(title: "Expenses", items: expenseBreakdown, color: .red)
+                    breakdownSection(title: "Income", items: appState.incomeBreakdown, color: .green)
+                    breakdownSection(title: "Expenses", items: appState.expenseBreakdown, color: .red)
                 }
 
                 // Assets & Liabilities side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
-                    breakdownSection(title: "Assets", items: assets, color: .blue)
-                    breakdownSection(title: "Liabilities", items: liabilities, color: .orange)
+                    breakdownSection(title: "Assets", items: appState.assets, color: .blue)
+                    breakdownSection(title: "Liabilities", items: appState.liabilities, color: .orange)
                 }
             }
             .padding(.horizontal, 24)
@@ -59,27 +38,49 @@ struct SummaryView: View {
             .padding(.bottom, 24)
         }
         .navigationTitle("Summary")
-        .onAppear { portfolioSortAscending = appState.config.portfolioSortMode == "asc" }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
+                Picker("Period", selection: $summaryPeriod) {
+                    Text("Current month").tag("month")
+                    Text("3 months").tag("3m")
+                    Text("6 months").tag("6m")
+                    Text("12 months").tag("12m")
+                    Text("Year to date").tag("ytd")
+                }
+            }
+        }
+        .onAppear {
+            portfolioSortAscending = appState.config.portfolioSortMode == "asc"
+            summaryPeriod = appState.config.summaryPeriod
+        }
         .onChange(of: portfolioSortAscending) { appState.config.portfolioSortMode = portfolioSortAscending ? "asc" : "desc" }
-        .task(id: appState.dataVersion) { await loadData() }
+        .onChange(of: summaryPeriod) {
+            appState.config.summaryPeriod = summaryPeriod
+            Task { await appState.loadSummary() }
+        }
+        .task { await appState.loadSummary() }
     }
 
     // MARK: - Summary Cards
 
     private var summaryCards: some View {
         HStack(spacing: 16) {
-            SummaryCard(title: "Income", summary: periodSummary, value: \.income, color: .green)
-            SummaryCard(title: "Expenses", summary: periodSummary, value: \.expenses, color: .red)
+            SummaryCard(title: "Income", summary: appState.summaryAllTime, value: \.income, color: .green)
+            SummaryCard(title: "Expenses", summary: appState.summaryAllTime, value: \.expenses, color: .red)
             SummaryCard(
-                title: "Net", summary: periodSummary, value: \.net,
-                color: (periodSummary?.net ?? 0) >= 0 ? .green : .red,
-                subtitle: SummaryCard.netSubtitle(for: periodSummary)
+                title: "Net", summary: appState.summaryAllTime, value: \.net,
+                color: (appState.summaryAllTime?.net ?? 0) >= 0 ? .green : .red,
+                subtitle: SummaryCard.netSubtitle(for: appState.summaryAllTime)
             )
         }
     }
 
     private var sortedPortfolio: [PortfolioRow] {
-        portfolio.sorted {
+        appState.portfolio.sorted {
             portfolioSortAscending ? $0.commodity < $1.commodity : $0.commodity > $1.commodity
         }
     }
@@ -87,8 +88,20 @@ struct SummaryView: View {
     // MARK: - Breakdown Section
 
     private func breakdownSection(title: String, items: [(String, Decimal, String)], color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.headline).padding(.bottom, 2)
+        let sortedItems = breakdownSortByAmount
+            ? items.sorted { $0.1 > $1.1 }
+            : items.sorted { $0.0 < $1.0 }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(title).font(.headline)
+                SortToggleButton(
+                    ascending: $breakdownSortByAmount,
+                    modeA: .byAmount,
+                    modeB: .byName
+                )
+            }
+            .padding(.bottom, 2)
 
             if items.isEmpty {
                 Text("No data for this period")
@@ -100,7 +113,7 @@ struct SummaryView: View {
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
 
-            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+            ForEach(Array(sortedItems.enumerated()), id: \.offset) { _, item in
                 let (account, amount, commodity) = item
                 let pct = total > 0 ? Double(truncating: (amount / total * 100) as NSDecimalNumber) : 0
 
@@ -136,7 +149,7 @@ struct SummaryView: View {
     // MARK: - Portfolio Section
 
     private var showMarketColumns: Bool {
-        portfolio.contains { $0.marketValue != nil } || !appState.config.priceTickers.isEmpty
+        appState.portfolio.contains { $0.marketValue != nil } || !appState.config.priceTickers.isEmpty
     }
 
     private var portfolioSection: some View {
@@ -147,7 +160,7 @@ struct SummaryView: View {
                 SortToggleButton(ascending: $portfolioSortAscending)
 
                 Spacer()
-                if isFetchingPrices {
+                if appState.isFetchingPrices {
                     HStack(spacing: 4) {
                         ProgressView().controlSize(.small)
                         Text("Fetching prices...").font(.caption).foregroundStyle(.secondary)
@@ -181,7 +194,7 @@ struct SummaryView: View {
             }
 
             // Hints
-            if appState.config.priceTickers.isEmpty && !portfolio.isEmpty {
+            if appState.config.priceTickers.isEmpty && !appState.portfolio.isEmpty {
                 Text("Configure price tickers in Settings > Investments to see market values.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -238,84 +251,4 @@ struct SummaryView: View {
         AmountFormatter.formatQuantity(qty)
     }
 
-    // MARK: - Data Loading
-
-    private func loadData() async {
-        guard let backend = appState.activeBackend else { return }
-        isLoading = true
-
-        // Each section loads independently so one failure doesn't block others
-        async let summaryTask = backend.loadPeriodSummary(period: nil)
-        async let expenseTask = backend.loadExpenseBreakdown(period: currentMonth)
-        async let incomeTask = backend.loadIncomeBreakdown(period: currentMonth)
-        async let liabilitiesTask = backend.loadLiabilitiesBreakdown()
-        async let assetsTask = backend.loadAssetsBreakdown()
-
-        periodSummary = try? await summaryTask
-        expenseBreakdown = (try? await expenseTask) ?? []
-        incomeBreakdown = (try? await incomeTask) ?? []
-        liabilities = (try? await liabilitiesTask) ?? []
-        assets = (try? await assetsTask) ?? []
-
-        isLoading = false
-
-        if appState.config.investmentsEnabled {
-            await loadInvestments(backend: backend)
-        }
-    }
-
-    private func loadInvestments(backend: any AccountingBackend) async {
-        do {
-            let positions = try await backend.loadInvestmentPositions()
-            let costs = try await backend.loadInvestmentCost()
-
-            var grouped: [String: (Decimal, Decimal, String)] = [:]
-            for (account, qty, commodity) in positions {
-                let existing = grouped[commodity] ?? (0, 0, "")
-                let cost = costs[account]
-                let bookVal = cost?.0 ?? 0
-                let bookCom = cost?.1 ?? ""
-                grouped[commodity] = (existing.0 + qty, existing.1 + bookVal, bookCom.isEmpty ? existing.2 : bookCom)
-            }
-
-            portfolio = grouped.map { commodity, values in
-                PortfolioRow(commodity: commodity, quantity: values.0, bookValue: values.1, bookCommodity: values.2)
-            }.sorted { $0.commodity < $1.commodity }
-        } catch {
-            return
-        }
-
-        let tickers = appState.config.priceTickers
-        guard !tickers.isEmpty else { return }
-
-        isFetchingPrices = true
-        if let pricesFile = await PriceService.getPricesFile(pricehistPath: appState.config.pricehistBinaryPath, tickers: tickers) {
-            do {
-                let marketValues = try await backend.loadInvestmentMarketValues(pricesFile: pricesFile)
-                let positions = try await backend.loadInvestmentPositions()
-
-                var commodityMarket: [String: Decimal] = [:]
-                for (account, _, commodity) in positions {
-                    if let mv = marketValues[account] { commodityMarket[commodity, default: 0] += mv.0 }
-                }
-
-                portfolio = portfolio.map { row in
-                    var updated = row
-                    if let mv = commodityMarket[row.commodity] { updated.marketValue = mv }
-                    return updated
-                }
-            } catch {
-                print("Market values: \(error.localizedDescription)")
-            }
-        }
-        isFetchingPrices = false
-    }
-}
-
-// MARK: - Supporting Types
-
-struct PortfolioRow: Identifiable {
-    let id = UUID()
-    let commodity: String; let quantity: Decimal; let bookValue: Decimal; let bookCommodity: String
-    var marketValue: Decimal?
 }

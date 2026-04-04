@@ -26,6 +26,12 @@
         }
       }
     },
+    "%lld commands" : {
+
+    },
+    "%lld errors" : {
+
+    },
     "© 2026 Michele Broggi" : {
 
     },
@@ -42,6 +48,15 @@
 
     },
     "0.00" : {
+
+    },
+    "3 months" : {
+
+    },
+    "6 months" : {
+
+    },
+    "12 months" : {
 
     },
     "A macOS companion for plain text accounting" : {
@@ -123,6 +138,9 @@
     "CHF, SEK, BTC..." : {
 
     },
+    "Clear" : {
+
+    },
     "Cleared" : {
 
     },
@@ -132,6 +150,9 @@
     "Clone" : {
 
     },
+    "Command Log" : {
+
+    },
     "Configure price tickers in Settings > Investments to see market values." : {
 
     },
@@ -139,6 +160,9 @@
 
     },
     "Could not check for updates: %@" : {
+
+    },
+    "Current month" : {
 
     },
     "Custom..." : {
@@ -193,6 +217,9 @@
 
     },
     "EUR" : {
+
+    },
+    "Expand tree by default" : {
 
     },
     "Export" : {
@@ -255,6 +282,9 @@
     "hledger for Mac" : {
 
     },
+    "hledger for Mac Help" : {
+
+    },
     "hledger.org" : {
 
     },
@@ -294,6 +324,9 @@
     "Loading transactions..." : {
 
     },
+    "Loading..." : {
+
+    },
     "Market data provided by pricehist via Yahoo Finance. Prices may be delayed." : {
 
     },
@@ -324,7 +357,13 @@
     "No Budget Rules" : {
 
     },
+    "No commands executed yet." : {
+
+    },
     "No Data" : {
+
+    },
+    "No data for this period" : {
 
     },
     "No journal file found at this path" : {
@@ -442,6 +481,9 @@
     "Sections" : {
 
     },
+    "Select a command to view details" : {
+
+    },
     "Set Status" : {
 
     },
@@ -510,6 +552,9 @@
 
     },
     "Yahoo ticker" : {
+
+    },
+    "Year to date" : {
 
     },
     "You're running the latest version (%@)." : {

@@ -50,6 +50,10 @@ struct ReportsView: View {
         .navigationTitle("Reports")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Menu {
                     Button("Export as CSV") { if let data = reportData { ExportService.exportReport(data, format: .csv) } }
                     Button("Export as PDF") { if let data = reportData { ExportService.exportReport(data, format: .pdf) } }

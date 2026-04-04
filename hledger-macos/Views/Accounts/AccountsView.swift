@@ -38,7 +38,11 @@ struct AccountsView: View {
         .searchable(text: $searchText, prompt: "Filter accounts...")
         .navigationTitle("Accounts")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Picker("View", selection: $viewMode) {
                     Text("Flat").tag("flat")
                     Text("Tree").tag("tree")
@@ -47,7 +51,10 @@ struct AccountsView: View {
             }
         }
         .task(id: appState.dataVersion) { await loadData() }
-        .onAppear { sortAscending = appState.config.accountsSortOrder == "asc" }
+        .onAppear {
+            viewMode = appState.config.accountsViewMode
+            sortAscending = appState.config.accountsSortOrder == "asc"
+        }
         .onChange(of: sortAscending) { appState.config.accountsSortOrder = sortAscending ? "asc" : "desc" }
         .onChange(of: viewMode) { Task { await loadData() } }
     }
@@ -112,11 +119,12 @@ struct AccountsView: View {
                     description: Text(searchText.isEmpty ? "No accounts found in journal." : "No matching accounts."))
             } else {
                 List {
-                    OutlineGroup(filteredTree, children: \.optionalChildren) { node in
-                        AccountRow(
-                            label: node.name,
-                            value: formatNodeBalance(node.balance),
-                            valueColor: nodeBalanceColor(node.balance)
+                    ForEach(filteredTree) { node in
+                        AccountTreeNode(
+                            node: node,
+                            startExpanded: appState.config.accountsTreeExpanded,
+                            formatBalance: formatNodeBalance,
+                            balanceColor: nodeBalanceColor
                         )
                     }
                 }
@@ -156,6 +164,52 @@ struct AccountsView: View {
     private func nodeBalanceColor(_ raw: String) -> Color {
         let (qty, _) = AmountParser.parse(raw)
         return qty < 0 ? .red : .secondary
+    }
+}
+
+// MARK: - Account Tree Node
+
+struct AccountTreeNode: View {
+    let node: AccountNode
+    let startExpanded: Bool
+    let formatBalance: (String) -> String
+    let balanceColor: (String) -> Color
+
+    @State private var isExpanded: Bool
+
+    init(node: AccountNode, startExpanded: Bool, formatBalance: @escaping (String) -> String, balanceColor: @escaping (String) -> Color) {
+        self.node = node
+        self.startExpanded = startExpanded
+        self.formatBalance = formatBalance
+        self.balanceColor = balanceColor
+        self._isExpanded = State(initialValue: startExpanded)
+    }
+
+    var body: some View {
+        if node.children.isEmpty {
+            AccountRow(
+                label: node.name,
+                value: formatBalance(node.balance),
+                valueColor: balanceColor(node.balance)
+            )
+        } else {
+            DisclosureGroup(isExpanded: $isExpanded) {
+                ForEach(node.children) { child in
+                    AccountTreeNode(
+                        node: child,
+                        startExpanded: startExpanded,
+                        formatBalance: formatBalance,
+                        balanceColor: balanceColor
+                    )
+                }
+            } label: {
+                AccountRow(
+                    label: node.name,
+                    value: formatBalance(node.balance),
+                    valueColor: balanceColor(node.balance)
+                )
+            }
+        }
     }
 }
 
