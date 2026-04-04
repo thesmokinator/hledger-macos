@@ -67,6 +67,7 @@ final class AppState {
     var assets: [(String, Decimal, String)] = []
     var portfolio: [PortfolioRow] = []
     var isFetchingPrices = false
+    var multiCurrencyAccounts: Set<String> = []
 
     // MARK: - UI State
 
@@ -220,10 +221,11 @@ final class AppState {
 
         async let periodSummary = backend.loadPeriodSummary(period: period)
         async let monthSummary = backend.loadPeriodSummary(period: currentPeriod)
-        async let expenses = backend.loadExpenseBreakdown(period: period)
-        async let income = backend.loadIncomeBreakdown(period: period)
-        async let liabs = backend.loadLiabilitiesBreakdown()
-        async let assts = backend.loadAssetsBreakdown()
+        let commodity = config.defaultCommodity
+        async let expenses = backend.loadExpenseBreakdown(period: period, preferredCommodity: commodity)
+        async let income = backend.loadIncomeBreakdown(period: period, preferredCommodity: commodity)
+        async let liabs = backend.loadLiabilitiesBreakdown(preferredCommodity: commodity)
+        async let assts = backend.loadAssetsBreakdown(preferredCommodity: commodity)
 
         summaryAllTime = try? await periodSummary
         summaryCurrentMonth = try? await monthSummary
@@ -231,6 +233,8 @@ final class AppState {
         incomeBreakdown = (try? await income) ?? []
         liabilities = (try? await liabs) ?? []
         assets = (try? await assts) ?? []
+
+        multiCurrencyAccounts = (try? await backend.loadMultiCurrencyAccounts()) ?? []
 
         if config.investmentsEnabled {
             await loadInvestments(backend: backend)

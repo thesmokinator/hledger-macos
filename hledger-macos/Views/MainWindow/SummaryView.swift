@@ -130,7 +130,8 @@ struct SummaryView: View {
                     percentage: pct,
                     barRatio: barRatio,
                     color: color,
-                    mode: appState.config.barChartMode
+                    mode: appState.config.barChartMode,
+                    isMultiCurrency: appState.multiCurrencyAccounts.contains(account)
                 )
                 .frame(height: 20)
             }

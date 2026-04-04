@@ -187,7 +187,9 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
 
     /// Load per-account breakdown for a given account type and period.
     /// Returns (account, amount, commodity) tuples sorted by amount descending.
-    func loadAccountBreakdown(typeQuery: String, period: String?) async throws -> [(String, Decimal, String)] {
+    /// Multi-commodity balances (e.g. "$120.00, €500.00") are resolved by picking the
+    /// preferred commodity if present, otherwise the first one.
+    func loadAccountBreakdown(typeQuery: String, period: String?, preferredCommodity: String = "") async throws -> [(String, Decimal, String)] {
         var args = ["balance", typeQuery, "--flat", "--no-total", "-O", "csv"]
         if let period, !period.isEmpty {
             args.append(contentsOf: ["-p", period])
@@ -195,32 +197,65 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         let output = try await runHledger(args)
         var results: [(String, Decimal, String)] = []
         for (account, balance) in Self.parseCSVAccountBalances(output) {
-            let (qty, com) = Self.parseBudgetAmount(balance)
-            if qty != 0 {
-                results.append((account, abs(qty), com))
+            let resolved = Self.resolveMultiCommodityBalance(balance, preferredCommodity: preferredCommodity)
+            if resolved.qty != 0 {
+                results.append((account, abs(resolved.qty), resolved.commodity))
             }
         }
         return results.sorted { $0.1 > $1.1 }
     }
 
+    /// Resolve a potentially multi-commodity balance string.
+    /// Picks the preferred commodity if present, otherwise the first non-zero amount.
+    static func resolveMultiCommodityBalance(_ balance: String, preferredCommodity: String) -> (qty: Decimal, commodity: String) {
+        let parts = balance.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+
+        var bestQty: Decimal = 0
+        var bestCom = ""
+        for part in parts {
+            let (qty, com) = parseBudgetAmount(part)
+            if !preferredCommodity.isEmpty && com == preferredCommodity {
+                return (qty, com)
+            }
+            if bestCom.isEmpty && qty != 0 {
+                bestQty = qty
+                bestCom = com
+            }
+        }
+        return (bestQty, bestCom)
+    }
+
     /// Load expense breakdown for a period.
-    func loadExpenseBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
-        try await loadAccountBreakdown(typeQuery: "type:X", period: period)
+    func loadExpenseBreakdown(period: String?, preferredCommodity: String = "") async throws -> [(String, Decimal, String)] {
+        try await loadAccountBreakdown(typeQuery: "type:X", period: period, preferredCommodity: preferredCommodity)
     }
 
     /// Load income breakdown for a period.
-    func loadIncomeBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
-        try await loadAccountBreakdown(typeQuery: "type:R", period: period)
+    func loadIncomeBreakdown(period: String?, preferredCommodity: String = "") async throws -> [(String, Decimal, String)] {
+        try await loadAccountBreakdown(typeQuery: "type:R", period: period, preferredCommodity: preferredCommodity)
     }
 
     /// Load liabilities breakdown (all-time, no period filter).
-    func loadLiabilitiesBreakdown() async throws -> [(String, Decimal, String)] {
-        try await loadAccountBreakdown(typeQuery: "type:L", period: nil)
+    func loadLiabilitiesBreakdown(preferredCommodity: String = "") async throws -> [(String, Decimal, String)] {
+        try await loadAccountBreakdown(typeQuery: "type:L", period: nil, preferredCommodity: preferredCommodity)
     }
 
     /// Load assets breakdown (all-time, no period filter).
-    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
-        try await loadAccountBreakdown(typeQuery: "type:A", period: nil)
+    func loadAssetsBreakdown(preferredCommodity: String = "") async throws -> [(String, Decimal, String)] {
+        try await loadAccountBreakdown(typeQuery: "type:A", period: nil, preferredCommodity: preferredCommodity)
+    }
+
+    /// Find accounts with balances in multiple commodities.
+    func loadMultiCurrencyAccounts() async throws -> Set<String> {
+        let output = try await runHledger("balance", "--flat", "--no-total", "-O", "csv")
+        var result: Set<String> = []
+        for (account, balance) in Self.parseCSVAccountBalances(output) {
+            let parts = balance.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count > 1 {
+                result.insert(account)
+            }
+        }
+        return result
     }
 
     // MARK: - Investments
