@@ -127,9 +127,10 @@ struct SummaryView: View {
                 HStack(spacing: 12) {
                     Text(account)
                         .font(.callout).lineLimit(1)
-                        .frame(minWidth: 100, alignment: .leading)
+                        .frame(width: appState.config.barChartMode == "fixed" ? 160 : nil, alignment: .leading)
+                        .frame(minWidth: 100)
 
-                    BreakdownBar(ratio: barRatio, color: color, mode: appState.config.barChartMode)
+                    BreakdownBar(ratio: barRatio, color: color)
 
                     Text(formatAmount(amount, commodity: commodity))
                         .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
