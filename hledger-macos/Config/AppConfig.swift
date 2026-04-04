@@ -85,6 +85,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "portfolioSortMode") }
     }
 
+    /// Whether the AI assistant is enabled.
+    var aiEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "aiEnabled") as? Bool ?? false }
+        set { UserDefaults.standard.set(newValue, forKey: "aiEnabled") }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {
