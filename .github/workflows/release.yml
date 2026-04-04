@@ -131,7 +131,7 @@ jobs:
           echo "DMG_NAME=$DMG_NAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.DMG_PATH }}
           generate_release_notes: true

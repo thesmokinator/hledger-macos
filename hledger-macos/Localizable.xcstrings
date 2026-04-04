@@ -95,6 +95,12 @@
     "Advanced settings" : {
 
     },
+    "AI Assistant" : {
+
+    },
+    "All processing happens locally on your Mac using Apple Intelligence. No financial data is sent to external servers." : {
+
+    },
     "Amount" : {
 
     },
@@ -109,6 +115,15 @@
       }
     },
     "Appearance" : {
+
+    },
+    "Apple Intelligence is not available on this device" : {
+
+    },
+    "Ask about your finances" : {
+
+    },
+    "Ask something..." : {
 
     },
     "Asset" : {
@@ -144,6 +159,9 @@
     "Clear" : {
 
     },
+    "Clear conversation" : {
+
+    },
     "Cleared" : {
 
     },
@@ -151,6 +169,9 @@
 
     },
     "Clone" : {
+
+    },
+    "Close AI Assistant" : {
 
     },
     "Command Log" : {
@@ -219,10 +240,16 @@
     "Edit" : {
 
     },
+    "Enable AI Assistant" : {
+
+    },
     "EUR" : {
 
     },
     "Expand tree by default" : {
+
+    },
+    "Experimental feature. Responses may be inaccurate or incomplete. Always verify data against your journal." : {
 
     },
     "Export" : {
@@ -453,6 +480,9 @@
     "pricehist" : {
 
     },
+    "Privacy" : {
+
+    },
     "Qty" : {
 
     },
@@ -502,6 +532,9 @@
     "Select a command to view details" : {
 
     },
+    "Send message" : {
+
+    },
     "Set Status" : {
 
     },
@@ -514,10 +547,16 @@
     "Startup" : {
 
     },
+    "Stop generating" : {
+
+    },
     "Summary" : {
 
     },
     "System" : {
+
+    },
+    "The assistant can answer questions about your journal: account balances, spending patterns, transaction summaries, and more." : {
 
     },
     "The journal file path has changed. All data will be reloaded from the new file." : {
@@ -526,13 +565,16 @@
     "Theme" : {
 
     },
-    "This account has balances in multiple currencies. See Accounts for full details." : {
+    "This account has balances in multiple currencies. Only the default currency is shown here. See Accounts for full details." : {
 
     },
     "Ticker" : {
 
     },
     "to %@" : {
+
+    },
+    "Tools" : {
 
     },
     "Transactions" : {
@@ -556,6 +598,9 @@
     "USD" : {
 
     },
+    "Using Apple Intelligence (built-in)" : {
+
+    },
     "Version %@" : {
 
     },
@@ -576,6 +621,9 @@
 
     },
     "Welcome to hledger for Mac" : {
+
+    },
+    "When enabled, an AI button appears at the bottom-left of the main window. You can also press ⌘⇧A to toggle the assistant." : {
 
     },
     "Yahoo ticker" : {
