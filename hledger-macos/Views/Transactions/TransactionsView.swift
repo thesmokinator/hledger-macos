@@ -201,8 +201,6 @@ struct TransactionsView: View {
     private func transactionRow(_ transaction: Transaction) -> some View {
         TransactionRowView(transaction: transaction)
             .tag(transaction)
-            .contentShape(Rectangle())
-            .onTapGesture(count: 2) { editTransaction(transaction) }
             .contextMenu {
                 Button("Edit") { editTransaction(transaction) }
                 Button("Clone") { cloneTransaction(transaction) }
