@@ -16,9 +16,10 @@ enum BinaryDetector {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
             "/opt/homebrew/bin/hledger",          // Apple Silicon Homebrew
-            "/usr/local/bin/hledger",             // Intel Homebrew
+            "/usr/local/bin/hledger",             // Intel Homebrew / generic
             "/usr/bin/hledger",                   // System
-            "\(home)/.local/bin/hledger",         // stack / pipx / manual install
+            "\(home)/.local/bin/hledger",         // stack
+            "\(home)/.cabal/bin/hledger",         // cabal
         ]
     }
 
