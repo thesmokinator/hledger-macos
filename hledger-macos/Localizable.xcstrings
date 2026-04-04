@@ -26,6 +26,12 @@
         }
       }
     },
+    "%lld commands" : {
+
+    },
+    "%lld errors" : {
+
+    },
     "© 2026 Michele Broggi" : {
 
     },
@@ -123,6 +129,9 @@
     "CHF, SEK, BTC..." : {
 
     },
+    "Clear" : {
+
+    },
     "Cleared" : {
 
     },
@@ -130,6 +139,9 @@
 
     },
     "Clone" : {
+
+    },
+    "Command Log" : {
 
     },
     "Configure price tickers in Settings > Investments to see market values." : {
@@ -255,6 +267,9 @@
     "hledger for Mac" : {
 
     },
+    "hledger for Mac Help" : {
+
+    },
     "hledger.org" : {
 
     },
@@ -294,6 +309,9 @@
     "Loading transactions..." : {
 
     },
+    "Loading..." : {
+
+    },
     "Market data provided by pricehist via Yahoo Finance. Prices may be delayed." : {
 
     },
@@ -324,7 +342,13 @@
     "No Budget Rules" : {
 
     },
+    "No commands executed yet." : {
+
+    },
     "No Data" : {
+
+    },
+    "No data for this period" : {
 
     },
     "No journal file found at this path" : {
@@ -440,6 +464,9 @@
 
     },
     "Sections" : {
+
+    },
+    "Select a command to view details" : {
 
     },
     "Set Status" : {

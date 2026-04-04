@@ -122,6 +122,10 @@ struct TransactionsView: View {
         .navigationTitle("Transactions")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Menu {
                     Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
                     Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
@@ -255,7 +259,7 @@ struct TransactionsView: View {
         guard let backend = appState.activeBackend else { return }
         do {
             try await backend.updateTransactionStatus(transaction, to: newStatus)
-            await appState.reload()
+            await appState.reloadAfterWrite()
         } catch {
             appState.errorMessage = error.localizedDescription
         }
@@ -265,7 +269,7 @@ struct TransactionsView: View {
         guard let txn = transactionToDelete, let backend = appState.activeBackend else { return }
         do {
             try await backend.deleteTransaction(txn)
-            await appState.reload()
+            await appState.reloadAfterWrite()
         } catch {
             appState.errorMessage = error.localizedDescription
         }

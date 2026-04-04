@@ -260,7 +260,14 @@ final class AppState {
         summaryCurrentMonth = try? await backend.loadPeriodSummary(period: currentPeriod)
     }
 
-    /// Reload all data.
+    /// Light reload after a transaction write (add/edit/delete/status).
+    func reloadAfterWrite() async {
+        async let txns: () = loadTransactions()
+        async let summary: () = loadPeriodSummary()
+        _ = await (txns, summary)
+    }
+
+    /// Full reload of all data.
     func reload() async {
         await loadTransactions()
         await loadAccounts()

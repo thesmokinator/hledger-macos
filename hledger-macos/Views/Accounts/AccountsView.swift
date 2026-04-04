@@ -38,7 +38,11 @@ struct AccountsView: View {
         .searchable(text: $searchText, prompt: "Filter accounts...")
         .navigationTitle("Accounts")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 Picker("View", selection: $viewMode) {
                     Text("Flat").tag("flat")
                     Text("Tree").tag("tree")
@@ -111,14 +115,12 @@ struct AccountsView: View {
                 ContentUnavailableView("No Accounts", systemImage: "building.columns",
                     description: Text(searchText.isEmpty ? "No accounts found in journal." : "No matching accounts."))
             } else {
-                List {
-                    OutlineGroup(filteredTree, children: \.optionalChildren) { node in
-                        AccountRow(
-                            label: node.name,
-                            value: formatNodeBalance(node.balance),
-                            valueColor: nodeBalanceColor(node.balance)
-                        )
-                    }
+                List(filteredTree, children: \.optionalChildren) { node in
+                    AccountRow(
+                        label: node.name,
+                        value: formatNodeBalance(node.balance),
+                        valueColor: nodeBalanceColor(node.balance)
+                    )
                 }
                 .listStyle(.inset)
             }

@@ -298,8 +298,8 @@ struct TransactionFormView: View {
             } else {
                 try await backend.appendTransaction(newTransaction)
             }
-            await appState.reload()
             dismiss()
+            Task { await appState.reloadAfterWrite() }
         } catch {
             errorMessage = error.localizedDescription
         }

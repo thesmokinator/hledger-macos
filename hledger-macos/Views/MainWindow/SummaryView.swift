@@ -7,6 +7,7 @@ struct SummaryView: View {
     @Environment(AppState.self) private var appState
 
     @State private var portfolioSortAscending = true
+    @State private var breakdownSortByAmount = true
 
     private var currentMonth: String {
         let f = DateFormatter()
@@ -51,6 +52,13 @@ struct SummaryView: View {
             .padding(.bottom, 24)
         }
         .navigationTitle("Summary")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+            }
+        }
         .onAppear { portfolioSortAscending = appState.config.portfolioSortMode == "asc" }
         .onChange(of: portfolioSortAscending) { appState.config.portfolioSortMode = portfolioSortAscending ? "asc" : "desc" }
         .task { await appState.loadSummary() }
@@ -79,8 +87,20 @@ struct SummaryView: View {
     // MARK: - Breakdown Section
 
     private func breakdownSection(title: String, items: [(String, Decimal, String)], color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.headline).padding(.bottom, 2)
+        let sortedItems = breakdownSortByAmount
+            ? items.sorted { $0.1 > $1.1 }
+            : items.sorted { $0.0 < $1.0 }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(title).font(.headline)
+                SortToggleButton(
+                    ascending: $breakdownSortByAmount,
+                    ascLabel: "Sort alphabetically",
+                    descLabel: "Sort by amount"
+                )
+            }
+            .padding(.bottom, 2)
 
             if items.isEmpty {
                 Text("No data for this period")
@@ -92,7 +112,7 @@ struct SummaryView: View {
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
 
-            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+            ForEach(Array(sortedItems.enumerated()), id: \.offset) { _, item in
                 let (account, amount, commodity) = item
                 let pct = total > 0 ? Double(truncating: (amount / total * 100) as NSDecimalNumber) : 0
 
