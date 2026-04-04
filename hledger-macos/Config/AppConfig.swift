@@ -85,6 +85,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "portfolioSortMode") }
     }
 
+    /// Bar chart mode in Summary breakdowns: "dynamic" (fills available space) or "fixed" (consistent width).
+    var barChartMode: String {
+        get { UserDefaults.standard.string(forKey: "barChartMode") ?? "dynamic" }
+        set { UserDefaults.standard.set(newValue, forKey: "barChartMode") }
+    }
+
     /// Commodity-to-Yahoo-ticker mappings as JSON string (e.g. {"XDWD":"XDWD.DE"}).
     var priceTickers: [String: String] {
         get {

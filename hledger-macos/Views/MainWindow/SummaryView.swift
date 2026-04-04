@@ -24,13 +24,17 @@ struct SummaryView: View {
                 // Income & Expenses side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
                     breakdownSection(title: "Income", items: appState.incomeBreakdown, color: .green)
+                        .frame(maxWidth: .infinity)
                     breakdownSection(title: "Expenses", items: appState.expenseBreakdown, color: .red)
+                        .frame(maxWidth: .infinity)
                 }
 
                 // Assets & Liabilities side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
                     breakdownSection(title: "Assets", items: appState.assets, color: .blue)
+                        .frame(maxWidth: .infinity)
                     breakdownSection(title: "Liabilities", items: appState.liabilities, color: .orange)
+                        .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 24)
@@ -113,33 +117,21 @@ struct SummaryView: View {
             }
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
+            let maxAmount = items.map(\.1).max() ?? 0
 
             ForEach(Array(sortedItems.enumerated()), id: \.offset) { _, item in
                 let (account, amount, commodity) = item
                 let pct = total > 0 ? Double(truncating: (amount / total * 100) as NSDecimalNumber) : 0
+                let barRatio = maxAmount > 0 ? Double(truncating: (amount / maxAmount) as NSDecimalNumber) : 0
 
-                HStack(spacing: 12) {
-                    Text(account)
-                        .font(.callout).lineLimit(1)
-                        .frame(minWidth: 100, alignment: .leading)
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.15)).frame(height: 6)
-                            RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.6))
-                                .frame(width: max(0, geo.size.width * CGFloat(pct / 100)), height: 6)
-                        }
-                    }
-                    .frame(height: 6)
-
-                    Text(formatAmount(amount, commodity: commodity))
-                        .font(.system(.callout, design: .monospaced)).foregroundStyle(.secondary)
-                        .frame(minWidth: 80, alignment: .trailing)
-
-                    Text((pct / 100).formatted(.percent.precision(.fractionLength(0))))
-                        .font(.caption).foregroundStyle(.tertiary)
-                        .frame(width: 36, alignment: .trailing)
-                }
+                BreakdownRow(
+                    account: account,
+                    amount: formatAmount(amount, commodity: commodity),
+                    percentage: pct,
+                    barRatio: barRatio,
+                    color: color,
+                    mode: appState.config.barChartMode
+                )
                 .frame(height: 20)
             }
         }
