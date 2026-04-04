@@ -203,6 +203,7 @@ struct TransactionsView: View {
             .tag(transaction)
             .contentShape(Rectangle())
             .onTapGesture(count: 2) { editTransaction(transaction) }
+            .onTapGesture(count: 1) { selectedTransaction = transaction }
             .contextMenu {
                 Button("Edit") { editTransaction(transaction) }
                 Button("Clone") { cloneTransaction(transaction) }

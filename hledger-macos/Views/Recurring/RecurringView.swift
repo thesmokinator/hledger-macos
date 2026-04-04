@@ -114,6 +114,7 @@ struct RecurringView: View {
                 .tag(rule)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) { editRule(rule) }
+                .onTapGesture(count: 1) { selectedRule = rule }
                 .contextMenu {
                     Button("Edit") { editRule(rule) }
                     Divider()
