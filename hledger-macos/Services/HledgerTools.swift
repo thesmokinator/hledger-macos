@@ -52,7 +52,7 @@ struct ExpenseBreakdownTool: Tool {
     var description: String { "Get all EXPENSE categories and how much was spent in each for a given month. Call this when the user asks about spending, costs, expenses, what they spent money on, or top expenses. Do NOT use this for income." }
 
     @concurrent func call(arguments: PeriodQuery) async throws -> String {
-        let breakdown = try await backend.loadExpenseBreakdown(period: arguments.period)
+        let breakdown = try await backend.loadExpenseBreakdown(period: arguments.period, preferredCommodity: "")
         if breakdown.isEmpty { return "No expenses found for \(arguments.period)." }
         let lines = breakdown.map { "\($0.0): \($0.1) \($0.2)" }
         let total = breakdown.reduce(Decimal.zero) { $0 + $1.1 }
@@ -69,7 +69,7 @@ struct IncomeBreakdownTool: Tool {
     var description: String { "Get all INCOME sources and how much was earned from each for a given month. Call this ONLY when the user asks about income, salary, earnings, or revenue. Do NOT use this for expenses or spending." }
 
     @concurrent func call(arguments: PeriodQuery) async throws -> String {
-        let breakdown = try await backend.loadIncomeBreakdown(period: arguments.period)
+        let breakdown = try await backend.loadIncomeBreakdown(period: arguments.period, preferredCommodity: "")
         if breakdown.isEmpty { return "No income found for \(arguments.period)." }
         let lines = breakdown.map { "\($0.0): \($0.1) \($0.2)" }
         let total = breakdown.reduce(Decimal.zero) { $0 + $1.1 }
@@ -101,7 +101,7 @@ struct AssetsBreakdownTool: Tool {
     var description: String { "Get all asset accounts (bank, cash, investments) with current balances. Call this when the user asks about their assets, savings, patrimony, or wealth." }
 
     @concurrent func call(arguments: EmptyQuery) async throws -> String {
-        let assets = try await backend.loadAssetsBreakdown()
+        let assets = try await backend.loadAssetsBreakdown(preferredCommodity: "")
         if assets.isEmpty { return "No assets found." }
         let lines = assets.map { "\($0.0): \($0.1) \($0.2)" }
         return "Assets:\n" + lines.joined(separator: "\n")
@@ -116,7 +116,7 @@ struct LiabilitiesBreakdownTool: Tool {
     var description: String { "Get all liability accounts (debts, loans, mortgages, credit cards). Call this when the user asks about debts, how much they owe, or liabilities." }
 
     @concurrent func call(arguments: EmptyQuery) async throws -> String {
-        let liabilities = try await backend.loadLiabilitiesBreakdown()
+        let liabilities = try await backend.loadLiabilitiesBreakdown(preferredCommodity: "")
         if liabilities.isEmpty { return "No liabilities found." }
         let lines = liabilities.map { "\($0.0): \($0.1) \($0.2)" }
         return "Liabilities:\n" + lines.joined(separator: "\n")
