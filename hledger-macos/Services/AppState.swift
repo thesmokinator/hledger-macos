@@ -102,11 +102,14 @@ final class AppState {
         if result.isFound {
             setupBackend()
             isInitialized = true
-            // Pre-load all data so views have cached content immediately
-            await reload()
         }
 
         isChecking = false
+
+        // Load data in background after UI is visible
+        if result.isFound {
+            await reload()
+        }
     }
 
     /// Re-scan for hledger (used from onboarding and settings).
