@@ -57,6 +57,17 @@ final class AppState {
     var accountBalances: [(String, String)] = []
     var journalStats: JournalStats?
 
+    // MARK: - Summary Data (cached)
+
+    var summaryAllTime: PeriodSummary?
+    var summaryCurrentMonth: PeriodSummary?
+    var expenseBreakdown: [(String, Decimal, String)] = []
+    var incomeBreakdown: [(String, Decimal, String)] = []
+    var liabilities: [(String, Decimal, String)] = []
+    var assets: [(String, Decimal, String)] = []
+    var portfolio: [PortfolioRow] = []
+    var isFetchingPrices = false
+
     // MARK: - UI State
 
     var isLoading = false
@@ -91,6 +102,8 @@ final class AppState {
         if result.isFound {
             setupBackend()
             isInitialized = true
+            // Pre-load all data so views have cached content immediately
+            await reload()
         }
 
         isChecking = false
@@ -165,11 +178,94 @@ final class AppState {
         }
     }
 
-    /// Reload all data for the current view.
+    /// Load summary data (all-time + current month breakdowns).
+    func loadSummary() async {
+        guard let backend = activeBackend else { return }
+
+        let currentMonth: String = {
+            let f = DateFormatter(); f.dateFormat = "yyyy-MM"
+            return f.string(from: Date())
+        }()
+
+        async let allTimeSummary = backend.loadPeriodSummary(period: nil)
+        async let monthSummary = backend.loadPeriodSummary(period: currentMonth)
+        async let expenses = backend.loadExpenseBreakdown(period: currentMonth)
+        async let income = backend.loadIncomeBreakdown(period: currentMonth)
+        async let liabs = backend.loadLiabilitiesBreakdown()
+        async let assts = backend.loadAssetsBreakdown()
+
+        summaryAllTime = try? await allTimeSummary
+        summaryCurrentMonth = try? await monthSummary
+        expenseBreakdown = (try? await expenses) ?? []
+        incomeBreakdown = (try? await income) ?? []
+        liabilities = (try? await liabs) ?? []
+        assets = (try? await assts) ?? []
+
+        if config.investmentsEnabled {
+            await loadInvestments(backend: backend)
+        }
+    }
+
+    /// Load investment portfolio data.
+    private func loadInvestments(backend: any AccountingBackend) async {
+        do {
+            let positions = try await backend.loadInvestmentPositions()
+            let costs = try await backend.loadInvestmentCost()
+
+            var grouped: [String: (Decimal, Decimal, String)] = [:]
+            for (account, qty, commodity) in positions {
+                let existing = grouped[commodity] ?? (0, 0, "")
+                let cost = costs[account]
+                let bookVal = cost?.0 ?? 0
+                let bookCom = cost?.1 ?? ""
+                grouped[commodity] = (existing.0 + qty, existing.1 + bookVal, bookCom.isEmpty ? existing.2 : bookCom)
+            }
+
+            portfolio = grouped.map { commodity, values in
+                PortfolioRow(commodity: commodity, quantity: values.0, bookValue: values.1, bookCommodity: values.2)
+            }.sorted { $0.commodity < $1.commodity }
+        } catch {
+            return
+        }
+
+        let tickers = config.priceTickers
+        guard !tickers.isEmpty else { return }
+
+        isFetchingPrices = true
+        if let pricesFile = await PriceService.getPricesFile(pricehistPath: config.pricehistBinaryPath, tickers: tickers) {
+            do {
+                let marketValues = try await backend.loadInvestmentMarketValues(pricesFile: pricesFile)
+                let positions = try await backend.loadInvestmentPositions()
+
+                var commodityMarket: [String: Decimal] = [:]
+                for (account, _, commodity) in positions {
+                    if let mv = marketValues[account] { commodityMarket[commodity, default: 0] += mv.0 }
+                }
+
+                portfolio = portfolio.map { row in
+                    var updated = row
+                    if let mv = commodityMarket[row.commodity] { updated.marketValue = mv }
+                    return updated
+                }
+            } catch {
+                print("Market values: \(error.localizedDescription)")
+            }
+        }
+        isFetchingPrices = false
+    }
+
+    /// Load period summary for transaction view cards.
+    func loadPeriodSummary() async {
+        guard let backend = activeBackend else { return }
+        summaryCurrentMonth = try? await backend.loadPeriodSummary(period: currentPeriod)
+    }
+
+    /// Reload all data.
     func reload() async {
         await loadTransactions()
         await loadAccounts()
         await loadStats()
+        await loadSummary()
         dataVersion = UUID()
     }
 
