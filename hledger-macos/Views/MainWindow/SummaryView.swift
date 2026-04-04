@@ -46,6 +46,7 @@ struct SummaryView: View {
 
                 Picker("Period", selection: $summaryPeriod) {
                     Text("Current month").tag("month")
+                    Text("Last month").tag("lastmonth")
                     Text("3 months").tag("3m")
                     Text("6 months").tag("6m")
                     Text("12 months").tag("12m")

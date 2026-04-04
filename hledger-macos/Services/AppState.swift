@@ -191,6 +191,10 @@ final class AppState {
         case "month":
             let mf = DateFormatter(); mf.dateFormat = "yyyy-MM"
             return mf.string(from: today)
+        case "lastmonth":
+            guard let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: today) else { return nil }
+            let mf = DateFormatter(); mf.dateFormat = "yyyy-MM"
+            return mf.string(from: lastMonth)
         case "3m":
             guard let start = Calendar.current.date(byAdding: .month, value: -3, to: today) else { return nil }
             return "\(f.string(from: start))..\(f.string(from: today))"

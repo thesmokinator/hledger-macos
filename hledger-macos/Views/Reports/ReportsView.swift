@@ -3,6 +3,7 @@
 import SwiftUI
 
 enum PeriodRange: Int, CaseIterable, Identifiable {
+    case twoMonths = 2
     case threeMonths = 3
     case sixMonths = 6
     case twelveMonths = 12
@@ -12,6 +13,7 @@ enum PeriodRange: Int, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
+        case .twoMonths: return "2 months"
         case .threeMonths: return "3 months"
         case .sixMonths: return "6 months"
         case .twelveMonths: return "12 months"
