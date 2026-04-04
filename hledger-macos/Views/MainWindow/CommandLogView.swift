@@ -26,24 +26,30 @@ struct CommandLogView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                Text("Command Log")
-                    .font(.headline)
-
-                Picker("", selection: $filter) {
-                    ForEach(LogFilter.allCases, id: \.self) { f in
-                        Text(filterLabel(f)).tag(f)
-                    }
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Command Log")
+                        .font(.headline)
+                    Spacer()
+                    Button("Export") { exportLog() }
+                        .controlSize(.small)
+                    Button("Clear") { log.clear() }
+                        .controlSize(.small)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 220)
 
-                Spacer()
-
-                Button("Export") { exportLog() }
-                    .controlSize(.small)
-                Button("Clear") { log.clear() }
-                    .controlSize(.small)
+                HStack(spacing: 12) {
+                    ForEach(LogFilter.allCases, id: \.self) { f in
+                        Button {
+                            filter = f
+                        } label: {
+                            Text(filterLabel(f))
+                                .font(.caption)
+                                .foregroundStyle(filter == f ? .primary : .secondary)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    Spacer()
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
