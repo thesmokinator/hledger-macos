@@ -298,7 +298,7 @@ struct TransactionFormView: View {
             } else {
                 try await backend.appendTransaction(newTransaction)
             }
-            await appState.loadTransactions()
+            await appState.reload()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

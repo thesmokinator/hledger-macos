@@ -255,7 +255,7 @@ struct TransactionsView: View {
         guard let backend = appState.activeBackend else { return }
         do {
             try await backend.updateTransactionStatus(transaction, to: newStatus)
-            await appState.loadTransactions()
+            await appState.reload()
         } catch {
             appState.errorMessage = error.localizedDescription
         }
@@ -265,7 +265,7 @@ struct TransactionsView: View {
         guard let txn = transactionToDelete, let backend = appState.activeBackend else { return }
         do {
             try await backend.deleteTransaction(txn)
-            await appState.loadTransactions()
+            await appState.reload()
         } catch {
             appState.errorMessage = error.localizedDescription
         }
