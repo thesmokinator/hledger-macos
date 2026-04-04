@@ -113,10 +113,12 @@ struct SummaryView: View {
             }
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
+            let maxAmount = items.map(\.1).max() ?? 0
 
             ForEach(Array(sortedItems.enumerated()), id: \.offset) { _, item in
                 let (account, amount, commodity) = item
                 let pct = total > 0 ? Double(truncating: (amount / total * 100) as NSDecimalNumber) : 0
+                let barRatio = maxAmount > 0 ? Double(truncating: (amount / maxAmount) as NSDecimalNumber) : 0
 
                 HStack(spacing: 12) {
                     Text(account)
@@ -127,7 +129,7 @@ struct SummaryView: View {
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.15)).frame(height: 6)
                             RoundedRectangle(cornerRadius: 3).fill(color.opacity(0.6))
-                                .frame(width: max(0, geo.size.width * CGFloat(pct / 100)), height: 6)
+                                .frame(width: max(0, geo.size.width * CGFloat(barRatio)), height: 6)
                         }
                     }
                     .frame(height: 6)
