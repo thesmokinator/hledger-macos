@@ -14,6 +14,15 @@ struct AccountRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            if let onDrillDown {
+                Button(action: onDrillDown) {
+                    Image(systemName: "list.bullet.rectangle")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 6)
+            }
             Text(label)
                 .font(labelBold ? labelFont.bold() : labelFont)
                 .foregroundStyle(labelColor)
@@ -22,15 +31,6 @@ struct AccountRow: View {
             Text(value)
                 .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(valueColor)
-            if let onDrillDown {
-                Button(action: onDrillDown) {
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, 8)
-            }
         }
         .padding(.vertical, ListMetrics.rowPadding)
     }
