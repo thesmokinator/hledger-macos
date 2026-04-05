@@ -69,17 +69,16 @@ struct SettingsView: View {
                     }
 
                     Picker("Default commodity", selection: $commodity) {
-                        Text("€").tag("€")
-                        Text("$").tag("$")
-                        Text("£").tag("£")
-                        Text("EUR").tag("EUR")
-                        Text("USD").tag("USD")
-                        Text("GBP").tag("GBP")
-                        Divider()
+                        if let commodities = appState.journalStats?.commodities, !commodities.isEmpty {
+                            ForEach(commodities, id: \.self) { c in
+                                Text(c).tag(c)
+                            }
+                            Divider()
+                        }
                         Text("Custom...").tag("__custom__")
                     }
 
-                    if commodity == "__custom__" || !["€", "$", "£", "EUR", "USD", "GBP"].contains(commodity) {
+                    if commodity == "__custom__" || !(appState.journalStats?.commodities ?? []).contains(commodity) {
                         TextField("", text: $customCommodity, prompt: Text("CHF, SEK, BTC..."))
                             .multilineTextAlignment(.trailing)
                             .onSubmit { commodity = customCommodity }
@@ -362,7 +361,8 @@ struct SettingsView: View {
         journalPath = appState.config.journalFilePath
         originalJournalPath = journalPath
         let savedCommodity = appState.config.defaultCommodity
-        if ["€", "$", "£", "EUR", "USD", "GBP"].contains(savedCommodity) {
+        let knownCommodities = appState.journalStats?.commodities ?? []
+        if knownCommodities.contains(savedCommodity) {
             commodity = savedCommodity
         } else {
             commodity = savedCommodity
@@ -401,6 +401,7 @@ struct SettingsView: View {
     private func performSave() {
         appState.config.journalFilePath = journalPath
         appState.config.defaultCommodity = commodity
+        appState.config.hasUserSetCommodity = true
         appState.config.accountsViewMode = accountsView
         appState.config.accountsTreeExpanded = treeExpanded
         appState.config.hledgerBinaryPath = hledgerPath

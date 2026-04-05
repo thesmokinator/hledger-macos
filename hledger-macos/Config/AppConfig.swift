@@ -22,6 +22,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "defaultCommodity") }
     }
 
+    /// Whether the user has explicitly chosen a commodity in Settings.
+    var hasUserSetCommodity: Bool {
+        get { UserDefaults.standard.object(forKey: "hasUserSetCommodity") as? Bool ?? false }
+        set { UserDefaults.standard.set(newValue, forKey: "hasUserSetCommodity") }
+    }
+
     /// Accounts view mode (flat or tree).
     var accountsViewMode: String {
         get { UserDefaults.standard.string(forKey: "accountsViewMode") ?? "flat" }
