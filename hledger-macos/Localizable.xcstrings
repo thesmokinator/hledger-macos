@@ -26,19 +26,20 @@
         }
       }
     },
+    "%lld transaction%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld transaction%2$@"
+          }
+        }
+      }
+    },
     "© 2026 Michele Broggi" : {
 
     },
     "⌘%lld" : {
-
-    },
-    "$" : {
-
-    },
-    "£" : {
-
-    },
-    "€" : {
 
     },
     "0.00" : {
@@ -243,7 +244,7 @@
     "Enable AI Assistant" : {
 
     },
-    "EUR" : {
+    "Error" : {
 
     },
     "Expand tree by default" : {
@@ -286,9 +287,6 @@
 
     },
     "Gain/Loss" : {
-
-    },
-    "GBP" : {
 
     },
     "General" : {
@@ -426,6 +424,9 @@
     "No transactions found for %@." : {
 
     },
+    "No transactions match your search." : {
+
+    },
     "Not found — install with `brew install hledger`" : {
 
     },
@@ -544,6 +545,9 @@
     "Show investments in Summary" : {
 
     },
+    "Show transactions for %@" : {
+
+    },
     "Startup" : {
 
     },
@@ -595,9 +599,6 @@
     "Usage" : {
 
     },
-    "USD" : {
-
-    },
     "Using Apple Intelligence (built-in)" : {
 
     },
@@ -618,6 +619,9 @@
 
     },
     "View Release" : {
+
+    },
+    "View Transactions" : {
 
     },
     "Welcome to hledger for Mac" : {

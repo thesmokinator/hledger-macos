@@ -9,6 +9,7 @@ struct AccountsView: View {
     @State private var treeNodes: [AccountNode] = []
     @State private var searchText = ""
     @State private var isLoading = false
+    @State private var drillDown: AccountDrillDown?
 
     private var filteredBalances: [AccountBalance] {
         let parsed = appState.accountBalances.map { AccountBalance(account: $0.0, rawBalance: $0.1) }
@@ -50,6 +51,10 @@ struct AccountsView: View {
                 .pickerStyle(.segmented)
             }
         }
+        .sheet(item: $drillDown) { item in
+            AccountTransactionsSheet(accountName: item.accountName)
+                .environment(appState)
+        }
         .task(id: appState.dataVersion) { await loadData() }
         .onAppear {
             viewMode = appState.config.accountsViewMode
@@ -89,11 +94,17 @@ struct AccountsView: View {
                     ForEach(groupedBalances, id: \.key) { group in
                         Section {
                             ForEach(group.rows) { row in
-                                AccountRow(
-                                    label: row.account,
-                                    value: row.formattedBalance,
-                                    valueColor: row.balanceColor
-                                )
+                                Button {
+                                    drillDown = AccountDrillDown(accountName: row.account)
+                                } label: {
+                                    AccountRow(
+                                        label: row.account,
+                                        value: row.formattedBalance,
+                                        valueColor: row.balanceColor
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .help("Show transactions for \(row.account)")
                             }
                         } header: {
                             HStack {
@@ -124,7 +135,8 @@ struct AccountsView: View {
                             node: node,
                             startExpanded: appState.config.accountsTreeExpanded,
                             formatBalance: formatNodeBalance,
-                            balanceColor: nodeBalanceColor
+                            balanceColor: nodeBalanceColor,
+                            onDrillDown: { drillDown = AccountDrillDown(accountName: $0) }
                         )
                     }
                 }
@@ -174,14 +186,22 @@ struct AccountTreeNode: View {
     let startExpanded: Bool
     let formatBalance: (String) -> String
     let balanceColor: (String) -> Color
+    let onDrillDown: (String) -> Void
 
     @State private var isExpanded: Bool
 
-    init(node: AccountNode, startExpanded: Bool, formatBalance: @escaping (String) -> String, balanceColor: @escaping (String) -> Color) {
+    init(
+        node: AccountNode,
+        startExpanded: Bool,
+        formatBalance: @escaping (String) -> String,
+        balanceColor: @escaping (String) -> Color,
+        onDrillDown: @escaping (String) -> Void
+    ) {
         self.node = node
         self.startExpanded = startExpanded
         self.formatBalance = formatBalance
         self.balanceColor = balanceColor
+        self.onDrillDown = onDrillDown
         self._isExpanded = State(initialValue: startExpanded)
     }
 
@@ -192,6 +212,9 @@ struct AccountTreeNode: View {
                 value: formatBalance(node.balance),
                 valueColor: balanceColor(node.balance)
             )
+            .contextMenu {
+                Button("View Transactions") { onDrillDown(node.fullPath) }
+            }
         } else {
             DisclosureGroup(isExpanded: $isExpanded) {
                 ForEach(node.children) { child in
@@ -199,7 +222,8 @@ struct AccountTreeNode: View {
                         node: child,
                         startExpanded: startExpanded,
                         formatBalance: formatBalance,
-                        balanceColor: balanceColor
+                        balanceColor: balanceColor,
+                        onDrillDown: onDrillDown
                     )
                 }
             } label: {
@@ -208,6 +232,9 @@ struct AccountTreeNode: View {
                     value: formatBalance(node.balance),
                     valueColor: balanceColor(node.balance)
                 )
+                .contextMenu {
+                    Button("View Transactions") { onDrillDown(node.fullPath) }
+                }
             }
         }
     }
