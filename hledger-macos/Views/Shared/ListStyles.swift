@@ -10,6 +10,7 @@ struct AccountRow: View {
     var labelBold: Bool = false
     var labelColor: Color = .primary
     var valueColor: Color = .secondary
+    var onDrillDown: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 0) {
@@ -21,6 +22,15 @@ struct AccountRow: View {
             Text(value)
                 .font(.system(.callout, design: .monospaced))
                 .foregroundStyle(valueColor)
+            if let onDrillDown {
+                Button(action: onDrillDown) {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 8)
+            }
         }
         .padding(.vertical, ListMetrics.rowPadding)
     }

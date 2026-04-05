@@ -94,17 +94,12 @@ struct AccountsView: View {
                     ForEach(groupedBalances, id: \.key) { group in
                         Section {
                             ForEach(group.rows) { row in
-                                Button {
-                                    drillDown = AccountDrillDown(accountName: row.account)
-                                } label: {
-                                    AccountRow(
-                                        label: row.account,
-                                        value: row.formattedBalance,
-                                        valueColor: row.balanceColor
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .help("Show transactions for \(row.account)")
+                                AccountRow(
+                                    label: row.account,
+                                    value: row.formattedBalance,
+                                    valueColor: row.balanceColor,
+                                    onDrillDown: { drillDown = AccountDrillDown(accountName: row.account) }
+                                )
                             }
                         } header: {
                             HStack {
@@ -210,11 +205,9 @@ struct AccountTreeNode: View {
             AccountRow(
                 label: node.name,
                 value: formatBalance(node.balance),
-                valueColor: balanceColor(node.balance)
+                valueColor: balanceColor(node.balance),
+                onDrillDown: { onDrillDown(node.fullPath) }
             )
-            .contextMenu {
-                Button("View Transactions") { onDrillDown(node.fullPath) }
-            }
         } else {
             DisclosureGroup(isExpanded: $isExpanded) {
                 ForEach(node.children) { child in
@@ -230,11 +223,9 @@ struct AccountTreeNode: View {
                 AccountRow(
                     label: node.name,
                     value: formatBalance(node.balance),
-                    valueColor: balanceColor(node.balance)
+                    valueColor: balanceColor(node.balance),
+                    onDrillDown: { onDrillDown(node.fullPath) }
                 )
-                .contextMenu {
-                    Button("View Transactions") { onDrillDown(node.fullPath) }
-                }
             }
         }
     }
