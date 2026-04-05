@@ -122,6 +122,7 @@ struct BudgetView: View {
             ) { newRule in
                 Task { await saveRule(newRule) }
             }
+            .environment(appState)
         }
         .alert("Delete Budget Rule?", isPresented: $showingDeleteConfirm) {
             Button("Cancel", role: .cancel) {}
@@ -161,7 +162,7 @@ struct BudgetView: View {
         isLoading = true
 
         let budgetPath = BudgetManager.budgetPath(for: backend.journalFile)
-        rules = BudgetManager.parseRules(budgetPath: budgetPath)
+        rules = BudgetManager.parseRules(budgetPath: budgetPath, commodityStyles: appState.commodityStyles)
 
         do {
             actuals = try await backend.loadBudgetReport(period: currentPeriod)
@@ -233,13 +234,15 @@ struct BudgetView: View {
                     oldAccount: editing.account,
                     newRule: newRule,
                     journalFile: backend.journalFile,
-                    validator: backend
+                    validator: backend,
+                    commodityStyles: appState.commodityStyles
                 )
             } else {
                 try await BudgetManager.addRule(
                     newRule,
                     journalFile: backend.journalFile,
-                    validator: backend
+                    validator: backend,
+                    commodityStyles: appState.commodityStyles
                 )
             }
             await loadData()
@@ -254,7 +257,8 @@ struct BudgetView: View {
             try await BudgetManager.deleteRule(
                 account: rule.account,
                 journalFile: backend.journalFile,
-                validator: backend
+                validator: backend,
+                commodityStyles: appState.commodityStyles
             )
             await loadData()
         } catch {

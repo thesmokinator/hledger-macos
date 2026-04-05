@@ -56,6 +56,7 @@ final class AppState {
     var accounts: [String] = []
     var accountBalances: [(String, String)] = []
     var journalStats: JournalStats?
+    private(set) var commodityStyles: [String: AmountStyle] = [:]
 
     // MARK: - Summary Data (cached)
 
@@ -156,7 +157,34 @@ final class AppState {
             transactions = []
         }
 
+        if !transactions.isEmpty {
+            extractCommodityStyles()
+        }
+
         isLoading = false
+    }
+
+    /// Look up the commodity style for a given commodity, falling back to default.
+    func styleForCommodity(_ commodity: String) -> AmountStyle {
+        commodityStyles[commodity] ?? .default
+    }
+
+    /// Extract commodity styles from loaded transactions (zero I/O cost).
+    private func extractCommodityStyles() {
+        var styles: [String: AmountStyle] = [:]
+        for txn in transactions {
+            for posting in txn.postings {
+                for amount in posting.amounts {
+                    if !amount.commodity.isEmpty && styles[amount.commodity] == nil {
+                        styles[amount.commodity] = amount.style
+                    }
+                    if let cost = amount.cost, !cost.commodity.isEmpty && styles[cost.commodity] == nil {
+                        styles[cost.commodity] = cost.style
+                    }
+                }
+            }
+        }
+        commodityStyles = styles
     }
 
     /// Load accounts list.

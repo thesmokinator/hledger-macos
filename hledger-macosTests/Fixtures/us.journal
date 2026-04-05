@@ -1,0 +1,9 @@
+commodity $1,000.00
+
+2026-01-15 * Salary
+    assets:bank                         $3,000.00
+    income:salary
+
+2026-01-20 * Groceries
+    expenses:food                         $150.00
+    assets:bank

@@ -40,7 +40,7 @@ enum BudgetManager {
     // MARK: - Parse Rules
 
     /// Parse budget rules from budget.journal.
-    static func parseRules(budgetPath: URL) -> [BudgetRule] {
+    static func parseRules(budgetPath: URL, commodityStyles: [String: AmountStyle] = [:]) -> [BudgetRule] {
         guard FileManager.default.fileExists(atPath: budgetPath.path),
               let content = try? String(contentsOf: budgetPath, encoding: .utf8),
               !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -71,10 +71,11 @@ enum BudgetManager {
                     let amountStr = String(match.2).trimmingCharacters(in: .whitespaces)
                     let category = match.3.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
                     let (quantity, commodity) = AmountParser.parse(amountStr)
+                    let style = commodityStyles[commodity] ?? .default
 
                     rules.append(BudgetRule(
                         account: account,
-                        amount: Amount(commodity: commodity, quantity: quantity),
+                        amount: Amount(commodity: commodity, quantity: quantity, style: style),
                         category: category
                     ))
                 }
@@ -136,10 +137,10 @@ enum BudgetManager {
     // MARK: - CRUD
 
     /// Add a new budget rule.
-    static func addRule(_ rule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func addRule(_ rule: BudgetRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = budgetPath(for: journalFile)
         try ensureBudgetFile(journalFile: journalFile)
-        var rules = parseRules(budgetPath: path)
+        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
         if rules.contains(where: { $0.account == rule.account }) {
             throw BackendError.commandFailed("Budget rule already exists for \(rule.account)")
         }
@@ -148,9 +149,9 @@ enum BudgetManager {
     }
 
     /// Update an existing budget rule.
-    static func updateRule(oldAccount: String, newRule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func updateRule(oldAccount: String, newRule: BudgetRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path)
+        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
         guard let index = rules.firstIndex(where: { $0.account == oldAccount }) else {
             throw BackendError.commandFailed("No budget rule found for \(oldAccount)")
         }
@@ -159,9 +160,9 @@ enum BudgetManager {
     }
 
     /// Delete a budget rule by account name.
-    static func deleteRule(account: String, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func deleteRule(account: String, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path)
+        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
         let count = rules.count
         rules.removeAll { $0.account == account }
         if rules.count == count {

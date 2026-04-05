@@ -500,18 +500,19 @@ struct MockBackend: AccountingBackend {
     func loadPeriodSummary(period: String?) async throws -> PeriodSummary {
         PeriodSummary(income: 7341.75, expenses: 1747.95, commodity: "€")
     }
-    func loadExpenseBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+    func loadExpenseBreakdown(period: String?, preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Expenses:School", 407, "€"), ("Expenses:Groceries", 319.17, "€")]
     }
-    func loadIncomeBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+    func loadIncomeBreakdown(period: String?, preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Income:Salary", 7302, "€"), ("Income:Other", 39.75, "€")]
     }
-    func loadLiabilitiesBreakdown() async throws -> [(String, Decimal, String)] {
+    func loadLiabilitiesBreakdown(preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Liabilities:Mortgage", -150000, "€")]
     }
-    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
+    func loadAssetsBreakdown(preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Assets:Bank", Decimal(string: "8198.21")!, "€"), ("Assets:Cash", Decimal(string: "153.40")!, "€")]
     }
+    func loadMultiCurrencyAccounts() async throws -> Set<String> { [] }
     func loadInvestmentPositions() async throws -> [(String, Decimal, String)] { [] }
     func loadInvestmentCost() async throws -> [String: (Decimal, String)] { [:] }
     func loadInvestmentMarketValues(pricesFile: URL) async throws -> [String: (Decimal, String)] { [:] }
@@ -589,5 +590,240 @@ struct HledgerToolTests {
         let tool = TransactionSearchTool(backend: backend)
         let result = try await tool.call(arguments: TextQuery(text: "nonexistent"))
         #expect(result.contains("No transactions found"))
+    }
+}
+
+// MARK: - Commodity Style Tests
+
+@Suite("CommodityStyle")
+struct CommodityStyleTests {
+
+    // -- Helpers --
+
+    static let europeanStyle = AmountStyle(
+        commoditySide: .left,
+        commoditySpaced: false,
+        decimalMark: ",",
+        digitGroupSeparator: ".",
+        digitGroupSizes: [3],
+        precision: 2
+    )
+
+    static let usStyle = AmountStyle(
+        commoditySide: .left,
+        commoditySpaced: false,
+        decimalMark: ".",
+        digitGroupSeparator: ",",
+        digitGroupSizes: [3],
+        precision: 2
+    )
+
+    // -- Amount.formatted() with styles --
+
+    @Test func formatDecimalEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€1.000,00")
+    }
+
+    @Test func formatDecimalUS() {
+        let amount = Amount(commodity: "$", quantity: Decimal(string: "1000")!, style: CommodityStyleTests.usStyle)
+        let result = amount.formatted()
+        #expect(result == "$1,000.00")
+    }
+
+    @Test func formatDecimalNoGrouping() {
+        // Default style: no grouping, dot decimal — backward compatibility
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: .default)
+        let result = amount.formatted()
+        #expect(result == "€1000.00")
+    }
+
+    @Test func formatDecimalLargeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1234567.89")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€1.234.567,89")
+    }
+
+    @Test func formatDecimalNegativeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "-1500.50")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "-€1.500,50")
+    }
+
+    @Test func formatDecimalSmallEuropean() {
+        // No grouping needed for small numbers
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "50")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€50,00")
+    }
+
+    @Test func formatDecimalRightSideCommodity() {
+        let style = AmountStyle(
+            commoditySide: .right,
+            commoditySpaced: true,
+            decimalMark: ",",
+            digitGroupSeparator: ".",
+            digitGroupSizes: [3],
+            precision: 2
+        )
+        let amount = Amount(commodity: "EUR", quantity: Decimal(string: "1000")!, style: style)
+        let result = amount.formatted()
+        #expect(result == "1.000,00 EUR")
+    }
+
+    // -- Roundtrip tests --
+
+    @Test func roundtripEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1500.75")!, style: CommodityStyleTests.europeanStyle)
+        let formatted = amount.formatted()
+        // €1.500,75
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "1500.75"))
+        #expect(com == "€")
+    }
+
+    @Test func roundtripUS() {
+        let amount = Amount(commodity: "$", quantity: Decimal(string: "1500.75")!, style: CommodityStyleTests.usStyle)
+        let formatted = amount.formatted()
+        // $1,500.75
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "1500.75"))
+        #expect(com == "$")
+    }
+
+    @Test func roundtripNegativeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "-2500")!, style: CommodityStyleTests.europeanStyle)
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "-2500"))
+        #expect(com == "€")
+    }
+
+    // -- Style extraction --
+
+    @Test func styleExtractionFromTransactions() {
+        let txns = [
+            Transaction(
+                index: 0, date: "2026-01-15", description: "Test",
+                postings: [
+                    Posting(account: "expenses:food", amounts: [
+                        Amount(commodity: "€", quantity: 50, style: CommodityStyleTests.europeanStyle)
+                    ]),
+                    Posting(account: "assets:bank")
+                ]
+            )
+        ]
+        let styles = Self.extractStyles(from: txns)
+        #expect(styles["€"]?.decimalMark == ",")
+        #expect(styles["€"]?.digitGroupSeparator == ".")
+        #expect(styles["€"]?.digitGroupSizes == [3])
+    }
+
+    @Test func styleExtractionPreservesFirstSeen() {
+        let style1 = AmountStyle(commoditySide: .left, commoditySpaced: false, decimalMark: ",", precision: 2)
+        let style2 = AmountStyle(commoditySide: .left, commoditySpaced: true, decimalMark: ",", precision: 4)
+        let txns = [
+            Transaction(index: 0, date: "2026-01-01", description: "T1",
+                postings: [Posting(account: "a", amounts: [Amount(commodity: "€", quantity: 1, style: style1)])]),
+            Transaction(index: 1, date: "2026-01-02", description: "T2",
+                postings: [Posting(account: "b", amounts: [Amount(commodity: "€", quantity: 2, style: style2)])])
+        ]
+        let styles = Self.extractStyles(from: txns)
+        // First style wins
+        #expect(styles["€"]?.commoditySpaced == false)
+        #expect(styles["€"]?.precision == 2)
+    }
+
+    @Test func styleExtractionIncludesCostCommodity() {
+        let costStyle = AmountStyle(commoditySide: .left, decimalMark: ".", precision: 2)
+        let amount = Amount(
+            commodity: "XDWD", quantity: 10,
+            style: AmountStyle(commoditySide: .right, commoditySpaced: true, decimalMark: ".", precision: 0),
+            cost: CostAmount(commodity: "$", quantity: 500, style: costStyle)
+        )
+        let txns = [
+            Transaction(index: 0, date: "2026-01-01", description: "Buy",
+                postings: [Posting(account: "assets:investments", amounts: [amount])])
+        ]
+        let styles = Self.extractStyles(from: txns)
+        #expect(styles["XDWD"] != nil)
+        #expect(styles["$"] != nil)
+        #expect(styles["$"]?.decimalMark == ".")
+    }
+
+    @Test func styleFallbackForUnknownCommodity() {
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let result = styles["BTC"] ?? .default
+        #expect(result.decimalMark == ".")
+    }
+
+    // -- RecurringManager parse with styles --
+
+    @Test func recurringParseWithEuropeanStyles() throws {
+        let content = """
+        ~ monthly from 2026-01-01  ; rule-id:test1 Test rule
+            expenses:food                                    €500,00
+            assets:bank
+
+        """
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let tmpFile = tmpDir.appendingPathComponent("recurring.journal")
+        try content.write(to: tmpFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let rules = RecurringManager.parseRules(recurringPath: tmpFile, commodityStyles: styles)
+
+        #expect(rules.count == 1)
+        let amount = rules[0].postings[0].amounts[0]
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.style.digitGroupSeparator == ".")
+        // Verify formatted output uses European style
+        let formatted = amount.formatted()
+        #expect(formatted == "€500,00")
+    }
+
+    @Test func budgetParseWithEuropeanStyles() throws {
+        let content = """
+        ~ monthly
+            expenses:groceries                               €500,00
+            Assets:Budget
+
+        """
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let tmpFile = tmpDir.appendingPathComponent("budget.journal")
+        try content.write(to: tmpFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let rules = BudgetManager.parseRules(budgetPath: tmpFile, commodityStyles: styles)
+
+        #expect(rules.count == 1)
+        let amount = rules[0].amount
+        #expect(amount.style.decimalMark == ",")
+        let formatted = amount.formatted()
+        #expect(formatted == "€500,00")
+    }
+
+    // -- Helper: replicate AppState.extractCommodityStyles() logic for testing --
+
+    private static func extractStyles(from transactions: [Transaction]) -> [String: AmountStyle] {
+        var styles: [String: AmountStyle] = [:]
+        for txn in transactions {
+            for posting in txn.postings {
+                for amount in posting.amounts {
+                    if !amount.commodity.isEmpty && styles[amount.commodity] == nil {
+                        styles[amount.commodity] = amount.style
+                    }
+                    if let cost = amount.cost, !cost.commodity.isEmpty && styles[cost.commodity] == nil {
+                        styles[cost.commodity] = cost.style
+                    }
+                }
+            }
+        }
+        return styles
     }
 }
