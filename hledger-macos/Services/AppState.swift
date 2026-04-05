@@ -335,8 +335,17 @@ final class AppState {
         await loadTransactions()
         await loadAccounts()
         await loadStats()
+        autoDetectCommodityIfNeeded()
         await loadSummary()
         dataVersion = UUID()
+    }
+
+    /// Auto-set the default commodity if the journal has exactly one and the user hasn't chosen.
+    private func autoDetectCommodityIfNeeded() {
+        guard !config.hasUserSetCommodity,
+              let commodities = journalStats?.commodities,
+              commodities.count == 1 else { return }
+        config.defaultCommodity = commodities[0]
     }
 
     /// Navigate to previous month.
