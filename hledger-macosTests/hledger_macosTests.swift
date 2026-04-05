@@ -500,18 +500,19 @@ struct MockBackend: AccountingBackend {
     func loadPeriodSummary(period: String?) async throws -> PeriodSummary {
         PeriodSummary(income: 7341.75, expenses: 1747.95, commodity: "€")
     }
-    func loadExpenseBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+    func loadExpenseBreakdown(period: String?, preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Expenses:School", 407, "€"), ("Expenses:Groceries", 319.17, "€")]
     }
-    func loadIncomeBreakdown(period: String?) async throws -> [(String, Decimal, String)] {
+    func loadIncomeBreakdown(period: String?, preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Income:Salary", 7302, "€"), ("Income:Other", 39.75, "€")]
     }
-    func loadLiabilitiesBreakdown() async throws -> [(String, Decimal, String)] {
+    func loadLiabilitiesBreakdown(preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Liabilities:Mortgage", -150000, "€")]
     }
-    func loadAssetsBreakdown() async throws -> [(String, Decimal, String)] {
+    func loadAssetsBreakdown(preferredCommodity: String) async throws -> [(String, Decimal, String)] {
         [("Assets:Bank", Decimal(string: "8198.21")!, "€"), ("Assets:Cash", Decimal(string: "153.40")!, "€")]
     }
+    func loadMultiCurrencyAccounts() async throws -> Set<String> { [] }
     func loadInvestmentPositions() async throws -> [(String, Decimal, String)] { [] }
     func loadInvestmentCost() async throws -> [String: (Decimal, String)] { [:] }
     func loadInvestmentMarketValues(pricesFile: URL) async throws -> [String: (Decimal, String)] { [:] }
@@ -589,5 +590,539 @@ struct HledgerToolTests {
         let tool = TransactionSearchTool(backend: backend)
         let result = try await tool.call(arguments: TextQuery(text: "nonexistent"))
         #expect(result.contains("No transactions found"))
+    }
+}
+
+// MARK: - Commodity Style Tests
+
+@Suite("CommodityStyle")
+struct CommodityStyleTests {
+
+    // -- Helpers --
+
+    static let europeanStyle = AmountStyle(
+        commoditySide: .left,
+        commoditySpaced: false,
+        decimalMark: ",",
+        digitGroupSeparator: ".",
+        digitGroupSizes: [3],
+        precision: 2
+    )
+
+    static let usStyle = AmountStyle(
+        commoditySide: .left,
+        commoditySpaced: false,
+        decimalMark: ".",
+        digitGroupSeparator: ",",
+        digitGroupSizes: [3],
+        precision: 2
+    )
+
+    // -- Amount.formatted() with styles --
+
+    @Test func formatDecimalEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€1.000,00")
+    }
+
+    @Test func formatDecimalUS() {
+        let amount = Amount(commodity: "$", quantity: Decimal(string: "1000")!, style: CommodityStyleTests.usStyle)
+        let result = amount.formatted()
+        #expect(result == "$1,000.00")
+    }
+
+    @Test func formatDecimalNoGrouping() {
+        // Default style: no grouping, dot decimal — backward compatibility
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: .default)
+        let result = amount.formatted()
+        #expect(result == "€1000.00")
+    }
+
+    @Test func formatDecimalLargeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1234567.89")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€1.234.567,89")
+    }
+
+    @Test func formatDecimalNegativeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "-1500.50")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "-€1.500,50")
+    }
+
+    @Test func formatDecimalSmallEuropean() {
+        // No grouping needed for small numbers
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "50")!, style: CommodityStyleTests.europeanStyle)
+        let result = amount.formatted()
+        #expect(result == "€50,00")
+    }
+
+    @Test func formatDecimalRightSideCommodity() {
+        let style = AmountStyle(
+            commoditySide: .right,
+            commoditySpaced: true,
+            decimalMark: ",",
+            digitGroupSeparator: ".",
+            digitGroupSizes: [3],
+            precision: 2
+        )
+        let amount = Amount(commodity: "EUR", quantity: Decimal(string: "1000")!, style: style)
+        let result = amount.formatted()
+        #expect(result == "1.000,00 EUR")
+    }
+
+    // -- Roundtrip tests --
+
+    @Test func roundtripEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1500.75")!, style: CommodityStyleTests.europeanStyle)
+        let formatted = amount.formatted()
+        // €1.500,75
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "1500.75"))
+        #expect(com == "€")
+    }
+
+    @Test func roundtripUS() {
+        let amount = Amount(commodity: "$", quantity: Decimal(string: "1500.75")!, style: CommodityStyleTests.usStyle)
+        let formatted = amount.formatted()
+        // $1,500.75
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "1500.75"))
+        #expect(com == "$")
+    }
+
+    @Test func roundtripNegativeEuropean() {
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "-2500")!, style: CommodityStyleTests.europeanStyle)
+        let formatted = amount.formatted()
+        let (qty, com) = AmountParser.parse(formatted)
+        #expect(qty == Decimal(string: "-2500"))
+        #expect(com == "€")
+    }
+
+    // -- Style extraction --
+
+    @Test func styleExtractionFromTransactions() {
+        let txns = [
+            Transaction(
+                index: 0, date: "2026-01-15", description: "Test",
+                postings: [
+                    Posting(account: "expenses:food", amounts: [
+                        Amount(commodity: "€", quantity: 50, style: CommodityStyleTests.europeanStyle)
+                    ]),
+                    Posting(account: "assets:bank")
+                ]
+            )
+        ]
+        let styles = Self.extractStyles(from: txns)
+        #expect(styles["€"]?.decimalMark == ",")
+        #expect(styles["€"]?.digitGroupSeparator == ".")
+        #expect(styles["€"]?.digitGroupSizes == [3])
+    }
+
+    @Test func styleExtractionPreservesFirstSeen() {
+        let style1 = AmountStyle(commoditySide: .left, commoditySpaced: false, decimalMark: ",", precision: 2)
+        let style2 = AmountStyle(commoditySide: .left, commoditySpaced: true, decimalMark: ",", precision: 4)
+        let txns = [
+            Transaction(index: 0, date: "2026-01-01", description: "T1",
+                postings: [Posting(account: "a", amounts: [Amount(commodity: "€", quantity: 1, style: style1)])]),
+            Transaction(index: 1, date: "2026-01-02", description: "T2",
+                postings: [Posting(account: "b", amounts: [Amount(commodity: "€", quantity: 2, style: style2)])])
+        ]
+        let styles = Self.extractStyles(from: txns)
+        // First style wins
+        #expect(styles["€"]?.commoditySpaced == false)
+        #expect(styles["€"]?.precision == 2)
+    }
+
+    @Test func styleExtractionIncludesCostCommodity() {
+        let costStyle = AmountStyle(commoditySide: .left, decimalMark: ".", precision: 2)
+        let amount = Amount(
+            commodity: "XDWD", quantity: 10,
+            style: AmountStyle(commoditySide: .right, commoditySpaced: true, decimalMark: ".", precision: 0),
+            cost: CostAmount(commodity: "$", quantity: 500, style: costStyle)
+        )
+        let txns = [
+            Transaction(index: 0, date: "2026-01-01", description: "Buy",
+                postings: [Posting(account: "assets:investments", amounts: [amount])])
+        ]
+        let styles = Self.extractStyles(from: txns)
+        #expect(styles["XDWD"] != nil)
+        #expect(styles["$"] != nil)
+        #expect(styles["$"]?.decimalMark == ".")
+    }
+
+    @Test func styleFallbackForUnknownCommodity() {
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let result = styles["BTC"] ?? .default
+        #expect(result.decimalMark == ".")
+    }
+
+    // -- RecurringManager parse with styles --
+
+    @Test func recurringParseWithEuropeanStyles() throws {
+        let content = """
+        ~ monthly from 2026-01-01  ; rule-id:test1 Test rule
+            expenses:food                                    €500,00
+            assets:bank
+
+        """
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let tmpFile = tmpDir.appendingPathComponent("recurring.journal")
+        try content.write(to: tmpFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let rules = RecurringManager.parseRules(recurringPath: tmpFile, commodityStyles: styles)
+
+        #expect(rules.count == 1)
+        let amount = rules[0].postings[0].amounts[0]
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.style.digitGroupSeparator == ".")
+        // Verify formatted output uses European style
+        let formatted = amount.formatted()
+        #expect(formatted == "€500,00")
+    }
+
+    @Test func budgetParseWithEuropeanStyles() throws {
+        let content = """
+        ~ monthly
+            expenses:groceries                               €500,00
+            Assets:Budget
+
+        """
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let tmpFile = tmpDir.appendingPathComponent("budget.journal")
+        try content.write(to: tmpFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
+        let rules = BudgetManager.parseRules(budgetPath: tmpFile, commodityStyles: styles)
+
+        #expect(rules.count == 1)
+        let amount = rules[0].amount
+        #expect(amount.style.decimalMark == ",")
+        let formatted = amount.formatted()
+        #expect(formatted == "€500,00")
+    }
+
+    // -- Helper: replicate AppState.extractCommodityStyles() logic for testing --
+
+    private static func extractStyles(from transactions: [Transaction]) -> [String: AmountStyle] {
+        var styles: [String: AmountStyle] = [:]
+        for txn in transactions {
+            for posting in txn.postings {
+                for amount in posting.amounts {
+                    if !amount.commodity.isEmpty && styles[amount.commodity] == nil {
+                        styles[amount.commodity] = amount.style
+                    }
+                    if let cost = amount.cost, !cost.commodity.isEmpty && styles[cost.commodity] == nil {
+                        styles[cost.commodity] = cost.style
+                    }
+                }
+            }
+        }
+        return styles
+    }
+}
+
+// MARK: - Integration Tests (require hledger installed)
+
+@Suite("Integration")
+struct IntegrationTests {
+
+    // -- Helpers --
+
+    /// Path to the Fixtures directory, derived from the test source file location.
+    private static let fixturesDir: URL = {
+        let testFile = URL(fileURLWithPath: #filePath)
+        return testFile.deletingLastPathComponent().appendingPathComponent("Fixtures")
+    }()
+
+    private static func fixturePath(_ name: String) -> URL {
+        fixturesDir.appendingPathComponent(name)
+    }
+
+    /// Find hledger or skip the test.
+    private static func requireHledger() throws -> String {
+        guard let path = BinaryDetector.findHledger() else {
+            throw HledgerNotFound()
+        }
+        return path
+    }
+
+    struct HledgerNotFound: Error {}
+
+    /// Run hledger with the given arguments and return stdout.
+    private static func runHledger(_ hledgerPath: String, args: [String]) async throws -> String {
+        let runner = SubprocessRunner(executablePath: hledgerPath)
+        return try await runner.run(args)
+    }
+
+    /// Parse hledger JSON output into transactions using the real HledgerBackend parser.
+    private static func parseTransactionsFromJSON(_ json: String) throws -> [Transaction] {
+        guard let data = json.data(using: .utf8) else {
+            throw BackendError.parseError("Invalid UTF-8")
+        }
+        let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] ?? []
+        return jsonArray.map { HledgerBackend.parseTransaction($0) }
+    }
+
+    /// Extract commodity styles from transactions (same logic as AppState).
+    private static func extractStyles(from transactions: [Transaction]) -> [String: AmountStyle] {
+        var styles: [String: AmountStyle] = [:]
+        for txn in transactions {
+            for posting in txn.postings {
+                for amount in posting.amounts {
+                    if !amount.commodity.isEmpty && styles[amount.commodity] == nil {
+                        styles[amount.commodity] = amount.style
+                    }
+                }
+            }
+        }
+        return styles
+    }
+
+    // -- 1. Validate all fixtures --
+
+    @Test func validateEuropeanFixture() async throws {
+        let hledger = try Self.requireHledger()
+        let output = try await Self.runHledger(hledger, args: ["--no-conf", "-f", Self.fixturePath("european.journal").path, "check"])
+        _ = output // check passed (no exception thrown)
+    }
+
+    @Test func validateUSFixture() async throws {
+        let hledger = try Self.requireHledger()
+        _ = try await Self.runHledger(hledger, args: ["--no-conf", "-f", Self.fixturePath("us.journal").path, "check"])
+    }
+
+    @Test func validateSwissFixture() async throws {
+        let hledger = try Self.requireHledger()
+        _ = try await Self.runHledger(hledger, args: ["--no-conf", "-f", Self.fixturePath("swiss.journal").path, "check"])
+    }
+
+    @Test func validateIndianFixture() async throws {
+        let hledger = try Self.requireHledger()
+        _ = try await Self.runHledger(hledger, args: ["--no-conf", "-f", Self.fixturePath("indian.journal").path, "check"])
+    }
+
+    // -- 2. Parse styles from hledger JSON --
+
+    @Test func parseEuropeanStyleFromHledger() async throws {
+        let hledger = try Self.requireHledger()
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("european.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        #expect(txns.count == 2)
+
+        let styles = Self.extractStyles(from: txns)
+        let euroStyle = try #require(styles["€"])
+        #expect(euroStyle.decimalMark == ",")
+        #expect(euroStyle.digitGroupSeparator == ".")
+        #expect(euroStyle.digitGroupSizes == [3])
+        #expect(euroStyle.commoditySide == .left)
+        #expect(euroStyle.precision == 2)
+    }
+
+    @Test func parseUSStyleFromHledger() async throws {
+        let hledger = try Self.requireHledger()
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("us.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let styles = Self.extractStyles(from: txns)
+        let dollarStyle = try #require(styles["$"])
+        #expect(dollarStyle.decimalMark == ".")
+        #expect(dollarStyle.digitGroupSeparator == ",")
+        #expect(dollarStyle.digitGroupSizes == [3])
+    }
+
+    @Test func parseSwissStyleFromHledger() async throws {
+        let hledger = try Self.requireHledger()
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("swiss.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let styles = Self.extractStyles(from: txns)
+        let chfStyle = try #require(styles["CHF"])
+        #expect(chfStyle.decimalMark == ".")
+        #expect(chfStyle.digitGroupSeparator == " ")
+        #expect(chfStyle.commoditySpaced == true)
+        #expect(chfStyle.commoditySide == .left)
+    }
+
+    @Test func parseIndianStyleFromHledger() async throws {
+        let hledger = try Self.requireHledger()
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("indian.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let styles = Self.extractStyles(from: txns)
+        let rupeeStyle = try #require(styles["₹"])
+        #expect(rupeeStyle.decimalMark == ".")
+        #expect(rupeeStyle.digitGroupSeparator == ",")
+        #expect(rupeeStyle.digitGroupSizes == [3, 2])
+    }
+
+    // -- 3. Roundtrip: extract style → create Amount → format → write → hledger validates --
+
+    @Test func roundtripWriteEuropean() async throws {
+        let hledger = try Self.requireHledger()
+
+        // 1. Extract style from European fixture
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("european.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let euroStyle = try #require(Self.extractStyles(from: txns)["€"])
+
+        // 2. Create a new transaction with correct style
+        let amount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: euroStyle)
+        let txn = Transaction(
+            index: 0, date: "2026-06-01", description: "Test roundtrip",
+            postings: [
+                Posting(account: "expenses:test", amounts: [amount]),
+                Posting(account: "assets:bank")
+            ], status: .cleared
+        )
+        let formatted = TransactionFormatter.format(txn)
+
+        // 3. Write to temp file that includes the European fixture (for commodity context)
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let tmpJournal = tmpDir.appendingPathComponent("test.journal")
+        let content = "include \(Self.fixturePath("european.journal").path)\n\n\(formatted)\n"
+        try content.write(to: tmpJournal, atomically: true, encoding: .utf8)
+
+        // 4. hledger check must pass
+        _ = try await Self.runHledger(hledger, args: ["--no-conf", "-f", tmpJournal.path, "check"])
+
+        // 5. Verify hledger reads the amount correctly (1000, not 100000)
+        let verifyJSON = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", tmpJournal.path, "print", "-O", "json", "desc:Test roundtrip"
+        ])
+        let verifyTxns = try Self.parseTransactionsFromJSON(verifyJSON)
+        #expect(verifyTxns.count == 1)
+        let verifyAmount = verifyTxns[0].postings[0].amounts[0]
+        #expect(verifyAmount.quantity == Decimal(string: "1000"))
+    }
+
+    @Test func roundtripWriteUS() async throws {
+        let hledger = try Self.requireHledger()
+
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("us.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let dollarStyle = try #require(Self.extractStyles(from: txns)["$"])
+
+        let amount = Amount(commodity: "$", quantity: Decimal(string: "2500.50")!, style: dollarStyle)
+        let txn = Transaction(
+            index: 0, date: "2026-06-01", description: "Test roundtrip US",
+            postings: [
+                Posting(account: "expenses:test", amounts: [amount]),
+                Posting(account: "assets:bank")
+            ], status: .cleared
+        )
+        let formatted = TransactionFormatter.format(txn)
+
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let tmpJournal = tmpDir.appendingPathComponent("test.journal")
+        let content = "include \(Self.fixturePath("us.journal").path)\n\n\(formatted)\n"
+        try content.write(to: tmpJournal, atomically: true, encoding: .utf8)
+
+        _ = try await Self.runHledger(hledger, args: ["--no-conf", "-f", tmpJournal.path, "check"])
+
+        let verifyJSON = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", tmpJournal.path, "print", "-O", "json", "desc:Test roundtrip US"
+        ])
+        let verifyTxns = try Self.parseTransactionsFromJSON(verifyJSON)
+        #expect(verifyTxns.count == 1)
+        #expect(verifyTxns[0].postings[0].amounts[0].quantity == Decimal(string: "2500.5"))
+    }
+
+    // -- 4. Bug #56 reproduction: prove the fix works --
+
+    @Test func bug56ReproductionDefaultStyleCausesWrongValue() async throws {
+        let hledger = try Self.requireHledger()
+
+        // Write €1000 with DEFAULT style (decimalMark: ".") into a European journal
+        // This is the exact bug: "€1000.00" in a journal with "€1.000,00" format
+        let buggyAmount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: .default)
+        let buggyFormatted = buggyAmount.formatted()
+        #expect(buggyFormatted == "€1000.00") // This is what the old code produced
+
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let tmpJournal = tmpDir.appendingPathComponent("bug56.journal")
+        let content = """
+        include \(Self.fixturePath("european.journal").path)
+
+        2026-06-01 * Bug 56 test
+            expenses:test                                    \(buggyFormatted)
+            assets:bank
+
+        """
+        try content.write(to: tmpJournal, atomically: true, encoding: .utf8)
+
+        // hledger reads €1000.00 as €100000 in European context (dot = thousands)
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", tmpJournal.path, "print", "-O", "json", "desc:Bug 56"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        #expect(txns.count == 1)
+        let badValue = txns[0].postings[0].amounts[0].quantity
+        // hledger interprets "1000.00" as 100000 (dot is thousands separator)
+        #expect(badValue == Decimal(string: "100000"))
+    }
+
+    @Test func bug56FixCorrectStyleProducesCorrectValue() async throws {
+        let hledger = try Self.requireHledger()
+
+        // Extract the real European style from hledger
+        let json = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", Self.fixturePath("european.journal").path, "print", "-O", "json"
+        ])
+        let txns = try Self.parseTransactionsFromJSON(json)
+        let euroStyle = try #require(Self.extractStyles(from: txns)["€"])
+
+        // Write €1000 with CORRECT European style
+        let fixedAmount = Amount(commodity: "€", quantity: Decimal(string: "1000")!, style: euroStyle)
+        let fixedFormatted = fixedAmount.formatted()
+        #expect(fixedFormatted == "€1.000,00") // Correct European format
+
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let tmpJournal = tmpDir.appendingPathComponent("bug56_fixed.journal")
+        let content = """
+        include \(Self.fixturePath("european.journal").path)
+
+        2026-06-01 * Bug 56 fixed
+            expenses:test                                    \(fixedFormatted)
+            assets:bank
+
+        """
+        try content.write(to: tmpJournal, atomically: true, encoding: .utf8)
+
+        // Verify hledger reads the correct value
+        let verifyJSON = try await Self.runHledger(hledger, args: [
+            "--no-conf", "-f", tmpJournal.path, "print", "-O", "json", "desc:Bug 56 fixed"
+        ])
+        let verifyTxns = try Self.parseTransactionsFromJSON(verifyJSON)
+        #expect(verifyTxns.count == 1)
+        let correctValue = verifyTxns[0].postings[0].amounts[0].quantity
+        #expect(correctValue == Decimal(string: "1000"))
     }
 }

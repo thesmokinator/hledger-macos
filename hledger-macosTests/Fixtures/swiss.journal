@@ -1,0 +1,5 @@
+commodity CHF 1 000.00
+
+2026-01-15 * Salary
+    assets:bank                      CHF 3 000.00
+    income:salary

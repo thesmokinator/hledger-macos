@@ -8,6 +8,7 @@ struct BudgetFormView: View {
     let knownAccounts: [String]
     let onSave: (BudgetRule) -> Void
 
+    @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
 
     @State private var account = ""
@@ -104,9 +105,10 @@ struct BudgetFormView: View {
             return
         }
 
+        let style = appState.styleForCommodity(commodity)
         let rule = BudgetRule(
             account: account,
-            amount: Amount(commodity: commodity, quantity: qty),
+            amount: Amount(commodity: commodity, quantity: qty, style: style),
             category: category
         )
         onSave(rule)

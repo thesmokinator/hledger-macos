@@ -128,7 +128,7 @@ struct RecurringView: View {
         guard let backend = appState.activeBackend else { return }
         isLoading = true
         let path = RecurringManager.recurringPath(for: backend.journalFile)
-        rules = RecurringManager.parseRules(recurringPath: path)
+        rules = RecurringManager.parseRules(recurringPath: path, commodityStyles: appState.commodityStyles)
         knownAccounts = (try? await backend.loadAccounts()) ?? []
         isLoading = false
     }
@@ -165,13 +165,15 @@ struct RecurringView: View {
                     ruleId: editing.ruleId,
                     newRule: newRule,
                     journalFile: backend.journalFile,
-                    validator: backend
+                    validator: backend,
+                    commodityStyles: appState.commodityStyles
                 )
             } else {
                 try await RecurringManager.addRule(
                     newRule,
                     journalFile: backend.journalFile,
-                    validator: backend
+                    validator: backend,
+                    commodityStyles: appState.commodityStyles
                 )
             }
             await loadData()
@@ -229,7 +231,8 @@ struct RecurringView: View {
             try await RecurringManager.deleteRule(
                 ruleId: rule.ruleId,
                 journalFile: backend.journalFile,
-                validator: backend
+                validator: backend,
+                commodityStyles: appState.commodityStyles
             )
             await loadData()
         } catch {

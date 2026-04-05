@@ -40,7 +40,7 @@ enum RecurringManager {
 
     // MARK: - Parse Rules
 
-    static func parseRules(recurringPath: URL) -> [RecurringRule] {
+    static func parseRules(recurringPath: URL, commodityStyles: [String: AmountStyle] = [:]) -> [RecurringRule] {
         guard FileManager.default.fileExists(atPath: recurringPath.path),
               let content = try? String(contentsOf: recurringPath, encoding: .utf8),
               !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -94,9 +94,10 @@ enum RecurringManager {
                     let account = String(match.1).trimmingCharacters(in: .whitespaces)
                     let amountStr = String(match.2).trimmingCharacters(in: .whitespaces)
                     let (qty, commodity) = AmountParser.parse(amountStr)
+                    let style = commodityStyles[commodity] ?? .default
                     currentPostings.append(Posting(
                         account: account,
-                        amounts: [Amount(commodity: commodity, quantity: qty)]
+                        amounts: [Amount(commodity: commodity, quantity: qty, style: style)]
                     ))
                 } else {
                     // Balancing posting (no amount)
@@ -173,10 +174,10 @@ enum RecurringManager {
 
     // MARK: - CRUD
 
-    static func addRule(_ rule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func addRule(_ rule: RecurringRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = recurringPath(for: journalFile)
         try ensureRecurringFile(journalFile: journalFile)
-        var rules = parseRules(recurringPath: path)
+        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
         if rules.contains(where: { $0.ruleId == rule.ruleId }) {
             throw BackendError.commandFailed("Recurring rule already exists with id: \(rule.ruleId)")
         }
@@ -184,9 +185,9 @@ enum RecurringManager {
         try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
     }
 
-    static func updateRule(ruleId: String, newRule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func updateRule(ruleId: String, newRule: RecurringRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path)
+        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
         guard let index = rules.firstIndex(where: { $0.ruleId == ruleId }) else {
             throw BackendError.commandFailed("No recurring rule found with id: \(ruleId)")
         }
@@ -194,9 +195,9 @@ enum RecurringManager {
         try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
     }
 
-    static func deleteRule(ruleId: String, journalFile: URL, validator: any AccountingBackend) async throws {
+    static func deleteRule(ruleId: String, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
         let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path)
+        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
         let count = rules.count
         rules.removeAll { $0.ruleId == ruleId }
         if rules.count == count {

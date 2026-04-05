@@ -296,8 +296,8 @@ struct TransactionFormView: View {
         let (qty, commodity) = AmountParser.parse(trimmed)
         if qty == 0 && commodity.isEmpty { return [] }
         let com = commodity.isEmpty ? appState.config.defaultCommodity : commodity
-        let side: CommoditySide = com.first?.isLetter == true && com.count > 1 ? .right : .left
-        return [Amount(commodity: com, quantity: qty, style: AmountStyle(commoditySide: side, precision: 2))]
+        let style = appState.styleForCommodity(com)
+        return [Amount(commodity: com, quantity: qty, style: style)]
     }
 }
 

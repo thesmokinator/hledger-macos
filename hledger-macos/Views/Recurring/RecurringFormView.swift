@@ -178,9 +178,10 @@ struct RecurringFormView: View {
             } else {
                 let (qty, commodity) = AmountParser.parse(row.amount)
                 let com = commodity.isEmpty ? appState.config.defaultCommodity : commodity
+                let style = appState.styleForCommodity(com)
                 postings.append(Posting(
                     account: row.account,
-                    amounts: [Amount(commodity: com, quantity: qty)]
+                    amounts: [Amount(commodity: com, quantity: qty, style: style)]
                 ))
             }
         }

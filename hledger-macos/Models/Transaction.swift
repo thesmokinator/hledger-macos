@@ -118,8 +118,20 @@ struct Amount: Codable, Hashable, Sendable {
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = precision
         formatter.maximumFractionDigits = precision
-        formatter.groupingSeparator = ""
         formatter.decimalSeparator = style.decimalMark
+
+        if let separator = style.digitGroupSeparator, !style.digitGroupSizes.isEmpty {
+            formatter.usesGroupingSeparator = true
+            formatter.groupingSeparator = separator
+            formatter.groupingSize = style.digitGroupSizes.first ?? 3
+            if style.digitGroupSizes.count > 1 {
+                formatter.secondaryGroupingSize = style.digitGroupSizes[1]
+            }
+        } else {
+            formatter.usesGroupingSeparator = false
+            formatter.groupingSeparator = ""
+        }
+
         return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
     }
 }
