@@ -720,12 +720,18 @@ extension HledgerBackend {
     ]
 
     /// Expand short search aliases to full hledger query prefixes.
+    /// Aliases are matched only at the start of each space-separated token,
+    /// preventing partial matches inside full-form prefixes (e.g. "t:" inside "acct:").
     static func expandSearchQuery(_ query: String) -> String {
         guard !query.isEmpty else { return query }
-        var result = query
-        for (alias, full) in queryAliases {
-            result = result.replacingOccurrences(of: alias, with: full)
-        }
-        return result
+        return query.split(separator: " ", omittingEmptySubsequences: false)
+            .map { token -> String in
+                let s = String(token)
+                for (alias, full) in queryAliases where s.hasPrefix(alias) {
+                    return full + s.dropFirst(alias.count)
+                }
+                return s
+            }
+            .joined(separator: " ")
     }
 }

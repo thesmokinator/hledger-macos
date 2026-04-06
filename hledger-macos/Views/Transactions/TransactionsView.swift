@@ -67,7 +67,9 @@ struct TransactionsView: View {
                 ContentUnavailableView(
                     "No Transactions",
                     systemImage: "doc.text",
-                    description: Text("No transactions found for \(appState.periodLabel).")
+                    description: Text(appState.searchQuery.isEmpty
+                        ? "No transactions found for \(appState.periodLabel)."
+                        : "No transactions match your search.")
                 )
                 Spacer()
             } else {
@@ -165,6 +167,11 @@ struct TransactionsView: View {
         .task { await loadAll() }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
+        }
+        .onChange(of: appState.searchQuery) { oldValue, newValue in
+            if newValue.isEmpty && !oldValue.isEmpty {
+                Task { await loadAll() }
+            }
         }
         .sheet(item: $formConfig) { config in
             TransactionFormView(editingTransaction: config.transaction, isClone: config.isClone)

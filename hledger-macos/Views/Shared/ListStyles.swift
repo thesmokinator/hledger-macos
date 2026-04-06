@@ -10,9 +10,19 @@ struct AccountRow: View {
     var labelBold: Bool = false
     var labelColor: Color = .primary
     var valueColor: Color = .secondary
+    var onDrillDown: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 0) {
+            if let onDrillDown {
+                Button(action: onDrillDown) {
+                    Image(systemName: "list.bullet.rectangle")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 6)
+            }
             Text(label)
                 .font(labelBold ? labelFont.bold() : labelFont)
                 .foregroundStyle(labelColor)

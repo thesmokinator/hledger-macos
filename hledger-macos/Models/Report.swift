@@ -10,7 +10,7 @@ struct PeriodSummary: Sendable {
     var investments: Decimal = 0
 
     /// Net disposable income (income minus expenses minus investments).
-    var net: Decimal {
+    nonisolated var net: Decimal {
         income - expenses - investments
     }
 }
