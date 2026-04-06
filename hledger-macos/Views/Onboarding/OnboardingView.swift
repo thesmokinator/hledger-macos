@@ -195,3 +195,36 @@ private struct LabeledField: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#Preview("Binary Not Found") {
+    let state = AppState()
+    state.detectionResult = BinaryDetectionResult(hledgerPath: nil, detectedJournalPath: nil)
+    state.isChecking = false
+    return OnboardingView()
+        .environment(state)
+}
+
+#Preview("Binary Found — No Journal") {
+    let state = AppState()
+    state.detectionResult = BinaryDetectionResult(
+        hledgerPath: "/opt/homebrew/bin/hledger",
+        detectedJournalPath: nil
+    )
+    state.errorMessage = "No journal file found. Configure one in Settings or create ~/.hledger.journal."
+    state.isChecking = false
+    return OnboardingView()
+        .environment(state)
+}
+
+#Preview("Binary Found — Journal Found") {
+    let state = AppState()
+    state.detectionResult = BinaryDetectionResult(
+        hledgerPath: "/opt/homebrew/bin/hledger",
+        detectedJournalPath: "~/.hledger.journal"
+    )
+    state.isChecking = false
+    return OnboardingView()
+        .environment(state)
+}
