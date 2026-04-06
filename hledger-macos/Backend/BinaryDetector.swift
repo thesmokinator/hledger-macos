@@ -61,10 +61,17 @@ enum BinaryDetector {
 
     /// Resolve the journal file by running `hledger files` in a login shell.
     ///
-    /// Uses bash or zsh (not `$SHELL`) because exotic shells like osh may not
-    /// source the user's environment correctly for this purpose.
+    /// Tries the user's configured shell first, then falls back to bash and zsh.
+    /// Exotic shells (e.g. osh) may fail at step 1 — that's fine, bash/zsh cover it.
     static func journalPathFromHledger(_ hledgerPath: String) -> String? {
-        for shell in ["/bin/bash", "/bin/zsh"] {
+        let userShell = ProcessInfo.processInfo.environment["SHELL"] ?? ""
+        // Deduplicated list: user shell first, then standard fallbacks
+        var shells = [userShell, "/bin/bash", "/bin/zsh"].filter { !$0.isEmpty }
+        // Remove duplicates while preserving order
+        var seen = Set<String>()
+        shells = shells.filter { seen.insert($0).inserted }
+
+        for shell in shells {
             guard let output = shellOutput(shell: shell, args: ["-l", "-c", "\"\(hledgerPath)\" files"]),
                   let firstLine = output.split(separator: "\n").first.map(String.init) else { continue }
             let path = firstLine.trimmingCharacters(in: .whitespaces)
