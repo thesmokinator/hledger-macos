@@ -1182,3 +1182,44 @@ struct IntegrationTests {
         #expect(correctValue == Decimal(string: "1000"))
     }
 }
+
+// MARK: - PriceFetcher Tests
+
+@Suite("PriceFetcher")
+struct PriceFetcherTests {
+    @Test func parsesLastLineFromMultiDayOutput() {
+        let output = """
+        P 2026-04-02 00:00:00 XEON 5.12 EUR
+        P 2026-04-03 00:00:00 XEON 5.15 EUR
+        P 2026-04-04 00:00:00 XEON 5.18 EUR
+        """
+        let result = PriceFetcher.parseLatestDirective(from: output)
+        #expect(result == "P 2026-04-04 XEON 5.18 EUR")
+    }
+
+    @Test func parsesOnlyLineWhenSingleTradingDay() {
+        let output = "P 2026-04-04 00:00:00 SWDA 112.73999786 EUR\n"
+        let result = PriceFetcher.parseLatestDirective(from: output)
+        #expect(result == "P 2026-04-04 SWDA 112.74 EUR")
+    }
+
+    @Test func returnsNilForEmptyOutput() {
+        #expect(PriceFetcher.parseLatestDirective(from: "") == nil)
+        #expect(PriceFetcher.parseLatestDirective(from: "   \n  \n") == nil)
+    }
+
+    @Test func cleansTimestamp() {
+        let result = PriceFetcher.cleanPDirective("P 2026-04-04 00:00:00 XEON 5.18345 EUR")
+        #expect(result == "P 2026-04-04 XEON 5.18 EUR")
+    }
+
+    @Test func cleansRoundsPrice() {
+        let result = PriceFetcher.cleanPDirective("P 2026-04-04 XEON 5.18999 EUR")
+        #expect(result == "P 2026-04-04 XEON 5.19 EUR")
+    }
+
+    @Test func cleansLineWithoutTimestamp() {
+        let result = PriceFetcher.cleanPDirective("P 2026-04-04 XEON 5.18 EUR")
+        #expect(result == "P 2026-04-04 XEON 5.18 EUR")
+    }
+}

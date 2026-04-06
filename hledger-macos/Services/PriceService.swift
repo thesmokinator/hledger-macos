@@ -44,69 +44,47 @@ enum PriceService {
         !path.isEmpty && FileManager.default.isExecutableFile(atPath: path)
     }
 
-    /// Clean pricehist output: remove timestamps and limit decimal precision.
-    private static func cleanPDirective(_ line: String) -> String {
-        // pricehist outputs: P 2026-04-02 00:00:00 SWDA 112.73999786 EUR
-        // hledger expects:  P 2026-04-02 SWDA 112.74 EUR
-        var parts = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-        // Remove timestamp (HH:MM:SS) if present after date
-        if parts.count >= 3 && parts[2].contains(":") {
-            parts.remove(at: 2)
-        }
-        // Round price to 2 decimals if it's a number
-        if parts.count >= 4, let price = Double(parts[3]) {
-            parts[3] = String(format: "%.2f", price)
-        }
-        return parts.joined(separator: " ")
-    }
-
     /// Get the prices file URL: return cache if fresh, fetch if stale.
-    /// Returns nil if pricehist path is not configured/valid or no tickers configured.
-    static func getPricesFile(pricehistPath: String, tickers: [String: String]) async -> URL? {
-        guard !tickers.isEmpty else { return nil }
-        guard isValid(path: pricehistPath) else { return nil }
+    ///
+    /// Returns `nil` for the URL if pricehist is not configured, no tickers are set,
+    /// or all fetches failed. The second element of the tuple contains any ticker
+    /// symbols for which no price data could be retrieved.
+    static func getPricesFile(
+        pricehistPath: String,
+        tickers: [String: String]
+    ) async -> (URL?, Set<String>) {
+        guard !tickers.isEmpty else { return (nil, []) }
+        guard isValid(path: pricehistPath) else { return (nil, []) }
 
         if pricesAreFresh(tickers: tickers) {
-            return cachePath
+            return (cachePath, [])
         }
 
         let runner = SubprocessRunner(executablePath: pricehistPath)
-        let today = {
-            let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd"
-            return f.string(from: Date())
-        }()
-
         var lines: [String] = []
+        var failed: Set<String> = []
 
         for (commodity, ticker) in tickers {
             do {
-                let output = try await runner.run([
-                    "fetch", "yahoo", ticker,
-                    "-s", today, "-e", today,
-                    "-o", "ledger",
-                    "--fmt-base", commodity
-                ])
-                for line in output.split(separator: "\n") {
-                    let trimmed = line.trimmingCharacters(in: .whitespaces)
-                    if !trimmed.isEmpty {
-                        lines.append(cleanPDirective(trimmed))
-                    }
+                if let directive = try await PriceFetcher.fetchLatestPrice(runner: runner, ticker: ticker, commodity: commodity) {
+                    lines.append(directive)
+                } else {
+                    failed.insert(ticker)
                 }
             } catch {
-                continue
+                failed.insert(ticker)
             }
         }
 
-        guard !lines.isEmpty else { return nil }
+        guard !lines.isEmpty else { return (nil, failed) }
 
         do {
             let content = lines.joined(separator: "\n") + "\n"
             try content.write(to: cachePath, atomically: true, encoding: .utf8)
             try tickerHash(for: tickers).write(to: tickerHashPath, atomically: true, encoding: .utf8)
-            return cachePath
+            return (cachePath, failed)
         } catch {
-            return nil
+            return (nil, failed)
         }
     }
 }
