@@ -34,6 +34,11 @@ enum NavigationSection: String, CaseIterable, Identifiable {
 @Observable
 @MainActor
 final class AppState {
+    // MARK: - Dependencies (injected for testability)
+
+    private let binaryDetector: BinaryDetecting
+    private let journalResolver: JournalResolving
+
     // MARK: - Initialization
 
     var isInitialized = false
@@ -45,6 +50,14 @@ final class AppState {
     var config = AppConfig()
     var activeBackend: (any AccountingBackend)?
     private(set) var dataVersion = UUID()
+
+    init(
+        binaryDetector: BinaryDetecting = LiveBinaryDetector(),
+        journalResolver: JournalResolving = LiveJournalResolver()
+    ) {
+        self.binaryDetector = binaryDetector
+        self.journalResolver = journalResolver
+    }
 
     // MARK: - Navigation
 
@@ -116,8 +129,8 @@ final class AppState {
     /// Detect hledger binary, resolve journal, and set up backend.
     /// Sets `isInitialized` only when both binary and journal are available.
     @discardableResult
-    private func detectAndSetup() -> Bool {
-        let result = BinaryDetector.detect(customHledgerPath: config.hledgerBinaryPath)
+    func detectAndSetup() -> Bool {
+        let result = binaryDetector.detect(customHledgerPath: config.hledgerBinaryPath)
         detectionResult = result
 
         guard result.isFound else {
@@ -132,7 +145,7 @@ final class AppState {
 
     /// Set up the hledger backend.
     func setupBackend() {
-        let journalURL = JournalFileResolver.resolve(
+        let journalURL = journalResolver.resolve(
             configuredPath: config.journalFilePath,
             shellDetectedPath: detectionResult?.detectedJournalPath
         )
