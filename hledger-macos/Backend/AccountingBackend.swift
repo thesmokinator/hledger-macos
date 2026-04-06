@@ -78,6 +78,14 @@ protocol AccountingBackend: Sendable {
     func loadReport(type: ReportType, periodBegin: String?, periodEnd: String?, commodity: String?) async throws -> ReportData
     func loadBudgetReport(period: String) async throws -> [BudgetRow]
 
+    // MARK: - CSV Import
+
+    /// Parse a CSV file using a rules file and return transactions.
+    func parseCsvImport(csvFile: URL, rulesFile: URL) async throws -> [Transaction]
+
+    /// Validate a rules file by attempting a dry-run parse of the CSV.
+    func validateCsvRules(csvFile: URL, rulesFile: URL) async throws
+
     // MARK: - Write
 
     func appendTransaction(_ transaction: Transaction) async throws

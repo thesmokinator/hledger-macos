@@ -580,6 +580,8 @@ struct MockBackend: AccountingBackend {
     func updateTransactionStatus(_ transaction: Transaction, to newStatus: TransactionStatus) async throws {}
     func replaceTransaction(_ original: Transaction, with new: Transaction) async throws {}
     func deleteTransaction(_ transaction: Transaction) async throws {}
+    func parseCsvImport(csvFile: URL, rulesFile: URL) async throws -> [Transaction] { [] }
+    func validateCsvRules(csvFile: URL, rulesFile: URL) async throws {}
 }
 
 @Suite("HledgerTools")
