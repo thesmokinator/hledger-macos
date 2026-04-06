@@ -37,10 +37,10 @@ struct hledger_macosApp: App {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if appState.isInitialized {
-                    ContentView()
-                } else {
+                } else if !appState.isInitialized || appState.errorMessage != nil {
                     OnboardingView()
+                } else {
+                    ContentView()
                 }
             }
             .environment(appState)
