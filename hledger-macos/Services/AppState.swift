@@ -100,31 +100,34 @@ final class AppState {
             selectedSection = section
         }
 
-        let result = BinaryDetector.detect(customHledgerPath: config.hledgerBinaryPath)
-        detectionResult = result
-
-        if result.isFound {
-            setupBackend()
-            isInitialized = true
-        }
-
+        let ready = detectAndSetup()
         isChecking = false
 
-        // Load data in background after UI is visible
-        if result.isFound {
+        if ready {
             await reload()
         }
     }
 
     /// Re-scan for hledger (used from onboarding and settings).
     func rescan() async {
+        detectAndSetup()
+    }
+
+    /// Detect hledger binary, resolve journal, and set up backend.
+    /// Sets `isInitialized` only when both binary and journal are available.
+    @discardableResult
+    private func detectAndSetup() -> Bool {
         let result = BinaryDetector.detect(customHledgerPath: config.hledgerBinaryPath)
         detectionResult = result
 
-        if result.isFound {
-            setupBackend()
-            isInitialized = true
+        guard result.isFound else {
+            isInitialized = false
+            return false
         }
+
+        setupBackend()
+        isInitialized = activeBackend != nil
+        return isInitialized
     }
 
     /// Set up the hledger backend.
