@@ -127,7 +127,10 @@ final class AppState {
 
     /// Set up the hledger backend.
     func setupBackend() {
-        let journalURL = JournalFileResolver.resolve(configuredPath: config.journalFilePath)
+        let journalURL = JournalFileResolver.resolve(
+            configuredPath: config.journalFilePath,
+            shellDetectedPath: detectionResult?.detectedJournalPath
+        )
 
         guard let journalURL else {
             errorMessage = "No journal file found. Configure one in Settings or create ~/.hledger.journal."
