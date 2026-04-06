@@ -337,3 +337,80 @@ struct CsvRulesEditorView: View {
         rawParseError = nil
     }
 }
+
+// MARK: - Previews
+
+private struct RulesEditorPreviewWrapper: View {
+    @State private var config: CsvRulesConfig
+
+    let csv: String
+    let accounts: [String]
+    let commodities: [String]
+
+    init(config: CsvRulesConfig, csv: String, accounts: [String], commodities: [String]) {
+        self._config = State(initialValue: config)
+        self.csv = csv
+        self.accounts = accounts
+        self.commodities = commodities
+    }
+
+    var body: some View {
+        CsvRulesEditorView(
+            config: $config,
+            csvContent: csv,
+            knownAccounts: accounts,
+            knownCommodities: commodities
+        )
+    }
+}
+
+#Preview("Bank CSV — Auto-detected") {
+    let csv = """
+    Date,Description,Amount,Balance
+    2024-01-15,Supermarket Lidl,-45.20,8154.80
+    2024-01-14,Salary January,3200.00,8200.00
+    2024-01-12,Amazon Prime,-14.99,5000.00
+    2024-01-10,Electric Bill,-89.50,5014.99
+    """
+
+    let config = CsvRulesConfig(
+        name: "ING Bank",
+        separator: .comma,
+        skipLines: 1,
+        dateFormat: "%Y-%m-%d",
+        defaultAccount: "assets:bank:checking",
+        defaultCurrency: "EUR",
+        columnMappings: [
+            ColumnMapping(csvColumnIndex: 0, csvColumnHeader: "Date", sampleValue: "2024-01-15", assignedField: .date),
+            ColumnMapping(csvColumnIndex: 1, csvColumnHeader: "Description", sampleValue: "Supermarket Lidl", assignedField: .description),
+            ColumnMapping(csvColumnIndex: 2, csvColumnHeader: "Amount", sampleValue: "-45.20", assignedField: .amount),
+            ColumnMapping(csvColumnIndex: 3, csvColumnHeader: "Balance", sampleValue: "8154.80", assignedField: nil),
+        ],
+        conditionalRules: [
+            ConditionalRule(pattern: "lidl|supermarket", account: "expenses:groceries"),
+            ConditionalRule(pattern: "amazon", account: "expenses:shopping"),
+        ]
+    )
+
+    return RulesEditorPreviewWrapper(
+        config: config,
+        csv: csv,
+        accounts: [
+            "assets:bank:checking", "assets:cash",
+            "expenses:groceries", "expenses:shopping", "expenses:utilities",
+            "income:salary",
+        ],
+        commodities: ["EUR", "USD"]
+    )
+    .frame(width: 620, height: 700)
+}
+
+#Preview("Empty — No CSV loaded") {
+    RulesEditorPreviewWrapper(
+        config: CsvRulesConfig(),
+        csv: "",
+        accounts: ["assets:bank", "expenses:food"],
+        commodities: ["EUR"]
+    )
+    .frame(width: 620, height: 500)
+}
