@@ -11,6 +11,18 @@ struct BinaryDetectionResult: Sendable {
     var isFound: Bool { hledgerPath != nil }
 }
 
+/// Abstraction for binary detection, enabling test injection.
+protocol BinaryDetecting {
+    func detect(customHledgerPath: String) -> BinaryDetectionResult
+}
+
+/// Production implementation that delegates to the static BinaryDetector methods.
+struct LiveBinaryDetector: BinaryDetecting {
+    func detect(customHledgerPath: String) -> BinaryDetectionResult {
+        BinaryDetector.detect(customHledgerPath: customHledgerPath)
+    }
+}
+
 /// Scans for the hledger binary in known paths, user shell PATH, and configured locations.
 /// Also detects the journal file by running `hledger files` in a login shell.
 enum BinaryDetector {

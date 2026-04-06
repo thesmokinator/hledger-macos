@@ -6,6 +6,18 @@
 
 import Foundation
 
+/// Abstraction for journal file resolution, enabling test injection.
+protocol JournalResolving {
+    func resolve(configuredPath: String, shellDetectedPath: String?) -> URL?
+}
+
+/// Production implementation that delegates to the static JournalFileResolver methods.
+struct LiveJournalResolver: JournalResolving {
+    func resolve(configuredPath: String, shellDetectedPath: String?) -> URL? {
+        JournalFileResolver.resolve(configuredPath: configuredPath, shellDetectedPath: shellDetectedPath)
+    }
+}
+
 enum JournalFileResolver {
     /// Common journal file names to look for inside a directory.
     private static let knownJournalNames = [
