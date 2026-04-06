@@ -193,6 +193,14 @@ struct SummaryView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .padding(.top, 4)
+            } else if !appState.failedPriceTickers.isEmpty {
+                Label(
+                    "Could not fetch prices for: \(appState.failedPriceTickers.sorted().joined(separator: ", "))",
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .padding(.top, 4)
             } else if showMarketColumns {
                 Text("Market data provided by pricehist via Yahoo Finance. Prices may be delayed.")
                     .font(.caption2)

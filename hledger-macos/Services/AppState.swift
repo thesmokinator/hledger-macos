@@ -68,6 +68,8 @@ final class AppState {
     var assets: [(String, Decimal, String)] = []
     var portfolio: [PortfolioRow] = []
     var isFetchingPrices = false
+    /// Ticker symbols for which no price data could be fetched (e.g. unknown symbol, network error).
+    var failedPriceTickers: Set<String> = []
     var multiCurrencyAccounts: Set<String> = []
 
     // MARK: - UI State
@@ -298,7 +300,9 @@ final class AppState {
         guard !tickers.isEmpty else { return }
 
         isFetchingPrices = true
-        if let pricesFile = await PriceService.getPricesFile(pricehistPath: config.pricehistBinaryPath, tickers: tickers) {
+        let (pricesFile, failed) = await PriceService.getPricesFile(pricehistPath: config.pricehistBinaryPath, tickers: tickers)
+        failedPriceTickers = failed
+        if let pricesFile {
             do {
                 let marketValues = try await backend.loadInvestmentMarketValues(pricesFile: pricesFile)
                 let positions = try await backend.loadInvestmentPositions()
