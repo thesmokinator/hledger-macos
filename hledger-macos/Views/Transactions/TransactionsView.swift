@@ -9,6 +9,7 @@ struct TransactionsView: View {
     @State private var formConfig: FormConfig?
     @State private var showingDeleteConfirm = false
     @State private var transactionToDelete: Transaction?
+    @State private var showingCsvImport = false
 
     @FocusState private var listFocused: Bool
 
@@ -128,6 +129,10 @@ struct TransactionsView: View {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
 
+                Button { showingCsvImport = true } label: {
+                    Label("Import CSV", systemImage: "square.and.arrow.down")
+                }
+
                 Menu {
                     Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
                     Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
@@ -144,6 +149,8 @@ struct TransactionsView: View {
         // Hidden keyboard shortcuts
         .background {
             Group {
+                Button("") { showingCsvImport = true }
+                    .keyboardShortcut("i", modifiers: .command)
                 Button("") { editTransaction(selectedTransaction) }
                     .keyboardShortcut("e", modifiers: .command)
                 Button("") { cloneTransaction(selectedTransaction) }
@@ -175,6 +182,10 @@ struct TransactionsView: View {
         }
         .sheet(item: $formConfig) { config in
             TransactionFormView(editingTransaction: config.transaction, isClone: config.isClone)
+                .environment(appState)
+        }
+        .sheet(isPresented: $showingCsvImport) {
+            CsvImportSheet()
                 .environment(appState)
         }
         .alert("Delete Transaction?", isPresented: $showingDeleteConfirm) {
