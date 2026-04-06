@@ -51,10 +51,12 @@ final class AppState {
     var activeBackend: (any AccountingBackend)?
     private(set) var dataVersion = UUID()
 
-    init(
-        binaryDetector: BinaryDetecting = LiveBinaryDetector(),
-        journalResolver: JournalResolving = LiveJournalResolver()
-    ) {
+    init() {
+        self.binaryDetector = LiveBinaryDetector()
+        self.journalResolver = LiveJournalResolver()
+    }
+
+    init(binaryDetector: BinaryDetecting, journalResolver: JournalResolving) {
         self.binaryDetector = binaryDetector
         self.journalResolver = journalResolver
     }

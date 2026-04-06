@@ -15,7 +15,7 @@ enum PriceFetcher {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
             .last
-            .map(cleanPDirective)
+            .map { cleanPDirective($0) }
     }
 
     /// Fetch the most recent trading day price for a ticker within the last `lookbackDays` days.
