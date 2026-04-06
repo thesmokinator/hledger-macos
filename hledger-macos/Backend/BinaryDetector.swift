@@ -1,15 +1,18 @@
-/// Detects the hledger CLI binary on the system.
+/// Detects the hledger CLI binary and journal file path on the system.
 
 import Foundation
 
 /// Result of hledger binary detection.
 struct BinaryDetectionResult: Sendable {
     let hledgerPath: String?
+    /// Journal path resolved by asking hledger itself via a login shell.
+    let detectedJournalPath: String?
 
     var isFound: Bool { hledgerPath != nil }
 }
 
 /// Scans for the hledger binary in known paths, user shell PATH, and configured locations.
+/// Also detects the journal file by running `hledger files` in a login shell.
 enum BinaryDetector {
     /// Common installation paths on macOS.
     private static var knownPaths: [String] {
@@ -23,10 +26,11 @@ enum BinaryDetector {
         ]
     }
 
-    /// Detect the hledger binary.
+    /// Detect the hledger binary and the journal file.
     static func detect(customHledgerPath: String = "") -> BinaryDetectionResult {
-        let path = findHledger(customPath: customHledgerPath)
-        return BinaryDetectionResult(hledgerPath: path)
+        let hledgerPath = findHledger(customPath: customHledgerPath)
+        let journalPath = hledgerPath.flatMap { journalPathFromHledger($0) }
+        return BinaryDetectionResult(hledgerPath: hledgerPath, detectedJournalPath: journalPath)
     }
 
     /// Find the hledger binary.
@@ -45,8 +49,8 @@ enum BinaryDetector {
         }
 
         // 3. Search user's shell PATH (covers stack, cabal, ghcup, nix, etc.)
-        for path in shellPATHDirectories() {
-            let candidate = (path as NSString).appendingPathComponent("hledger")
+        for dir in loginShellPATH() {
+            let candidate = (dir as NSString).appendingPathComponent("hledger")
             if FileManager.default.isExecutableFile(atPath: candidate) {
                 return candidate
             }
@@ -55,44 +59,76 @@ enum BinaryDetector {
         return nil
     }
 
-    /// Get PATH directories from the user's login shell.
+    /// Resolve the journal file by running `hledger files` in a login shell.
+    ///
+    /// Tries the user's configured shell first, then falls back to bash and zsh.
+    /// Exotic shells (e.g. osh) may fail at step 1 — that's fine, bash/zsh cover it.
+    static func journalPathFromHledger(_ hledgerPath: String) -> String? {
+        let userShell = ProcessInfo.processInfo.environment["SHELL"] ?? ""
+        // Deduplicated list: user shell first, then standard fallbacks
+        var shells = [userShell, "/bin/bash", "/bin/zsh"].filter { !$0.isEmpty }
+        // Remove duplicates while preserving order
+        var seen = Set<String>()
+        shells = shells.filter { seen.insert($0).inserted }
+
+        for shell in shells {
+            guard let output = shellOutput(shell: shell, args: ["-l", "-c", "\"\(hledgerPath)\" files"]),
+                  let firstLine = output.split(separator: "\n").first.map(String.init) else { continue }
+            let path = firstLine.trimmingCharacters(in: .whitespaces)
+            if !path.isEmpty {
+                return path
+            }
+        }
+        return nil
+    }
+
+    /// PATH directories from the user's login shell.
+    ///
     /// GUI apps don't inherit the shell PATH, so we ask the shell explicitly.
-    private static func shellPATHDirectories() -> [String] {
+    static func loginShellPATH() -> [String] {
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
 
-        // Try both interactive login (-li) and plain login (-l) for maximum compatibility
+        // Try interactive login (-li) first, then plain login (-l)
         for args in [["-li", "-c", "echo $PATH"], ["-l", "-c", "echo $PATH"]] {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: shell)
-            process.arguments = args
-
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = Pipe()
-
-            do {
-                try process.run()
-                // Timeout after 5 seconds to avoid hanging on interactive shells
-                let deadline = DispatchTime.now() + .seconds(5)
-                let done = DispatchSemaphore(value: 0)
-                process.terminationHandler = { _ in done.signal() }
-                if done.wait(timeout: deadline) == .timedOut {
-                    process.terminate()
-                    continue
-                }
-
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                guard let output = String(data: data, encoding: .utf8) else { continue }
-                // Take last non-empty line (shell might print motd or other output)
-                let pathString = output.split(separator: "\n")
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                    .last { $0.contains("/") && !$0.isEmpty }
-                guard let pathString, !pathString.isEmpty else { continue }
+            guard let output = shellOutput(shell: shell, args: args) else { continue }
+            // Take the last non-empty line (shell may print motd or other output)
+            let pathString = output.split(separator: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .last { $0.contains("/") && !$0.isEmpty }
+            if let pathString, !pathString.isEmpty {
                 return pathString.split(separator: ":").map(String.init)
-            } catch {
-                continue
             }
         }
         return []
+    }
+
+    // MARK: - Private
+
+    /// Run a shell command and return its stdout, with a 5-second timeout.
+    private static func shellOutput(shell: String, args: [String]) -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: shell)
+        process.arguments = args
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+        } catch {
+            return nil
+        }
+
+        let deadline = DispatchTime.now() + .seconds(5)
+        let done = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in done.signal() }
+        if done.wait(timeout: deadline) == .timedOut {
+            process.terminate()
+            return nil
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8)
     }
 }

@@ -220,6 +220,62 @@ struct JournalFileResolverTests {
         let path = JournalFileResolver.defaultPath()
         #expect(!path.isEmpty)
     }
+
+    @Test func shellDetectedPathUsedWhenNoConfig() throws {
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-\(UUID().uuidString).journal")
+        try "".write(to: tmp, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let result = JournalFileResolver.resolve(configuredPath: "", shellDetectedPath: tmp.path)
+        #expect(result == tmp)
+    }
+
+    @Test func configuredPathTakesPriorityOverShellDetected() throws {
+        let configured = FileManager.default.temporaryDirectory
+            .appendingPathComponent("configured-\(UUID().uuidString).journal")
+        let detected = FileManager.default.temporaryDirectory
+            .appendingPathComponent("detected-\(UUID().uuidString).journal")
+        try "".write(to: configured, atomically: true, encoding: .utf8)
+        try "".write(to: detected, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: configured)
+            try? FileManager.default.removeItem(at: detected)
+        }
+
+        let result = JournalFileResolver.resolve(configuredPath: configured.path, shellDetectedPath: detected.path)
+        #expect(result == configured)
+    }
+
+    @Test func shellDetectedPathSkippedIfNonexistent() {
+        let result = JournalFileResolver.resolve(
+            configuredPath: "",
+            shellDetectedPath: "/nonexistent/shell-detected.journal"
+        )
+        // Should not crash and should not return the nonexistent path
+        #expect(result?.path != "/nonexistent/shell-detected.journal")
+    }
+}
+
+// MARK: - BinaryDetector Shell Detection Tests
+
+@Suite("BinaryDetector.journalPathFromHledger")
+struct BinaryDetectorJournalTests {
+    @Test func invalidHledgerPathReturnsNil() {
+        let result = BinaryDetector.journalPathFromHledger("/nonexistent/bin/hledger")
+        #expect(result == nil)
+    }
+
+    @Test func realHledgerReturnsPath() {
+        guard let hledgerPath = BinaryDetector.findHledger() else { return }
+        // journalPathFromHledger may return nil if no journal is configured — that's fine.
+        // What we verify is that it doesn't crash and returns a valid absolute path if non-nil.
+        let result = BinaryDetector.journalPathFromHledger(hledgerPath)
+        if let path = result {
+            #expect(!path.isEmpty)
+            #expect(path.hasPrefix("/"))
+        }
+    }
 }
 
 // MARK: - BinaryDetector Tests

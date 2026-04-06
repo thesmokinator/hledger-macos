@@ -1,7 +1,8 @@
 /// Resolves the journal file path using a priority chain:
 /// 1. User-configured path (from AppConfig) — file or directory
-/// 2. LEDGER_FILE environment variable
-/// 3. Default ~/.hledger.journal
+/// 2. LEDGER_FILE environment variable (process environment)
+/// 3. Shell-detected path from `hledger files` (covers LEDGER_FILE set in shell config)
+/// 4. Default ~/.hledger.journal
 
 import Foundation
 
@@ -26,9 +27,11 @@ enum JournalFileResolver {
     /// Accepts either a file path or a directory. If a directory is given,
     /// searches for common journal file names inside it.
     ///
-    /// - Parameter configuredPath: User-configured path from settings (empty = not set).
+    /// - Parameters:
+    ///   - configuredPath: User-configured path from settings (empty = not set).
+    ///   - shellDetectedPath: Path returned by `hledger files` via login shell (nil = not available).
     /// - Returns: The resolved file URL, or nil if no journal file is found.
-    static func resolve(configuredPath: String = "") -> URL? {
+    static func resolve(configuredPath: String = "", shellDetectedPath: String? = nil) -> URL? {
         // 1. User-configured path
         if !configuredPath.isEmpty {
             if let url = resolvePathOrDirectory(configuredPath) {
@@ -36,14 +39,22 @@ enum JournalFileResolver {
             }
         }
 
-        // 2. LEDGER_FILE environment variable
+        // 2. LEDGER_FILE from process environment
         if let envFile = ProcessInfo.processInfo.environment["LEDGER_FILE"], !envFile.isEmpty {
             if let url = resolvePathOrDirectory(envFile) {
                 return url
             }
         }
 
-        // 3. Default ~/.hledger.journal
+        // 3. Shell-detected path from `hledger files` — covers LEDGER_FILE set in shell config,
+        //    hledger config files, and any other hledger-native configuration.
+        if let shellPath = shellDetectedPath, !shellPath.isEmpty {
+            if let url = resolvePathOrDirectory(shellPath) {
+                return url
+            }
+        }
+
+        // 4. Default ~/.hledger.journal
         let homeDir = FileManager.default.homeDirectoryForCurrentUser
         let defaultFile = homeDir.appendingPathComponent(".hledger.journal")
         if FileManager.default.fileExists(atPath: defaultFile.path) {
