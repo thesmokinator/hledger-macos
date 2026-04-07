@@ -54,11 +54,11 @@ struct CsvRulesEditorView: View {
                 // Header row
                 HStack(spacing: 0) {
                     Text("CSV Column")
-                        .frame(width: 140, alignment: .leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Sample")
-                        .frame(width: 180, alignment: .leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Assign to")
-                        .frame(minWidth: 140, alignment: .leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -78,13 +78,13 @@ struct CsvRulesEditorView: View {
         HStack(spacing: 0) {
             Text(config.columnMappings[index].csvColumnHeader)
                 .font(.callout)
-                .frame(width: 140, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             Text(config.columnMappings[index].sampleValue)
                 .font(.callout.monospaced())
                 .foregroundStyle(.secondary)
-                .frame(width: 180, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             Picker("", selection: $config.columnMappings[index].assignedField) {
