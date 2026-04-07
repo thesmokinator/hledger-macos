@@ -1,0 +1,28 @@
+; name: Credit Card
+separator ;
+skip 1
+date-format %d/%m/%Y
+fields date, , description, , amount
+currency EUR
+account1 liabilities:credit-card
+
+if lidl|esselunga|coop
+  account2 expenses:groceries
+
+if amazon
+  account2 expenses:shopping
+
+if ristorante|pizzeria|bar
+  account2 expenses:dining
+
+if autostrada|benzina|treno
+  account2 expenses:transport
+
+if mediaworld|unieuro
+  account2 expenses:electronics
+
+if booking|airbnb|hotel
+  account2 expenses:travel
+
+if farmacia
+  account2 expenses:health

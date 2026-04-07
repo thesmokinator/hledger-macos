@@ -1,0 +1,33 @@
+; name: Bank Checking
+skip 1
+date-format %d/%m/%Y
+fields date, description, amount,
+currency EUR
+account1 assets:bank:checking
+
+if whole foods|grocery store
+  account2 expenses:groceries
+
+if netflix|spotify
+  account2 expenses:subscriptions
+
+if salary|freelance
+  account2 income:salary
+
+if rent
+  account2 expenses:rent
+
+if electric|water|phone
+  account2 expenses:utilities
+
+if shell gas|train|ticket
+  account2 expenses:transport
+
+if restaurant|piazza|sushi
+  account2 expenses:dining
+
+if amazon
+  account2 expenses:shopping
+
+if pharmacy
+  account2 expenses:health
