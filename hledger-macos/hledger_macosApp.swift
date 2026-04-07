@@ -155,13 +155,11 @@ struct AppCommands: Commands {
             }
         }
 
-        // Tools > CSV Rules Manager, AI Assistant
+        // Tools > Rules Manager, AI Assistant
         CommandMenu("Tools") {
-            Button("CSV Rules Manager...") {
+            Button("Rules Manager") {
                 appState.showingRulesManager = true
             }
-
-            Divider()
 
             Button("AI Assistant") {
                 NotificationCenter.default.post(name: .toggleAIChat, object: nil)

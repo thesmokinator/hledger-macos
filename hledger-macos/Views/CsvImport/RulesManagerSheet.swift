@@ -95,7 +95,7 @@ struct RulesManagerSheet: View {
 
                 Spacer()
 
-                Button("New Rules File") {
+                Button("New Rule") {
                     createNewRule()
                 }
 

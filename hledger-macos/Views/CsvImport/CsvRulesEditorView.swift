@@ -27,7 +27,9 @@ struct CsvRulesEditorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                columnMappingSection
+                if !csvContent.isEmpty {
+                    columnMappingSection
+                }
                 settingsSection
                 conditionalRulesSection
                 rawEditorSection
