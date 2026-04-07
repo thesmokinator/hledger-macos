@@ -132,33 +132,40 @@ struct CsvRulesEditorView: View {
                 }
 
                 FormRow("Date format:", labelWidth: 100) {
-                    Picker("", selection: $config.dateFormat) {
-                        Text("YYYY-MM-DD").tag("%Y-%m-%d")
-                        Text("DD/MM/YYYY").tag("%d/%m/%Y")
-                        Text("MM/DD/YYYY").tag("%m/%d/%Y")
-                        Text("DD-MM-YYYY").tag("%d-%m-%Y")
-                        Text("DD.MM.YYYY").tag("%d.%m.%Y")
-                        Text("YYYY/MM/DD").tag("%Y/%m/%d")
+                    HStack {
+                        Picker("", selection: $config.dateFormat) {
+                            Text("YYYY-MM-DD").tag("%Y-%m-%d")
+                            Text("DD/MM/YYYY").tag("%d/%m/%Y")
+                            Text("MM/DD/YYYY").tag("%m/%d/%Y")
+                            Text("DD-MM-YYYY").tag("%d-%m-%Y")
+                            Text("DD.MM.YYYY").tag("%d.%m.%Y")
+                            Text("YYYY/MM/DD").tag("%Y/%m/%d")
+                        }
+                        .labelsHidden()
+                        Spacer()
                     }
-                    .labelsHidden()
                 }
 
                 FormRow("Separator:", labelWidth: 100) {
-                    Picker("", selection: $config.separator) {
-                        ForEach(CsvSeparator.allCases) { sep in
-                            Text(sep.displayName).tag(sep)
+                    HStack {
+                        Picker("", selection: $config.separator) {
+                            ForEach(CsvSeparator.allCases) { sep in
+                                Text(sep.displayName).tag(sep)
+                            }
                         }
+                        .labelsHidden()
+                        Spacer()
                     }
-                    .labelsHidden()
-                    .frame(width: 160)
                 }
 
                 FormRow("Skip rows:", labelWidth: 100) {
-                    Stepper(value: $config.skipLines, in: 0...10) {
-                        Text("\(config.skipLines)")
-                            .font(.callout.monospaced())
+                    HStack {
+                        Stepper(value: $config.skipLines, in: 0...10) {
+                            Text("\(config.skipLines)")
+                                .font(.callout.monospaced())
+                        }
+                        Spacer()
                     }
-                    .frame(width: 120)
                 }
             }
         }
