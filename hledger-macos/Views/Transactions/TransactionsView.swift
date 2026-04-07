@@ -129,17 +129,25 @@ struct TransactionsView: View {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
 
-                Button { showingCsvImport = true } label: {
-                    Label("Import CSV", systemImage: "square.and.arrow.down")
-                }
-
                 Menu {
-                    Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
-                    Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
+                    Button { showingCsvImport = true } label: {
+                        Label("Import CSV...", systemImage: "square.and.arrow.down")
+                    }
+
+                    Divider()
+
+                    Button { ExportService.exportTransactions(appState.transactions, format: .csv) } label: {
+                        Label("Export as CSV", systemImage: "arrow.down.doc")
+                    }
+                    .disabled(appState.transactions.isEmpty)
+
+                    Button { ExportService.exportTransactions(appState.transactions, format: .pdf) } label: {
+                        Label("Export as PDF", systemImage: "doc.richtext")
+                    }
+                    .disabled(appState.transactions.isEmpty)
                 } label: {
-                    Label("Export", systemImage: "arrow.down.doc")
+                    Label("Import & Export", systemImage: "arrow.up.arrow.down.doc")
                 }
-                .disabled(appState.transactions.isEmpty)
 
                 Button(action: { newTransaction() }) {
                     Label("New Transaction", systemImage: "plus")
@@ -171,7 +179,14 @@ struct TransactionsView: View {
                 newTransaction()
             }
         }
-        .task { await loadAll() }
+        .task {
+            await loadAll()
+            // Handle deferred ⌘N from another section (e.g. Summary → Transactions)
+            if appState.showingNewTransaction {
+                appState.showingNewTransaction = false
+                newTransaction()
+            }
+        }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
         }

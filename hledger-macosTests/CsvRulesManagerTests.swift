@@ -214,3 +214,84 @@ struct RulesDiscoveryTests {
         #expect(CsvRulesManager.findCompanionRules(for: fakeCSV) == nil)
     }
 }
+
+// MARK: - Fixture-Based Integration Tests
+
+@Suite("CsvRulesManager.Fixtures")
+struct CsvFixtureTests {
+
+    private var fixturesDir: URL {
+        let bundle = Bundle(for: BundleToken.self)
+        return bundle.bundleURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("hledger-macosTests/Fixtures")
+    }
+
+    // Fallback: resolve from source directory
+    private func fixtureURL(_ name: String) -> URL {
+        // Try bundle-adjacent path first
+        let bundlePath = fixturesDir.appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: bundlePath.path) {
+            return bundlePath
+        }
+        // Fallback to known project path
+        let projectPath = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/\(name)")
+        return projectPath
+    }
+
+    @Test func autoDetectSampleBankCsv() throws {
+        let csvURL = fixtureURL("sample_bank.csv")
+        let content = try String(contentsOf: csvURL, encoding: .utf8)
+
+        let separator = CsvRulesManager.detectSeparator(content)
+        #expect(separator == .comma)
+
+        let (hasHeader, headers) = CsvRulesManager.detectHeaderRow(content, separator: separator)
+        #expect(hasHeader == true)
+        #expect(headers == ["Date", "Description", "Amount", "Balance"])
+
+        let dataRows = CsvRulesManager.parseRawCsv(content, separator: separator, skipLines: 1)
+            .filter { !$0.allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty } }
+        #expect(dataRows.count == 26)
+
+        let mappings = CsvRulesManager.autoMapColumns(headers: headers, sampleRows: Array(dataRows.prefix(5)))
+        #expect(mappings[0].assignedField == .date)
+        #expect(mappings[1].assignedField == .description)
+        #expect(mappings[2].assignedField == .amount)
+        // Balance column should not be mapped to a known field
+        #expect(mappings[3].assignedField == nil)
+    }
+
+    @Test func parseSampleBankRulesFile() throws {
+        let rulesURL = fixtureURL("sample_bank.rules")
+        let config = CsvRulesManager.parseRulesFile(url: rulesURL)
+        #expect(config != nil)
+
+        let rules = config!
+        #expect(rules.name == "Sample Bank")
+        #expect(rules.skipLines == 1)
+        #expect(rules.dateFormat == "%d/%m/%Y")
+        #expect(rules.defaultAccount == "assets:bank:checking")
+        #expect(rules.defaultCurrency == "EUR")
+        #expect(rules.conditionalRules.count >= 11)
+        #expect(rules.conditionalRules[0].pattern == "whole foods|grocery store")
+        #expect(rules.conditionalRules[0].account == "expenses:groceries")
+    }
+
+    @Test func detectDateFormatFromSampleBank() throws {
+        let csvURL = fixtureURL("sample_bank.csv")
+        let content = try String(contentsOf: csvURL, encoding: .utf8)
+        let rows = CsvRulesManager.parseRawCsv(content, separator: .comma, skipLines: 1)
+        let dateSamples = rows.prefix(5).map { $0[0] }
+
+        let format = CsvRulesManager.detectDateFormat(dateSamples)
+        #expect(format == "%d/%m/%Y")
+    }
+}
+
+/// Helper to find the test bundle at runtime.
+private class BundleToken {}

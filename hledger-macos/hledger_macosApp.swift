@@ -64,6 +64,10 @@ struct hledger_macosApp: App {
             .sheet(isPresented: $showingCommandLog) {
                 CommandLogView()
             }
+            .sheet(isPresented: Bindable(appState).showingRulesManager) {
+                RulesManagerSheet()
+                    .environment(appState)
+            }
             .alert("Update Available", isPresented: $showingUpdateAlert) {
                 if case .updateAvailable(_, let url, let downloadUrl) = updateStatus {
                     if let downloadUrl {
@@ -115,7 +119,7 @@ struct AppCommands: Commands {
     var body: some Commands {
         // Cmd+N: context-aware "New" action
         CommandGroup(replacing: .newItem) {
-            Button("New...") {
+            Button("New Transaction") {
                 appState.triggerNew()
             }
             .keyboardShortcut("n", modifiers: .command)
@@ -151,8 +155,14 @@ struct AppCommands: Commands {
             }
         }
 
-        // Tools > AI Assistant
+        // Tools > CSV Rules Manager, AI Assistant
         CommandMenu("Tools") {
+            Button("CSV Rules Manager...") {
+                appState.showingRulesManager = true
+            }
+
+            Divider()
+
             Button("AI Assistant") {
                 NotificationCenter.default.post(name: .toggleAIChat, object: nil)
             }

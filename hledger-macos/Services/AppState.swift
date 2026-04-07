@@ -95,6 +95,7 @@ final class AppState {
     var showingNewTransaction = false
     var showingNewBudgetRule = false
     var showingNewRecurringRule = false
+    var showingRulesManager = false
 
     // MARK: - Period Navigation
 
@@ -394,7 +395,9 @@ final class AppState {
         case .transactions: showingNewTransaction = true
         case .budget: showingNewBudgetRule = true
         case .recurring: showingNewRecurringRule = true
-        default: showingNewTransaction = true
+        default:
+            selectedSection = .transactions
+            showingNewTransaction = true
         }
     }
 
