@@ -151,21 +151,29 @@ struct ReportsView: View {
             )
 
             ForEach(Array(data.rows.enumerated()), id: \.element.id) { index, row in
-                ReportRowView(
-                    account: row.account,
-                    amounts: row.amounts,
-                    isSectionHeader: row.isSectionHeader,
-                    isTotal: row.isTotal,
-                    formatAmount: formatReportAmount,
-                    amountColor: { amountColor($0, isTotal: row.isTotal) }
-                )
-                .tag(row.id)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    guard !row.isSectionHeader && !row.isTotal else { return }
-                    selectedRowID = row.id
-                    drillDown = AccountDrillDown(accountName: row.account)
+                HStack(spacing: 0) {
+                    if !row.isSectionHeader && !row.isTotal {
+                        Button {
+                            drillDown = AccountDrillDown(accountName: row.account)
+                        } label: {
+                            Image(systemName: "list.bullet.rectangle")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 6)
+                    }
+
+                    ReportRowView(
+                        account: row.account,
+                        amounts: row.amounts,
+                        isSectionHeader: row.isSectionHeader,
+                        isTotal: row.isTotal,
+                        formatAmount: formatReportAmount,
+                        amountColor: { amountColor($0, isTotal: row.isTotal) }
+                    )
                 }
+                .tag(row.id)
                 if row.isTotal && index + 1 < data.rows.count && !data.rows[index + 1].isTotal {
                     Spacer().frame(height: 8).listRowSeparator(.hidden)
                 }
