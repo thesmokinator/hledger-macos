@@ -202,9 +202,9 @@ struct SummaryView: View {
                 .foregroundStyle(.orange)
                 .padding(.top, 4)
             } else if showMarketColumns {
-                Text("Market data provided by pricehist via Yahoo Finance. Prices may be delayed.")
-                    .font(.caption2)
-                    .foregroundStyle(.quaternary)
+                Label("Prices via Yahoo Finance (delayed)", systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                     .padding(.top, 4)
             }
         }
