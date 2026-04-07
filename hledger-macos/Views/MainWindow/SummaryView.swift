@@ -43,11 +43,13 @@ struct SummaryView: View {
         }
         .navigationTitle("Summary")
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Picker("Period", selection: $summaryPeriod) {
                     Text("Current month").tag("month")
                     Text("Last month").tag("lastmonth")

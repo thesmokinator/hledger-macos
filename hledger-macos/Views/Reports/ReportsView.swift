@@ -52,11 +52,13 @@ struct ReportsView: View {
         }
         .navigationTitle("Reports")
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("Export as CSV") { if let data = reportData { ExportService.exportReport(data, format: .csv) } }
                     Button("Export as PDF") { if let data = reportData { ExportService.exportReport(data, format: .pdf) } }
@@ -64,14 +66,18 @@ struct ReportsView: View {
                     Label("Export", systemImage: "arrow.down.doc")
                 }
                 .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Button {
                     showingChart = true
                 } label: {
                     Label("Chart", systemImage: "chart.bar")
                 }
                 .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     ForEach(ReportType.allCases, id: \.self) { type in
                         Button {
@@ -88,7 +94,9 @@ struct ReportsView: View {
                     Text(reportType.displayName)
                         .font(.callout)
                 }
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     ForEach(PeriodRange.allCases) { range in
                         Button {

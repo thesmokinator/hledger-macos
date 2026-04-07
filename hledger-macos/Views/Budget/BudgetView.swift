@@ -77,11 +77,13 @@ struct BudgetView: View {
         }
         .navigationTitle("Budget")
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("Export as CSV") { ExportService.exportBudget(mergedRows, format: .csv) }
                     Button("Export as PDF") { ExportService.exportBudget(mergedRows, format: .pdf) }
@@ -89,7 +91,9 @@ struct BudgetView: View {
                     Label("Export", systemImage: "arrow.down.doc")
                 }
                 .disabled(mergedRows.isEmpty)
+            }
 
+            ToolbarItem(placement: .primaryAction) {
                 Button { addRule() } label: {
                     Label("Add Rule", systemImage: "plus")
                 }
