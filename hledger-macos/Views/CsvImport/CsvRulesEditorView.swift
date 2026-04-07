@@ -406,13 +406,3 @@ private struct RulesEditorPreviewWrapper: View {
     )
     .frame(width: 620, height: 700)
 }
-
-#Preview("Empty — No CSV loaded") {
-    RulesEditorPreviewWrapper(
-        config: CsvRulesConfig(),
-        csv: "",
-        accounts: ["assets:bank", "expenses:food"],
-        commodities: ["EUR"]
-    )
-    .frame(width: 620, height: 500)
-}
