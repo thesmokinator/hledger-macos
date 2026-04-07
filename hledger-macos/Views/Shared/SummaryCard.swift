@@ -41,7 +41,7 @@ struct SummaryCard: View {
 
             Text(subtitle ?? " ")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding(.vertical, 16)
