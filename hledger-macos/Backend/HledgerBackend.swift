@@ -335,6 +335,23 @@ final class HledgerBackend: AccountingBackend, @unchecked Sendable {
         return Self.parseCSVBudgetReport(output)
     }
 
+    // MARK: - CSV Import
+
+    func parseCsvImport(csvFile: URL, rulesFile: URL) async throws -> [Transaction] {
+        let args = ["--no-conf", "print", "-f", csvFile.path, "--rules-file", rulesFile.path, "-O", "json"]
+        let output = try await runner.run(args)
+        guard let data = output.data(using: .utf8) else {
+            throw BackendError.parseError("Invalid UTF-8 output from hledger CSV import")
+        }
+        let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] ?? []
+        return jsonArray.map { Self.parseTransaction($0) }
+    }
+
+    func validateCsvRules(csvFile: URL, rulesFile: URL) async throws {
+        let args = ["--no-conf", "print", "-f", csvFile.path, "--rules-file", rulesFile.path, "-O", "json"]
+        _ = try await runner.run(args)
+    }
+
     // MARK: - Write Operations
 
     func appendTransaction(_ transaction: Transaction) async throws {

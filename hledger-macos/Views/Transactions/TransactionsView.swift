@@ -9,6 +9,7 @@ struct TransactionsView: View {
     @State private var formConfig: FormConfig?
     @State private var showingDeleteConfirm = false
     @State private var transactionToDelete: Transaction?
+    @State private var showingCsvImport = false
 
     @FocusState private var listFocused: Bool
 
@@ -129,12 +130,24 @@ struct TransactionsView: View {
                 }
 
                 Menu {
-                    Button("Export as CSV") { ExportService.exportTransactions(appState.transactions, format: .csv) }
-                    Button("Export as PDF") { ExportService.exportTransactions(appState.transactions, format: .pdf) }
+                    Button { showingCsvImport = true } label: {
+                        Label("Import CSV", systemImage: "square.and.arrow.down")
+                    }
+
+                    Divider()
+
+                    Button { ExportService.exportTransactions(appState.transactions, format: .csv) } label: {
+                        Label("Export as CSV", systemImage: "arrow.down.doc")
+                    }
+                    .disabled(appState.transactions.isEmpty)
+
+                    Button { ExportService.exportTransactions(appState.transactions, format: .pdf) } label: {
+                        Label("Export as PDF", systemImage: "doc.richtext")
+                    }
+                    .disabled(appState.transactions.isEmpty)
                 } label: {
-                    Label("Export", systemImage: "arrow.down.doc")
+                    Label("Import & Export", systemImage: "doc.badge.gearshape")
                 }
-                .disabled(appState.transactions.isEmpty)
 
                 Button(action: { newTransaction() }) {
                     Label("New Transaction", systemImage: "plus")
@@ -144,6 +157,8 @@ struct TransactionsView: View {
         // Hidden keyboard shortcuts
         .background {
             Group {
+                Button("") { showingCsvImport = true }
+                    .keyboardShortcut("i", modifiers: .command)
                 Button("") { editTransaction(selectedTransaction) }
                     .keyboardShortcut("e", modifiers: .command)
                 Button("") { cloneTransaction(selectedTransaction) }
@@ -164,7 +179,14 @@ struct TransactionsView: View {
                 newTransaction()
             }
         }
-        .task { await loadAll() }
+        .task {
+            await loadAll()
+            // Handle deferred ⌘N from another section (e.g. Summary → Transactions)
+            if appState.showingNewTransaction {
+                appState.showingNewTransaction = false
+                newTransaction()
+            }
+        }
         .onChange(of: appState.currentPeriod) {
             Task { await loadAll() }
         }
@@ -175,6 +197,10 @@ struct TransactionsView: View {
         }
         .sheet(item: $formConfig) { config in
             TransactionFormView(editingTransaction: config.transaction, isClone: config.isClone)
+                .environment(appState)
+        }
+        .sheet(isPresented: $showingCsvImport) {
+            CsvImportSheet()
                 .environment(appState)
         }
         .alert("Delete Transaction?", isPresented: $showingDeleteConfirm) {

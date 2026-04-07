@@ -1,0 +1,8 @@
+"Date","Description","Gross","Fee","Net","Currency"
+"2026-01-05","Payment to Netflix","15.99","0.00","15.99","EUR"
+"2026-01-10","Payment from Client A","-500.00","14.50","-485.50","EUR"
+"2026-01-15","Payment to Spotify","9.99","0.00","9.99","EUR"
+"2026-01-20","eBay Purchase","45.00","0.00","45.00","EUR"
+"2026-01-25","Refund from Amazon","-29.99","0.00","-29.99","EUR"
+"2026-02-01","Payment to Adobe","24.99","0.00","24.99","EUR"
+"2026-02-10","Payment from Client B","-1200.00","34.80","-1165.20","EUR"
