@@ -22,7 +22,7 @@ struct RulesManagerSheet: View {
         VStack(spacing: 0) {
             // Title
             HStack {
-                Text("CSV Rules Manager")
+                Text("Rules Manager")
                     .font(.title2.bold())
                 Spacer()
             }
