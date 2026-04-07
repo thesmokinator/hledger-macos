@@ -31,6 +31,8 @@ struct ReportsView: View {
     @State private var reportData: ReportData?
     @State private var isLoading = false
     @State private var showingChart = false
+    @State private var selectedRowID: UUID?
+    @State private var drillDown: AccountDrillDown?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -132,12 +134,16 @@ struct ReportsView: View {
                 ReportChartOverlay(reportType: reportType, data: data)
             }
         }
+        .sheet(item: $drillDown) { item in
+            AccountTransactionsSheet(accountName: item.accountName)
+                .environment(appState)
+        }
     }
 
     // MARK: - Report Content
 
     private func reportContent(_ data: ReportData) -> some View {
-        List {
+        List(selection: $selectedRowID) {
             ReportHeaderRow(
                 accountLabel: "Account",
                 periodHeaders: data.periodHeaders,
@@ -145,14 +151,29 @@ struct ReportsView: View {
             )
 
             ForEach(Array(data.rows.enumerated()), id: \.element.id) { index, row in
-                ReportRowView(
-                    account: row.account,
-                    amounts: row.amounts,
-                    isSectionHeader: row.isSectionHeader,
-                    isTotal: row.isTotal,
-                    formatAmount: formatReportAmount,
-                    amountColor: { amountColor($0, isTotal: row.isTotal) }
-                )
+                HStack(spacing: 0) {
+                    if !row.isSectionHeader && !row.isTotal {
+                        Button {
+                            drillDown = AccountDrillDown(accountName: row.account)
+                        } label: {
+                            Image(systemName: "list.bullet.rectangle")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 6)
+                    }
+
+                    ReportRowView(
+                        account: row.account,
+                        amounts: row.amounts,
+                        isSectionHeader: row.isSectionHeader,
+                        isTotal: row.isTotal,
+                        formatAmount: formatReportAmount,
+                        amountColor: { amountColor($0, isTotal: row.isTotal) }
+                    )
+                }
+                .tag(row.id)
                 if row.isTotal && index + 1 < data.rows.count && !data.rows[index + 1].isTotal {
                     Spacer().frame(height: 8).listRowSeparator(.hidden)
                 }
