@@ -35,6 +35,36 @@ struct CsvImportSheet: View {
     @State private var knownAccounts: [String] = []
     @State private var knownCommodities: [String] = []
 
+    // MARK: - Validation
+
+    private var validationErrors: [String] {
+        var errors: [String] = []
+        if config.columnMappings.isEmpty {
+            errors.append("No column mappings defined")
+        } else {
+            if !config.columnMappings.contains(where: { $0.assignedField == .date }) {
+                errors.append("No date column mapped")
+            }
+            let hasAmount = config.columnMappings.contains { $0.assignedField == .amount }
+            let hasAmountIn = config.columnMappings.contains { $0.assignedField == .amountIn }
+            if !hasAmount && !hasAmountIn {
+                errors.append("No amount column mapped")
+            }
+        }
+        if config.defaultAccount.isEmpty {
+            errors.append("No account configured")
+        }
+        return errors
+    }
+
+    private var isReadyToImport: Bool {
+        selectedTab == 2 && !previewTransactions.filter(\.isSelected).isEmpty && validationErrors.isEmpty && !isParsing && !isImporting
+    }
+
+    private var selectedCount: Int {
+        previewTransactions.filter(\.isSelected).count
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar
@@ -60,10 +90,8 @@ struct CsvImportSheet: View {
             .padding(.bottom, 8)
 
             if csvContent.isEmpty {
-                // No CSV loaded — show file picker prompt
                 noFileView
             } else {
-                // Wizard tabs
                 TabView(selection: $selectedTab) {
                     CsvPreviewTab(
                         csvContent: csvContent,
@@ -87,8 +115,7 @@ struct CsvImportSheet: View {
                     CsvImportPreviewTab(
                         previewTransactions: $previewTransactions,
                         isLoading: isParsing,
-                        errorMessage: parseError,
-                        onImport: { Task { await performImport() } }
+                        errorMessage: parseError
                     )
                     .tabItem { Label("3. Import", systemImage: "square.and.arrow.down") }
                     .tag(2)
@@ -102,23 +129,38 @@ struct CsvImportSheet: View {
 
             Divider()
 
-            // Bottom bar
+            // Bottom bar — consistent with other dialogs
             HStack {
                 if let result = importResult {
                     Label(result, systemImage: "checkmark.circle")
                         .font(.callout)
                         .foregroundStyle(.green)
+                } else if !validationErrors.isEmpty && selectedTab == 2 {
+                    Label(validationErrors.first!, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                } else if selectedTab == 2 && selectedCount > 0 {
+                    Text("\(selectedCount) transaction\(selectedCount == 1 ? "" : "s") selected")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
                 Button("Close") { dismiss() }
                     .keyboardShortcut(.cancelAction)
+
+                Button("Import") {
+                    Task { await performImport() }
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(!isReadyToImport)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .frame(width: 740, height: 620)
+        .frame(width: 760, height: 660)
         .task { await loadAutocompleteData() }
         .onAppear {
             if csvContent.isEmpty {
@@ -173,16 +215,12 @@ struct CsvImportSheet: View {
         do {
             csvContent = try String(contentsOf: url, encoding: .utf8)
             csvFileURL = url
-
-            // Check for companion rules
             companionRules = CsvRulesManager.findCompanionRules(for: url)
 
-            // List available rules files
             if let journal = appState.activeBackend?.journalFile {
                 rulesFiles = CsvRulesManager.listAllRulesFiles(for: journal)
             }
 
-            // Reset state for new file
             config = CsvRulesConfig()
             previewTransactions = []
             parseError = nil
@@ -205,19 +243,21 @@ struct CsvImportSheet: View {
 
     private func parsePreview() async {
         guard let backend = appState.activeBackend, !csvContent.isEmpty else { return }
+        guard validationErrors.isEmpty else {
+            parseError = validationErrors.joined(separator: ". ")
+            return
+        }
 
         isParsing = true
         parseError = nil
         previewTransactions = []
 
         do {
-            // Write a temp rules file from config
             let tempRules = FileManager.default.temporaryDirectory
                 .appendingPathComponent("hledger-import-\(UUID().uuidString).rules")
             try CsvRulesManager.writeRulesFile(config, to: tempRules)
             defer { try? FileManager.default.removeItem(at: tempRules) }
 
-            // Write CSV content to temp file if needed (for hledger to read)
             let csvFile = csvFileURL ?? {
                 let temp = FileManager.default.temporaryDirectory
                     .appendingPathComponent("import-\(UUID().uuidString).csv")
@@ -227,9 +267,8 @@ struct CsvImportSheet: View {
 
             let transactions = try await backend.parseCsvImport(csvFile: csvFile, rulesFile: tempRules)
 
-            // Convert to preview transactions
             var preview = transactions.map { txn -> CsvPreviewTransaction in
-                let amount = txn.postings.first?.amounts.first.map { $0.formatted() } ?? ""
+                let amount = txn.postings.first?.amounts.first.map { $0.displayFormatted() } ?? ""
                 let account1 = txn.postings.first?.account ?? ""
                 let account2 = txn.postings.count > 1 ? txn.postings[1].account : ""
                 return CsvPreviewTransaction(
@@ -241,7 +280,6 @@ struct CsvImportSheet: View {
                 )
             }
 
-            // Detect duplicates against existing journal
             let existing = try await backend.loadTransactions(query: nil, reversed: false)
             preview = CsvRulesManager.detectDuplicates(preview: preview, existing: existing)
 
@@ -264,7 +302,6 @@ struct CsvImportSheet: View {
         isImporting = true
 
         do {
-            // Write temp rules file
             let tempRules = FileManager.default.temporaryDirectory
                 .appendingPathComponent("hledger-import-\(UUID().uuidString).rules")
             try CsvRulesManager.writeRulesFile(config, to: tempRules)
@@ -273,7 +310,6 @@ struct CsvImportSheet: View {
             let csvFile = csvFileURL ?? URL(fileURLWithPath: "/dev/null")
             let allTransactions = try await backend.parseCsvImport(csvFile: csvFile, rulesFile: tempRules)
 
-            // Match selected preview transactions to parsed Transaction objects by index
             let selectedDates = Set(toImport.map { "\($0.date)|\($0.description)" })
             var imported = 0
             for txn in allTransactions {
@@ -286,7 +322,6 @@ struct CsvImportSheet: View {
 
             importResult = "Imported \(imported) transaction\(imported == 1 ? "" : "s")"
 
-            // Save rules file if it's new
             if rulesFileURL == nil, let journal = backend.journalFile as URL? {
                 let rulesDir = try CsvRulesManager.ensureRulesDirectory(for: journal)
                 let fileName = config.name.isEmpty ? "import" : config.name.lowercased().replacingOccurrences(of: " ", with: "-")
@@ -294,7 +329,6 @@ struct CsvImportSheet: View {
                 try CsvRulesManager.writeRulesFile(config, to: targetURL)
             }
 
-            // Reload app data
             await appState.reloadAfterWrite()
         } catch {
             parseError = "Import failed: \(error.localizedDescription)"
