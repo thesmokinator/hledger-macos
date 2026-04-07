@@ -142,7 +142,7 @@ struct CsvImportSheet: View {
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
-            Button("Choose CSV File...") {
+            Button("Choose CSV File") {
                 pickCsvFile()
             }
             .buttonStyle(.borderedProminent)

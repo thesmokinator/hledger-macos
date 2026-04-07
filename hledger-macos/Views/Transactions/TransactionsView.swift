@@ -131,7 +131,7 @@ struct TransactionsView: View {
 
                 Menu {
                     Button { showingCsvImport = true } label: {
-                        Label("Import CSV...", systemImage: "square.and.arrow.down")
+                        Label("Import CSV", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
@@ -146,7 +146,7 @@ struct TransactionsView: View {
                     }
                     .disabled(appState.transactions.isEmpty)
                 } label: {
-                    Label("Import & Export", systemImage: "arrow.up.arrow.down.doc")
+                    Label("Import & Export", systemImage: "doc.badge.gearshape")
                 }
 
                 Button(action: { newTransaction() }) {
