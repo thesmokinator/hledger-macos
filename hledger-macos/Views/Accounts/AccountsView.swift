@@ -39,13 +39,11 @@ struct AccountsView: View {
         .searchable(text: $searchText, prompt: "Filter accounts...")
         .navigationTitle("Accounts")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
-            }
 
-            ToolbarItem(placement: .primaryAction) {
                 Picker("View", selection: $viewMode) {
                     Text("Flat").tag("flat")
                     Text("Tree").tag("tree")

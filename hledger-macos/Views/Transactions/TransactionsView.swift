@@ -124,13 +124,11 @@ struct TransactionsView: View {
         }
         .navigationTitle("Transactions")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
-            }
 
-            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button { showingCsvImport = true } label: {
                         Label("Import CSV", systemImage: "square.and.arrow.down")
@@ -150,9 +148,7 @@ struct TransactionsView: View {
                 } label: {
                     Label("Import & Export", systemImage: "doc.badge.gearshape")
                 }
-            }
 
-            ToolbarItem(placement: .primaryAction) {
                 Button(action: { newTransaction() }) {
                     Label("New Transaction", systemImage: "plus")
                 }
