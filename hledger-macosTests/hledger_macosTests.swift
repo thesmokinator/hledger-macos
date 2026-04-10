@@ -145,6 +145,267 @@ struct AmountParserTests {
     }
 }
 
+// MARK: - PostingAmountParser Tests
+
+@Suite("PostingAmountParser")
+struct PostingAmountParserTests {
+
+    // MARK: - Simple amounts
+
+    @Test func parsePlainNumber() {
+        let amount = PostingAmountParser.parse("50.00", defaultCommodity: "€")
+        #expect(amount?.quantity == Decimal(string: "50.00"))
+        #expect(amount?.commodity == "€")
+        #expect(amount?.cost == nil)
+    }
+
+    @Test func parseNegativePlainNumber() {
+        let amount = PostingAmountParser.parse("-123.45", defaultCommodity: "€")
+        #expect(amount?.quantity == Decimal(string: "-123.45"))
+        #expect(amount?.commodity == "€")
+    }
+
+    @Test func parseCurrencyPrefix() {
+        let amount = PostingAmountParser.parse("€500.00")
+        #expect(amount?.quantity == Decimal(string: "500.00"))
+        #expect(amount?.commodity == "€")
+        #expect(amount?.style.commoditySide == .left)
+        #expect(amount?.style.commoditySpaced == false)
+    }
+
+    @Test func parseCurrencySuffix() {
+        let amount = PostingAmountParser.parse("500.00 EUR")
+        #expect(amount?.quantity == Decimal(string: "500.00"))
+        #expect(amount?.commodity == "EUR")
+        #expect(amount?.style.commoditySide == .right)
+        #expect(amount?.style.commoditySpaced == true)
+    }
+
+    @Test func parseEuropeanFormatSimple() {
+        let amount = PostingAmountParser.parse("€50,00")
+        #expect(amount?.quantity == Decimal(string: "50"))
+        #expect(amount?.commodity == "€")
+    }
+
+    @Test func parseEuropeanFormatThousands() {
+        let amount = PostingAmountParser.parse("€1.000,50")
+        #expect(amount?.quantity == Decimal(string: "1000.5"))
+        #expect(amount?.commodity == "€")
+    }
+
+    @Test func parseUSFormat() {
+        let amount = PostingAmountParser.parse("$1,000.50")
+        #expect(amount?.quantity == Decimal(string: "1000.5"))
+        #expect(amount?.commodity == "$")
+    }
+
+    @Test func parseNamedCommodityNoCost() {
+        let amount = PostingAmountParser.parse("10 AAPL")
+        #expect(amount?.quantity == 10)
+        #expect(amount?.commodity == "AAPL")
+        #expect(amount?.cost == nil)
+    }
+
+    @Test func parseNegativeNamedCommodity() {
+        let amount = PostingAmountParser.parse("-5 XDWD")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.commodity == "XDWD")
+        #expect(amount?.cost == nil)
+    }
+
+    // MARK: - Cost annotation: @@ (total cost)
+
+    /// Regression test for the original bug: European decimal in @@ cost.
+    /// Input "-1 SWDA @@ 112,93" was previously rejected by hledger because
+    /// the comma wasn't being normalized to a dot before writing the journal.
+    @Test func parseTotalCostEuropeanDecimal() {
+        let amount = PostingAmountParser.parse("-1 SWDA @@ 112,93", defaultCommodity: "€")
+        #expect(amount?.quantity == -1)
+        #expect(amount?.commodity == "SWDA")
+        #expect(amount?.cost?.quantity == Decimal(string: "112.93"))
+        #expect(amount?.cost?.commodity == "€")
+    }
+
+    @Test func parseTotalCostDotDecimal() {
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €742.55")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.commodity == "XDWD")
+        #expect(amount?.cost?.quantity == Decimal(string: "742.55"))
+        #expect(amount?.cost?.commodity == "€")
+    }
+
+    @Test func parseTotalCostWithCurrencySuffix() {
+        let amount = PostingAmountParser.parse("10 AAPL @@ 1500.00 USD")
+        #expect(amount?.quantity == 10)
+        #expect(amount?.commodity == "AAPL")
+        #expect(amount?.cost?.quantity == Decimal(string: "1500.00"))
+        #expect(amount?.cost?.commodity == "USD")
+    }
+
+    @Test func parseTotalCostEuropeanThousands() {
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €1.000,00")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.cost?.quantity == Decimal(string: "1000"))
+    }
+
+    @Test func parseTotalCostNoExplicitCommodity() {
+        // Cost "112,93" with no commodity → should use defaultCommodity
+        let amount = PostingAmountParser.parse("-1 SWDA @@ 112,93", defaultCommodity: "€")
+        #expect(amount?.cost?.commodity == "€")
+    }
+
+    @Test func parseTotalCostAlwaysPositive() {
+        // hledger requires the @@ cost to be positive, even for sells
+        let amount = PostingAmountParser.parse("-1 SWDA @@ 112.93", defaultCommodity: "€")
+        #expect(amount?.cost?.quantity == Decimal(string: "112.93"))
+    }
+
+    // MARK: - Cost annotation: @ (unit cost)
+
+    @Test func parseUnitCost() {
+        // @ is unit cost: total = qty × unit
+        // -5 XDWD @ €148.00 → total cost = 5 × 148 = 740
+        let amount = PostingAmountParser.parse("-5 XDWD @ €148.00")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.cost?.quantity == Decimal(string: "740"))
+    }
+
+    @Test func parseUnitCostEuropeanDecimal() {
+        // -1 SWDA @ 112,93 → total cost = 1 × 112.93 = 112.93
+        let amount = PostingAmountParser.parse("-1 SWDA @ 112,93", defaultCommodity: "€")
+        #expect(amount?.cost?.quantity == Decimal(string: "112.93"))
+    }
+
+    // MARK: - Edge cases
+
+    @Test func parseEmptyString() {
+        #expect(PostingAmountParser.parse("") == nil)
+        #expect(PostingAmountParser.parse("   ") == nil)
+    }
+
+    @Test func parseZero() {
+        // "0" with no commodity → nil (consistent with previous behavior)
+        #expect(PostingAmountParser.parse("0") == nil)
+    }
+
+    @Test func parseGarbageString() {
+        #expect(PostingAmountParser.parse("not a number") == nil)
+    }
+
+    @Test func parseCostWithoutCommodity() {
+        // "@@ 100" has no quantity/commodity prefix → invalid
+        #expect(PostingAmountParser.parseCostAnnotated("@@ 100") == nil)
+    }
+
+    @Test func parseCostWithoutCostValue() {
+        // Missing cost amount after @@ is caught by the regex (requires .+)
+        #expect(PostingAmountParser.parseCostAnnotated("-1 SWDA @@") == nil)
+    }
+
+    @Test func parseCostWithInvalidCostAmount() {
+        // Cost portion cannot be parsed as a number
+        #expect(PostingAmountParser.parseCostAnnotated("-1 SWDA @@ garbage") == nil)
+    }
+
+    // MARK: - Roundtrip: parse → format → hledger-compatible output
+
+    /// Critical test: European input must produce hledger-compatible output.
+    /// User types `-1 SWDA @@ 112,93` (Italian) → journal must contain `112.93`.
+    @Test func roundtripEuropeanInputProducesDotOutput() {
+        let amount = PostingAmountParser.parse("-1 SWDA @@ 112,93", defaultCommodity: "€")!
+        let formatted = amount.formatted()
+        // Must contain the dot-normalized cost, no comma
+        #expect(formatted.contains("112.93"))
+        #expect(!formatted.contains("112,93"))
+        #expect(formatted.contains("@@"))
+    }
+
+    @Test func roundtripSimpleEuropeanInputProducesDotOutput() {
+        let amount = PostingAmountParser.parse("€50,00")!
+        let formatted = amount.formatted()
+        #expect(formatted.contains("50.00"))
+        #expect(!formatted.contains("50,00"))
+    }
+
+    @Test func roundtripCostAnnotatedFormatIncludesCostMarker() {
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €742.55")!
+        let formatted = amount.formatted()
+        #expect(formatted.contains("XDWD"))
+        #expect(formatted.contains("@@"))
+        #expect(formatted.contains("742.55"))
+    }
+
+    /// When editing an existing transaction, the prefilled amount string comes from
+    /// `Amount.formatted()`. Re-parsing that string must yield an equivalent Amount,
+    /// so the user can edit and save without losing information.
+    @Test func roundtripCostAnnotatedFullCycle() {
+        let parsed = PostingAmountParser.parse("-5 XDWD @@ €742.55")!
+        let formatted = parsed.formatted()
+        let reparsed = PostingAmountParser.parse(formatted)!
+
+        #expect(reparsed.quantity == parsed.quantity)
+        #expect(reparsed.commodity == parsed.commodity)
+        #expect(reparsed.cost?.quantity == parsed.cost?.quantity)
+        #expect(reparsed.cost?.commodity == parsed.cost?.commodity)
+    }
+
+    @Test func roundtripEuropeanInputFullCycle() {
+        // User types European format → formatted in hledger format → reparsed
+        let parsed = PostingAmountParser.parse("-1 SWDA @@ 112,93", defaultCommodity: "€")!
+        let formatted = parsed.formatted()
+        let reparsed = PostingAmountParser.parse(formatted)!
+
+        #expect(reparsed.quantity == -1)
+        #expect(reparsed.commodity == "SWDA")
+        #expect(reparsed.cost?.quantity == Decimal(string: "112.93"))
+        #expect(reparsed.cost?.commodity == "€")
+    }
+
+    // MARK: - decimalPlaces helper
+
+    @Test func decimalPlacesNoSeparator() {
+        #expect(PostingAmountParser.decimalPlaces(in: "50") == 0)
+        #expect(PostingAmountParser.decimalPlaces(in: "1000") == 0)
+    }
+
+    @Test func decimalPlacesDotDecimal() {
+        #expect(PostingAmountParser.decimalPlaces(in: "50.00") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "50.5") == 1)
+        #expect(PostingAmountParser.decimalPlaces(in: "50.123") == 3)
+    }
+
+    @Test func decimalPlacesCommaDecimal() {
+        #expect(PostingAmountParser.decimalPlaces(in: "50,00") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "112,93") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "50,5") == 1)
+    }
+
+    @Test func decimalPlacesEuropeanThousands() {
+        // "1.000,50" → European: dot is thousands, comma is decimal → 2 places
+        #expect(PostingAmountParser.decimalPlaces(in: "1.000,50") == 2)
+    }
+
+    @Test func decimalPlacesUSThousands() {
+        // "1,000.50" → US: comma is thousands, dot is decimal → 2 places
+        #expect(PostingAmountParser.decimalPlaces(in: "1,000.50") == 2)
+    }
+
+    @Test func decimalPlacesCommaAsThousands() {
+        // "1,000" → 3 digits after comma → thousands separator → 0 places
+        #expect(PostingAmountParser.decimalPlaces(in: "1,000") == 0)
+    }
+
+    @Test func decimalPlacesWithCurrencyPrefix() {
+        #expect(PostingAmountParser.decimalPlaces(in: "€50.00") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "-€50,00") == 2)
+    }
+
+    @Test func decimalPlacesNegative() {
+        #expect(PostingAmountParser.decimalPlaces(in: "-50.00") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "-112,93") == 2)
+    }
+}
+
 // MARK: - AmountFormatter Tests
 
 @Suite("AmountFormatter")
