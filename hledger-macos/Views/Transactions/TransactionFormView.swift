@@ -291,13 +291,13 @@ struct TransactionFormView: View {
     }
 
     private func parseAmountString(_ s: String) -> [Amount] {
-        let trimmed = s.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return [] }
-        let (qty, commodity) = AmountParser.parse(trimmed)
-        if qty == 0 && commodity.isEmpty { return [] }
-        let com = commodity.isEmpty ? appState.config.defaultCommodity : commodity
-        let style = appState.styleForCommodity(com)
-        return [Amount(commodity: com, quantity: qty, style: style)]
+        guard let amount = PostingAmountParser.parse(
+            s,
+            defaultCommodity: appState.config.defaultCommodity
+        ) else {
+            return []
+        }
+        return [amount]
     }
 }
 
