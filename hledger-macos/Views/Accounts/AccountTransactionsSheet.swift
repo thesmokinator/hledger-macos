@@ -90,9 +90,7 @@ struct AccountTransactionsSheet: View {
     @ViewBuilder
     private var content: some View {
         if isLoading {
-            Spacer()
-            ProgressView("Loading transactions...")
-            Spacer()
+            LoadingOverlay(message: "Loading transactions...")
         } else if let error = errorMessage {
             Spacer()
             ContentUnavailableView("Error", systemImage: "exclamationmark.triangle",

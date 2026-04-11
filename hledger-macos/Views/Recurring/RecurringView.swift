@@ -21,9 +21,7 @@ struct RecurringView: View {
     var body: some View {
         VStack(spacing: 0) {
             if isLoading {
-                Spacer()
-                ProgressView("Loading rules...")
-                Spacer()
+                LoadingOverlay(message: "Loading rules...")
             } else if rules.isEmpty {
                 Spacer()
                 ContentUnavailableView(

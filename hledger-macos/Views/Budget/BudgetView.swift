@@ -60,9 +60,7 @@ struct BudgetView: View {
 
             // Content
             if isLoading {
-                Spacer()
-                ProgressView("Loading budget...")
-                Spacer()
+                LoadingOverlay(message: "Loading budget...")
             } else if rules.isEmpty {
                 Spacer()
                 ContentUnavailableView(
