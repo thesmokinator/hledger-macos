@@ -136,14 +136,12 @@ struct RulesManagerSheet: View {
                 )
             }
         }
-        .alert("Delete Rules File?", isPresented: $showingDeleteConfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { performDelete() }
-        } message: {
-            if let rule = ruleToDelete {
-                Text("Delete \"\(rule.name)\"? This cannot be undone.")
-            }
-        }
+        .confirmDeleteAlert(
+            isPresented: $showingDeleteConfirm,
+            itemName: "Rules File",
+            message: ruleToDelete.map { "Delete \"\($0.name)\"? This cannot be undone." } ?? "",
+            onConfirm: { performDelete() }
+        )
     }
 
     // MARK: - Data
