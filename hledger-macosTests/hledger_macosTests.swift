@@ -818,6 +818,147 @@ struct JournalFileResolverTests {
         // Should not crash and should not return the nonexistent path
         #expect(result?.path != "/nonexistent/shell-detected.journal")
     }
+
+    // MARK: - Issue #98 additional coverage
+
+    /// Build a unique temp directory and clean it up at deinit time.
+    private static func makeTempDir() throws -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JournalResolverTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    @Test func directoryWithMainJournalReturnsIt() throws {
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let mainJournal = dir.appendingPathComponent("main.journal")
+        try "".write(to: mainJournal, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == mainJournal)
+    }
+
+    @Test func directoryKnownNamesPriority() throws {
+        // When both main.journal and all.journal exist, main.journal wins
+        // (it is first in knownJournalNames).
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let mainJournal = dir.appendingPathComponent("main.journal")
+        let allJournal = dir.appendingPathComponent("all.journal")
+        try "".write(to: mainJournal, atomically: true, encoding: .utf8)
+        try "".write(to: allJournal, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == mainJournal)
+    }
+
+    @Test func directoryFallsBackToFirstSortedJournalFile() throws {
+        // No known names → fall back to first .journal alphabetically
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let zJournal = dir.appendingPathComponent("z-budget.journal")
+        let aJournal = dir.appendingPathComponent("a-personal.journal")
+        try "".write(to: zJournal, atomically: true, encoding: .utf8)
+        try "".write(to: aJournal, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == aJournal)
+    }
+
+    @Test func directorySupportsHledgerAndJExtensions() throws {
+        // .hledger and .j are also supported journal extensions
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let hledgerFile = dir.appendingPathComponent("budget.hledger")
+        try "".write(to: hledgerFile, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == hledgerFile)
+    }
+
+    @Test func emptyDirectoryReturnsNil() throws {
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // No journal files inside
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == nil)
+    }
+
+    @Test func directoryWithNonJournalFilesReturnsNil() throws {
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        // Files with non-journal extensions must not match
+        try "data".write(to: dir.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)
+        try "data".write(to: dir.appendingPathComponent("data.csv"), atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(configuredPath: dir.path)
+        #expect(result == nil)
+    }
+
+    @Test func tildePathIsExpanded() throws {
+        // Use $HOME to construct a tilde-equivalent path that we know exists.
+        // ~/.hledger.journal probably doesn't exist, so we use a temp file
+        // and reference it via the literal home dir as a proxy.
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let testFile = home.appendingPathComponent(".tilde-resolver-test-\(UUID().uuidString).journal")
+        try "".write(to: testFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: testFile) }
+
+        // Pass a path with tilde — must be expanded to the same file
+        let tildePath = "~/" + testFile.lastPathComponent
+        let result = JournalFileResolver.resolve(configuredPath: tildePath)
+        #expect(result?.path == testFile.path)
+    }
+
+    @Test func emptyConfiguredPathFallsThrough() throws {
+        // Empty configured path must NOT match anything by itself; the
+        // resolver falls through to LEDGER_FILE / shellDetected / default.
+        // We pass a valid shellDetected to verify fallthrough.
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let shellJournal = dir.appendingPathComponent("shell.journal")
+        try "".write(to: shellJournal, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(
+            configuredPath: "",
+            shellDetectedPath: shellJournal.path
+        )
+        #expect(result == shellJournal)
+    }
+
+    @Test func configuredFileMissingFallsThroughToShellDetected() throws {
+        // First option (configured path) doesn't exist → resolver tries the
+        // next option in the chain instead of returning nil.
+        let dir = try Self.makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let shellJournal = dir.appendingPathComponent("shell.journal")
+        try "".write(to: shellJournal, atomically: true, encoding: .utf8)
+
+        let result = JournalFileResolver.resolve(
+            configuredPath: "/nonexistent/configured.journal",
+            shellDetectedPath: shellJournal.path
+        )
+        #expect(result == shellJournal)
+    }
+
+    @Test func defaultPathReturnsTildeStringWhenNoFileExists() {
+        // If LEDGER_FILE is unset and ~/.hledger.journal does not exist,
+        // defaultPath() returns the literal "~/.hledger.journal" placeholder.
+        // We can only assert non-empty since the test machine may have one.
+        let path = JournalFileResolver.defaultPath()
+        #expect(!path.isEmpty)
+        // Either a real path or the placeholder
+        #expect(path.hasPrefix("/") || path.hasPrefix("~/"))
+    }
 }
 
 // MARK: - BinaryDetector Shell Detection Tests
