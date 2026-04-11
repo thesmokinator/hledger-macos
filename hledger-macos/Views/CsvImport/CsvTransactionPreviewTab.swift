@@ -134,10 +134,12 @@ struct CsvTransactionPreviewTab: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                .frame(width: 160, alignment: .leading)
+                .truncationMode(.head)
+                .frame(width: 180, alignment: .trailing)
 
             Text(txn.amount)
                 .font(.system(.callout, design: .monospaced))
+                .frame(width: 110, alignment: .trailing)
         }
         .padding(.vertical, ListMetrics.rowPadding)
     }
