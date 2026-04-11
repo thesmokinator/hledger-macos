@@ -16,32 +16,11 @@ struct TransactionsView: View {
     var body: some View {
         @Bindable var state = appState
         VStack(spacing: 0) {
-            // Period navigator
-            HStack {
-                Button(action: { appState.previousMonth() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title3)
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(.leftArrow, modifiers: [])
-
-                Spacer()
-
-                Text(appState.periodLabel)
-                    .font(.title2.bold())
-
-                Spacer()
-
-                Button(action: { appState.nextMonth() }) {
-                    Image(systemName: "chevron.right")
-                        .font(.title3)
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(.rightArrow, modifiers: [])
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 16)
+            PeriodNavigator(
+                label: appState.periodLabel,
+                onPrevious: { appState.previousMonth() },
+                onNext: { appState.nextMonth() }
+            )
 
             // Income / Expenses cards (always visible)
             HStack(spacing: 16) {

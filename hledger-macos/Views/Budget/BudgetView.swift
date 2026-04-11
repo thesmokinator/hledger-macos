@@ -34,27 +34,11 @@ struct BudgetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Period navigator
-            HStack {
-                Button(action: { previousMonth() }) {
-                    Image(systemName: "chevron.left").font(.title3)
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(.leftArrow, modifiers: [])
-
-                Spacer()
-                Text(periodLabel).font(.title2.bold())
-                Spacer()
-
-                Button(action: { nextMonth() }) {
-                    Image(systemName: "chevron.right").font(.title3)
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(.rightArrow, modifiers: [])
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 16)
+            PeriodNavigator(
+                label: periodLabel,
+                onPrevious: { previousMonth() },
+                onNext: { nextMonth() }
+            )
 
             Divider()
 
