@@ -159,7 +159,7 @@ struct ReportsView: View {
                                 .foregroundStyle(.tertiary)
                         }
                         .buttonStyle(.plain)
-                        .padding(.trailing, 6)
+                        .padding(.trailing, Theme.Spacing.xsPlus)
                     }
 
                     ReportRowView(

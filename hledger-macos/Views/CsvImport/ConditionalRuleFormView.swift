@@ -28,8 +28,8 @@ struct ConditionalRuleFormView: View {
                             .foregroundStyle(Color.accentColor)
                         Spacer()
                     }
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
+                    .padding(.top, Theme.Spacing.xl)
+                    .padding(.bottom, Theme.Spacing.xl)
 
                     VStack(spacing: 14) {
                         FormRow("Pattern:", labelWidth: 80) {
@@ -50,7 +50,7 @@ struct ConditionalRuleFormView: View {
                                 .textFieldStyle(.roundedBorder)
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.Spacing.xxl)
                 }
             }
 
@@ -74,8 +74,8 @@ struct ConditionalRuleFormView: View {
                     .keyboardShortcut(.defaultAction)
                     .disabled(pattern.isEmpty || account.isEmpty)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 440, height: 280)
         .onAppear { prefill() }

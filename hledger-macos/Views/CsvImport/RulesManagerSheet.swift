@@ -26,9 +26,9 @@ struct RulesManagerSheet: View {
                     .font(.title2.bold())
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.top, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.md)
 
             Divider()
 
@@ -49,7 +49,7 @@ struct RulesManagerSheet: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Theme.Spacing.xl)
             } else {
                 List(selection: $selectedRule) {
                     ForEach(rulesFiles) { info in
@@ -113,8 +113,8 @@ struct RulesManagerSheet: View {
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.cancelAction)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 560, height: 420)
         .task { await loadData() }
@@ -207,9 +207,9 @@ private struct RulesEditorSheet: View {
                     .font(.headline)
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.top, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.sm)
 
             CsvRulesEditorView(
                 config: $config,
@@ -233,8 +233,8 @@ private struct RulesEditorSheet: View {
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 640, height: 580)
     }

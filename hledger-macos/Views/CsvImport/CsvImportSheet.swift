@@ -85,9 +85,9 @@ struct CsvImportSheet: View {
                     .font(.callout)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.top, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.sm)
 
             if csvContent.isEmpty {
                 noFileView
@@ -157,8 +157,8 @@ struct CsvImportSheet: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(!isReadyToImport)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 760, height: 660)
         .task { await loadAutocompleteData() }

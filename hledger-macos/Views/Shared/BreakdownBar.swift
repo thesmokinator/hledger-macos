@@ -62,7 +62,7 @@ struct BreakdownRow: View {
                     .popover(isPresented: $showingMultiCurrencyInfo) {
                         Text("This account has balances in multiple currencies. Only the default currency is shown here. See Accounts for full details.")
                             .font(.callout)
-                            .padding(12)
+                            .padding(Theme.Spacing.md)
                             .frame(width: 280)
                     }
             }

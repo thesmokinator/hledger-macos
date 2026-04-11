@@ -21,7 +21,7 @@ struct AccountRow: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
-                .padding(.trailing, 6)
+                .padding(.trailing, Theme.Spacing.xsPlus)
             }
             Text(label)
                 .font(labelBold ? labelFont.bold() : labelFont)

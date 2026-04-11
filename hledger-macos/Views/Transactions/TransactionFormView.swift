@@ -60,8 +60,8 @@ struct TransactionFormView: View {
                             .foregroundStyle(Color.accentColor)
                         Spacer()
                     }
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
+                    .padding(.top, Theme.Spacing.xl)
+                    .padding(.bottom, Theme.Spacing.xl)
 
                     // Fields
                     VStack(spacing: 14) {
@@ -102,11 +102,11 @@ struct TransactionFormView: View {
                                 .focused($focusedField, equals: .comment)
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.Spacing.xxl)
 
                     // Postings
                     VStack(alignment: .leading, spacing: 8) {
-                        Divider().padding(.vertical, 12)
+                        Divider().padding(.vertical, Theme.Spacing.md)
 
                         Text("Postings")
                             .font(.subheadline.bold())
@@ -114,12 +114,12 @@ struct TransactionFormView: View {
                         Text("Amount: plain number (50.00), currency prefix (\(appState.config.defaultCommodity)50.00), or commodity with cost (-5 STCK @@ \(appState.config.defaultCommodity)200.00). Leave one amount blank to auto-balance.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .padding(.bottom, 4)
+                            .padding(.bottom, Theme.Spacing.xs)
 
                         Text("Default commodity: \(appState.config.defaultCommodity)")
                             .font(.caption.italic())
                             .foregroundStyle(.tertiary)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, Theme.Spacing.sm)
 
                         ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
                             PostingRowField(
@@ -139,10 +139,10 @@ struct TransactionFormView: View {
                             Label("Add Posting", systemImage: "plus")
                         }
                         .controlSize(.small)
-                        .padding(.top, 4)
+                        .padding(.top, Theme.Spacing.xs)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, Theme.Spacing.xxl)
+                    .padding(.bottom, Theme.Spacing.lg)
                 }
             }
 
@@ -167,8 +167,8 @@ struct TransactionFormView: View {
                     .keyboardShortcut(.defaultAction)
                     .disabled(isSaving || !isDateValid)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 560, height: 580)
         .task { await loadAutocompleteData() }

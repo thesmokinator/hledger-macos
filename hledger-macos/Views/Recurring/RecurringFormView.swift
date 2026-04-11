@@ -37,8 +37,8 @@ struct RecurringFormView: View {
                             .foregroundStyle(Color.accentColor)
                         Spacer()
                     }
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
+                    .padding(.top, Theme.Spacing.xl)
+                    .padding(.bottom, Theme.Spacing.xl)
 
                     // Fields
                     VStack(spacing: 14) {
@@ -68,11 +68,11 @@ struct RecurringFormView: View {
                             DateInputField(year: $endYear, month: $endMonth, day: $endDay, optional: true)
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.Spacing.xxl)
 
                     // Postings
                     VStack(alignment: .leading, spacing: 8) {
-                        Divider().padding(.vertical, 12)
+                        Divider().padding(.vertical, Theme.Spacing.md)
 
                         Text("Postings")
                             .font(.subheadline.bold())
@@ -80,7 +80,7 @@ struct RecurringFormView: View {
                         Text("Leave one amount blank for auto-balance.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, Theme.Spacing.sm)
 
                         ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
                             PostingRowField(
@@ -100,10 +100,10 @@ struct RecurringFormView: View {
                             Label("Add Posting", systemImage: "plus")
                         }
                         .controlSize(.small)
-                        .padding(.top, 4)
+                        .padding(.top, Theme.Spacing.xs)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, Theme.Spacing.xxl)
+                    .padding(.bottom, Theme.Spacing.lg)
                 }
             }
 
@@ -128,8 +128,8 @@ struct RecurringFormView: View {
                     .keyboardShortcut(.defaultAction)
                     .disabled(description.isEmpty || startYear.isEmpty)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 560, height: 520)
         .onAppear { prefill() }
