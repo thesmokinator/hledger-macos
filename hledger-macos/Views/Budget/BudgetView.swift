@@ -142,7 +142,7 @@ struct BudgetView: View {
         isLoading = true
 
         let budgetPath = BudgetManager.budgetPath(for: backend.journalFile)
-        rules = BudgetManager.parseRules(budgetPath: budgetPath, commodityStyles: appState.commodityStyles)
+        rules = BudgetManager.parseRules(budgetPath: budgetPath)
 
         do {
             actuals = try await backend.loadBudgetReport(period: currentPeriod)
@@ -214,15 +214,13 @@ struct BudgetView: View {
                     oldAccount: editing.account,
                     newRule: newRule,
                     journalFile: backend.journalFile,
-                    validator: backend,
-                    commodityStyles: appState.commodityStyles
+                    validator: backend
                 )
             } else {
                 try await BudgetManager.addRule(
                     newRule,
                     journalFile: backend.journalFile,
-                    validator: backend,
-                    commodityStyles: appState.commodityStyles
+                    validator: backend
                 )
             }
             await loadData()
@@ -237,8 +235,7 @@ struct BudgetView: View {
             try await BudgetManager.deleteRule(
                 account: rule.account,
                 journalFile: backend.journalFile,
-                validator: backend,
-                commodityStyles: appState.commodityStyles
+                validator: backend
             )
             await loadData()
         } catch {

@@ -143,19 +143,28 @@ enum PostingAmountParser {
 
     // MARK: - Helpers
 
-    /// Build an `AmountStyle` for a parsed commodity, deriving side, spacing and
-    /// precision from the raw input string.
+    /// Build an `AmountStyle` for a parsed commodity, deriving every field from
+    /// the raw input string so the user-typed shape round-trips intact even
+    /// without a `styleResolver`.
     ///
     /// - Single-character commodities (e.g. `€`, `$`) are placed on the left with no space.
     /// - Multi-character commodities (e.g. `EUR`, `SWDA`) are placed on the right with a space.
-    /// - `decimalMark` is always `.` (the hledger default). Callers MUST pass a
-    ///   `styleResolver` (via `applyJournalStyle`) so European-format commodities
-    ///   round-trip correctly — see #129.
+    /// - `decimalMark` and `digitGroupSeparator` come from `detectFormat(in:)`,
+    ///   so `1,00 €` produces `decimalMark = ","` even with no resolver and
+    ///   `1.000,00` also gets `digitGroupSeparator = "."`. Callers can still
+    ///   pass a `styleResolver` (via `applyJournalStyle`) to OVERRIDE the
+    ///   input-derived values with the journal-declared style — that is the
+    ///   safety net when the user types in the "wrong" format and we want to
+    ///   normalise on save.
     private static func styleFor(commodity: String, rawInput: String) -> AmountStyle {
         let isSymbol = commodity.count == 1
+        let format = detectFormat(in: rawInput)
         return AmountStyle(
             commoditySide: isSymbol ? .left : .right,
             commoditySpaced: !isSymbol,
+            decimalMark: format.decimalMark,
+            digitGroupSeparator: format.digitGroupSeparator,
+            digitGroupSizes: format.digitGroupSeparator != nil ? [3] : [],
             precision: decimalPlaces(in: rawInput)
         )
     }
@@ -181,37 +190,72 @@ enum PostingAmountParser {
 
     /// Return the number of decimal places in a raw number string.
     ///
-    /// Handles both US (`1,000.00`) and European (`1.000,00`) formats using the
-    /// same heuristic as `AmountParser.parseNumber`:
-    /// - If both `.` and `,` are present, the last one is the decimal mark.
-    /// - If only `,` is present, it's treated as decimal when ≤2 digits follow,
-    ///   otherwise as a thousands separator.
-    /// - If only `.` is present, it's always the decimal mark.
+    /// Strips both leading and trailing non-numeric characters before
+    /// counting, so inputs like `1,00 €` or `-1.234,56 EUR` work the same
+    /// as `€1,00` and `-€1.234,56`. Without the trailing strip, `1,00 €`
+    /// would return 0 because `"00 €"` is not all-numeric — that was the
+    /// root cause of the precision-lost variant of #129.
     static func decimalPlaces(in s: String) -> Int {
-        // Strip leading minus and any non-numeric prefix (e.g. currency symbol)
-        let core = s.drop(while: { !$0.isNumber && $0 != "." && $0 != "," })
+        let core = stripNonNumericEdges(s)
         guard !core.isEmpty else { return 0 }
 
+        let format = detectFormat(in: s)
+        guard let lastMark = core.lastIndex(of: Character(format.decimalMark)) else { return 0 }
+        // Count only digits after the decimal mark — any trailing non-digits
+        // are already stripped by stripNonNumericEdges, but be defensive.
+        return core[core.index(after: lastMark)...].filter(\.isNumber).count
+    }
+
+    /// Detect the decimal mark and (optional) digit-group separator from a raw
+    /// number string, looking only at the leading/trailing-stripped numeric core.
+    ///
+    /// - Both `.` and `,` present: the **last** one is the decimal mark, the
+    ///   other is the digit-group separator (`1.000,00` → European,
+    ///   `1,000.00` → US).
+    /// - Only `,` present: it is the decimal mark when ≤2 digits follow it
+    ///   (`50,00`), otherwise it is interpreted as a thousands separator
+    ///   (`1,000` → 1000 with `","` digit group, no fractional part).
+    /// - Only `.` present, or neither: `.` is the decimal mark, no group
+    ///   separator.
+    static func detectFormat(in s: String) -> (decimalMark: String, digitGroupSeparator: String?) {
+        let core = stripNonNumericEdges(s)
         let hasDot = core.contains(".")
         let hasComma = core.contains(",")
-        guard hasDot || hasComma else { return 0 }
 
-        let decimalMark: Character
         if hasDot && hasComma {
             let lastDot = core.lastIndex(of: ".")!
             let lastComma = core.lastIndex(of: ",")!
-            decimalMark = lastComma > lastDot ? "," : "."
-        } else if hasComma {
-            let lastComma = core.lastIndex(of: ",")!
-            let afterComma = core[core.index(after: lastComma)...]
-            // ≤2 digits after comma → decimal; otherwise thousands separator
-            guard afterComma.count <= 2 && afterComma.allSatisfy(\.isNumber) else { return 0 }
-            decimalMark = ","
-        } else {
-            decimalMark = "."
+            if lastComma > lastDot {
+                return (decimalMark: ",", digitGroupSeparator: ".")
+            } else {
+                return (decimalMark: ".", digitGroupSeparator: ",")
+            }
         }
 
-        guard let lastMark = core.lastIndex(of: decimalMark) else { return 0 }
-        return core.distance(from: core.index(after: lastMark), to: core.endIndex)
+        if hasComma {
+            let lastComma = core.lastIndex(of: ",")!
+            let afterComma = core[core.index(after: lastComma)...]
+            if afterComma.count <= 2 && afterComma.allSatisfy(\.isNumber) {
+                return (decimalMark: ",", digitGroupSeparator: nil)
+            } else {
+                return (decimalMark: ".", digitGroupSeparator: ",")
+            }
+        }
+
+        return (decimalMark: ".", digitGroupSeparator: nil)
+    }
+
+    /// Strip non-numeric characters from BOTH ends of a literal amount string,
+    /// leaving only the contiguous numeric core (digits, `.`, `,` and any
+    /// embedded `-` for the sign which is treated as numeric here too).
+    private static func stripNonNumericEdges(_ s: String) -> Substring {
+        var core = Substring(s)
+        while let first = core.first, !first.isNumber && first != "." && first != "," {
+            core = core.dropFirst()
+        }
+        while let last = core.last, !last.isNumber && last != "." && last != "," {
+            core = core.dropLast()
+        }
+        return core
     }
 }

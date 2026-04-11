@@ -307,24 +307,26 @@ struct PostingAmountParserTests {
         #expect(PostingAmountParser.parseCostAnnotated("-1 SWDA @@ garbage") == nil)
     }
 
-    // MARK: - Roundtrip: parse → format → hledger-compatible output
+    // MARK: - Roundtrip: parse → format preserves the user-typed format
 
-    /// Critical test: European input must produce hledger-compatible output.
-    /// User types `-1 SWDA @@ 112,93` (Italian) → journal must contain `112.93`.
-    @Test func roundtripEuropeanInputProducesDotOutput() {
+    /// European input must round-trip preserving its `,` decimal mark.
+    /// Previously the parser flattened everything to `.` ("hledger-compatible
+    /// US format"), which seemed safer until #129 — that flattening is exactly
+    /// what made `commodity € 1.000,00` journals re-parse `€1.00` as 100×.
+    /// The new contract: the format the user typed is the format we save.
+    @Test func roundtripEuropeanInputPreservesCommaDecimal() {
         let amount = PostingAmountParser.parse("-1 SWDA @@ 112,93", defaultCommodity: "€")!
         let formatted = amount.formatted()
-        // Must contain the dot-normalized cost, no comma
-        #expect(formatted.contains("112.93"))
-        #expect(!formatted.contains("112,93"))
+        #expect(formatted.contains("112,93"))
+        #expect(!formatted.contains("112.93"))
         #expect(formatted.contains("@@"))
     }
 
-    @Test func roundtripSimpleEuropeanInputProducesDotOutput() {
+    @Test func roundtripSimpleEuropeanInputPreservesCommaDecimal() {
         let amount = PostingAmountParser.parse("€50,00")!
         let formatted = amount.formatted()
-        #expect(formatted.contains("50.00"))
-        #expect(!formatted.contains("50,00"))
+        #expect(formatted.contains("50,00"))
+        #expect(!formatted.contains("50.00"))
     }
 
     @Test func roundtripCostAnnotatedFormatIncludesCostMarker() {
@@ -405,6 +407,123 @@ struct PostingAmountParserTests {
         #expect(PostingAmountParser.decimalPlaces(in: "-112,93") == 2)
     }
 
+    /// #129 follow-up: amounts with a TRAILING commodity were returning
+    /// precision 0 because the post-comma slice contained the commodity
+    /// characters and `allSatisfy(\.isNumber)` short-circuited to false.
+    /// `decimalPlaces` now strips trailing non-numerics like it already
+    /// stripped leading ones.
+    @Test func decimalPlacesWithTrailingCurrencySymbol() {
+        #expect(PostingAmountParser.decimalPlaces(in: "1,00 €") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "1,00€") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "1.000,00 €") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "-1,00 €") == 2)
+    }
+
+    @Test func decimalPlacesWithTrailingMultiCharCommodity() {
+        #expect(PostingAmountParser.decimalPlaces(in: "1,00 EUR") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "50.00 USD") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "1.234,56 EUR") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "1,234.56 USD") == 2)
+        #expect(PostingAmountParser.decimalPlaces(in: "-1,00 EUR") == 2)
+    }
+
+    // MARK: - detectFormat helper (#129 part 2)
+
+    @Test func detectFormatPlainInteger() {
+        let f = PostingAmountParser.detectFormat(in: "50")
+        #expect(f.decimalMark == ".")
+        #expect(f.digitGroupSeparator == nil)
+    }
+
+    @Test func detectFormatDotDecimal() {
+        let f = PostingAmountParser.detectFormat(in: "50.00")
+        #expect(f.decimalMark == ".")
+        #expect(f.digitGroupSeparator == nil)
+    }
+
+    @Test func detectFormatCommaDecimal() {
+        let f = PostingAmountParser.detectFormat(in: "50,00")
+        #expect(f.decimalMark == ",")
+        #expect(f.digitGroupSeparator == nil)
+    }
+
+    @Test func detectFormatEuropeanThousands() {
+        let f = PostingAmountParser.detectFormat(in: "1.000,50")
+        #expect(f.decimalMark == ",")
+        #expect(f.digitGroupSeparator == ".")
+    }
+
+    @Test func detectFormatUSThousands() {
+        let f = PostingAmountParser.detectFormat(in: "1,000.50")
+        #expect(f.decimalMark == ".")
+        #expect(f.digitGroupSeparator == ",")
+    }
+
+    @Test func detectFormatCommaAsThousandsOnly() {
+        // "1,000" → 3 digits after comma → comma is thousands, dot is decimal
+        let f = PostingAmountParser.detectFormat(in: "1,000")
+        #expect(f.decimalMark == ".")
+        #expect(f.digitGroupSeparator == ",")
+    }
+
+    @Test func detectFormatStripsLeadingAndTrailingNonNumerics() {
+        // Leading currency
+        let leading = PostingAmountParser.detectFormat(in: "€1,00")
+        #expect(leading.decimalMark == ",")
+
+        // Trailing currency
+        let trailing = PostingAmountParser.detectFormat(in: "1,00 €")
+        #expect(trailing.decimalMark == ",")
+
+        // Leading negative + trailing commodity
+        let both = PostingAmountParser.detectFormat(in: "-1.000,50 EUR")
+        #expect(both.decimalMark == ",")
+        #expect(both.digitGroupSeparator == ".")
+    }
+
+    // MARK: - parseSimple now derives full style from input (#129 part 2)
+
+    /// Without a styleResolver, parseSimple must still produce an Amount whose
+    /// style matches the literal — `decimalMark`, `digitGroupSeparator`, and
+    /// `precision` all derived from input. This is what makes the
+    /// Recurring/Budget round-trip work without the old commodityStyles
+    /// tappabuchi in their parseRules helpers.
+    @Test func parseSimpleDerivesEuropeanStyleFromInputWithoutResolver() {
+        let amount = PostingAmountParser.parseSimple("€1,00")!
+        #expect(amount.quantity == Decimal(1))
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.style.precision == 2)
+        #expect(amount.formatted() == "€1,00")
+    }
+
+    @Test func parseSimpleDerivesEuropeanThousandsFromInputWithoutResolver() {
+        let amount = PostingAmountParser.parseSimple("€1.000,00")!
+        #expect(amount.quantity == Decimal(1000))
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.style.digitGroupSeparator == ".")
+        #expect(amount.style.digitGroupSizes == [3])
+        #expect(amount.formatted() == "€1.000,00")
+    }
+
+    @Test func parseSimpleDerivesUSStyleFromInputWithoutResolver() {
+        let amount = PostingAmountParser.parseSimple("$1,000.50")!
+        #expect(amount.quantity == Decimal(string: "1000.50"))
+        #expect(amount.style.decimalMark == ".")
+        #expect(amount.style.digitGroupSeparator == ",")
+        #expect(amount.formatted() == "$1,000.50")
+    }
+
+    @Test func parseSimpleDerivesEuropeanStyleFromTrailingCommodityInput() {
+        // The exact input that triggered the user-reported precision-0 bug
+        // discussed during #129 testing.
+        let amount = PostingAmountParser.parseSimple("1,00 €", defaultCommodity: "€")!
+        #expect(amount.quantity == Decimal(1))
+        #expect(amount.commodity == "€")
+        #expect(amount.style.precision == 2)
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.formatted() == "€1,00")
+    }
+
     // MARK: - Issue #95 gaps: literal #83 regression and edge cases
 
     /// Literal regression test for the exact string in issue #83:
@@ -417,10 +536,10 @@ struct PostingAmountParserTests {
         #expect(amount?.commodity == "XDWD")
         #expect(amount?.cost?.quantity == Decimal(string: "742.55"))
         #expect(amount?.cost?.commodity == "€")
-        // Formatted output must use `.` (hledger-compatible), never `,`
+        // Format must preserve the user-typed `,` decimal mark — see #129.
         let formatted = amount!.formatted()
-        #expect(formatted.contains("742.55"))
-        #expect(!formatted.contains("742,55"))
+        #expect(formatted.contains("742,55"))
+        #expect(!formatted.contains("742.55"))
     }
 
     @Test func parseTotalCostExtraWhitespaceAroundOperator() {
@@ -1910,7 +2029,11 @@ struct CommodityStyleTests {
 
     // -- RecurringManager parse with styles --
 
-    @Test func recurringParseWithEuropeanStyles() throws {
+    @Test func recurringParseDerivesEuropeanStyleFromLiteral() throws {
+        // After #129, parseRules no longer takes a commodityStyles parameter:
+        // the loaded Amount inherits its style from the literal via
+        // PostingAmountParser.parseSimple, which derives decimalMark and
+        // digitGroupSeparator from the input string itself.
         let content = """
         ~ monthly from 2026-01-01  ; rule-id:test1 Test rule
             expenses:food                                    €500,00
@@ -1923,19 +2046,16 @@ struct CommodityStyleTests {
         try content.write(to: tmpFile, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: tmpDir) }
 
-        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
-        let rules = RecurringManager.parseRules(recurringPath: tmpFile, commodityStyles: styles)
+        let rules = RecurringManager.parseRules(recurringPath: tmpFile)
 
         #expect(rules.count == 1)
         let amount = rules[0].postings[0].amounts[0]
         #expect(amount.style.decimalMark == ",")
-        #expect(amount.style.digitGroupSeparator == ".")
-        // Verify formatted output uses European style
-        let formatted = amount.formatted()
-        #expect(formatted == "€500,00")
+        // Verify the literal round-trips
+        #expect(amount.formatted() == "€500,00")
     }
 
-    @Test func budgetParseWithEuropeanStyles() throws {
+    @Test func budgetParseDerivesEuropeanStyleFromLiteral() throws {
         let content = """
         ~ monthly
             expenses:groceries                               €500,00
@@ -1948,14 +2068,12 @@ struct CommodityStyleTests {
         try content.write(to: tmpFile, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: tmpDir) }
 
-        let styles: [String: AmountStyle] = ["€": CommodityStyleTests.europeanStyle]
-        let rules = BudgetManager.parseRules(budgetPath: tmpFile, commodityStyles: styles)
+        let rules = BudgetManager.parseRules(budgetPath: tmpFile)
 
         #expect(rules.count == 1)
         let amount = rules[0].amount
         #expect(amount.style.decimalMark == ",")
-        let formatted = amount.formatted()
-        #expect(formatted == "€500,00")
+        #expect(amount.formatted() == "€500,00")
     }
 
     // -- Helper: replicate AppState.extractCommodityStyles() logic for testing --
