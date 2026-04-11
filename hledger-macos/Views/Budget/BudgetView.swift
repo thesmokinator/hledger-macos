@@ -124,14 +124,12 @@ struct BudgetView: View {
             }
             .environment(appState)
         }
-        .alert("Delete Budget Rule?", isPresented: $showingDeleteConfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { Task { await performDelete() } }
-        } message: {
-            if let rule = ruleToDelete {
-                Text("Remove budget for \(rule.account)?")
-            }
-        }
+        .confirmDeleteAlert(
+            isPresented: $showingDeleteConfirm,
+            itemName: "Budget Rule",
+            message: ruleToDelete.map { "Remove budget for \($0.account)?" } ?? "",
+            onConfirm: { Task { await performDelete() } }
+        )
     }
 
     // MARK: - Budget List

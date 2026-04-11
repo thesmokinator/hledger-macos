@@ -85,14 +85,12 @@ struct RecurringView: View {
             }
             .environment(appState)
         }
-        .alert("Delete Recurring Rule?", isPresented: $showingDeleteConfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { Task { await performDelete() } }
-        } message: {
-            if let rule = ruleToDelete {
-                Text("Remove recurring rule \"\(rule.description)\" (\(rule.periodExpr))?")
-            }
-        }
+        .confirmDeleteAlert(
+            isPresented: $showingDeleteConfirm,
+            itemName: "Recurring Rule",
+            message: ruleToDelete.map { "Remove recurring rule \"\($0.description)\" (\($0.periodExpr))?" } ?? "",
+            onConfirm: { Task { await performDelete() } }
+        )
         .alert("Generate Transactions?", isPresented: $showingGenerateConfirm) {
             Button("Cancel", role: .cancel) {}
             Button("Generate") { Task { await generateAll() } }

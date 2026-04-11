@@ -203,14 +203,12 @@ struct TransactionsView: View {
             CsvImportSheet()
                 .environment(appState)
         }
-        .alert("Delete Transaction?", isPresented: $showingDeleteConfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { Task { await performDelete() } }
-        } message: {
-            if let txn = transactionToDelete {
-                Text("\(txn.date) \(txn.status.symbol) \(txn.description)\n\(txn.postings.map(\.account).joined(separator: "\n"))")
-            }
-        }
+        .confirmDeleteAlert(
+            isPresented: $showingDeleteConfirm,
+            itemName: "Transaction",
+            message: transactionToDelete.map { "\($0.date) \($0.status.symbol) \($0.description)\n\($0.postings.map(\.account).joined(separator: "\n"))" } ?? "",
+            onConfirm: { Task { await performDelete() } }
+        )
     }
 
     // MARK: - Data Loading
