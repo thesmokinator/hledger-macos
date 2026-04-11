@@ -532,6 +532,242 @@ struct TransactionFormatterTests {
         let result = TransactionFormatter.format(txn)
         #expect(result.contains("; my note"))
     }
+
+    // MARK: - Issue #99: alignment and round-trip safety
+    //
+    // These tests verify the correctness of column alignment and field
+    // preservation. Bugs here corrupt user data on transaction edit, so
+    // we assert exact strings rather than just substrings.
+
+    @Test func unmarkedStatusOmitsMarker() {
+        let txn = Transaction(index: 0, date: "2026-01-01", description: "Test", status: .unmarked)
+        let result = TransactionFormatter.format(txn)
+        // Header must NOT contain a status marker
+        let header = result.split(separator: "\n").first.map(String.init) ?? ""
+        #expect(header == "2026-01-01 Test")
+    }
+
+    @Test func basicAlignmentTwoPostings() {
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Lunch",
+            postings: [
+                Posting(account: "expenses:food", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "12.50")!)
+                ]),
+                Posting(account: "assets:bank")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        let lines = result.split(separator: "\n").map(String.init)
+        #expect(lines.count == 3)
+        // Postings start with 4-space indent
+        #expect(lines[1].hasPrefix("    expenses:food"))
+        #expect(lines[2].hasPrefix("    assets:bank"))
+    }
+
+    @Test func varyingAccountLengthsProduceAlignedAmountColumn() {
+        // Two postings with different-length accounts must produce amounts
+        // aligned to the same column. Default minimum account width is 40.
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(account: "expenses:short", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "10.00")!)
+                ]),
+                Posting(account: "expenses:much:longer:account:name", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "20.00")!)
+                ]),
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        let lines = result.split(separator: "\n").map(String.init)
+        // Find the position of the amount on each posting line — must be equal
+        let euroPos1 = lines[1].range(of: "€")?.lowerBound
+        let euroPos2 = lines[2].range(of: "€")?.lowerBound
+        #expect(euroPos1 != nil && euroPos2 != nil)
+        let dist1 = lines[1].distance(from: lines[1].startIndex, to: euroPos1!)
+        let dist2 = lines[2].distance(from: lines[2].startIndex, to: euroPos2!)
+        #expect(dist1 == dist2)
+    }
+
+    @Test func varyingAmountLengthsRightAligned() {
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(account: "expenses:a", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "5.00")!)
+                ]),
+                Posting(account: "expenses:b", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "12345.67")!)
+                ]),
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        let lines = result.split(separator: "\n").map(String.init)
+        // Both amount lines must end at the same column (right-aligned)
+        #expect(lines[1].count == lines[2].count)
+        // The shorter amount line should have leading spaces before €
+        let euroIdx = lines[1].range(of: "€")!.lowerBound
+        let beforeEuro = lines[1][..<euroIdx]
+        // After the account "expenses:a" + 2-space gap there must be padding
+        #expect(beforeEuro.contains("  "))
+    }
+
+    @Test func postingWithoutAmountIsBareAccount() {
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(account: "assets:bank", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "100.00")!)
+                ]),
+                Posting(account: "expenses:food")  // no amount → balanced posting
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        let lines = result.split(separator: "\n").map(String.init)
+        // The bare-account posting line must not contain digits or commodities
+        #expect(lines[2] == "    expenses:food")
+    }
+
+    @Test func balanceAssertionPreserved() {
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Reconcile",
+            postings: [
+                Posting(
+                    account: "assets:bank",
+                    amounts: [Amount(commodity: "€", quantity: Decimal(string: "50.00")!)],
+                    balanceAssertion: "= €1000.00"
+                ),
+                Posting(account: "income:salary")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        #expect(result.contains("= €1000.00"))
+    }
+
+    @Test func postingCommentPreserved() {
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(
+                    account: "expenses:food",
+                    amounts: [Amount(commodity: "€", quantity: Decimal(string: "10.00")!)],
+                    comment: "lunch detail"
+                ),
+                Posting(account: "assets:bank")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        #expect(result.contains("; lunch detail"))
+    }
+
+    @Test func costAnnotationInFormattedOutput() {
+        let cost = CostAmount(commodity: "€", quantity: Decimal(string: "742.55")!)
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Buy ETF",
+            postings: [
+                Posting(account: "assets:investments", amounts: [
+                    Amount(commodity: "XDWD", quantity: -5, cost: cost)
+                ]),
+                Posting(account: "assets:cash")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        // Cost is always emitted as @@ (total cost) by Amount.formatted()
+        #expect(result.contains("@@"))
+        #expect(result.contains("XDWD"))
+        // Cost commodity must be present after @@
+        #expect(result.contains("742.55"))
+    }
+
+    @Test func veryLongAccountNamePreserved() {
+        // Account longer than the 40-char minimum width: width must expand
+        // to fit the longest account, the 2-space gap before the amount
+        // must still be there, and the account name must not be truncated.
+        let longAccount = "expenses:taxes:state:california:property:residential:primary"
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(account: longAccount, amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "100.00")!)
+                ]),
+                Posting(account: "assets:bank")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        #expect(result.contains(longAccount))
+        // The amount must still appear and not be cut off
+        #expect(result.contains("€100.00"))
+    }
+
+    @Test func veryLongAmountPreserved() {
+        // Amount string longer than the 12-char minimum width
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Test",
+            postings: [
+                Posting(account: "assets:bank", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "1234567890.12")!)
+                ]),
+                Posting(account: "income:windfall")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        #expect(result.contains("€1234567890.12"))
+    }
+
+    @Test func headerWithStatusCodeAndComment() {
+        let txn = Transaction(
+            index: 0,
+            date: "2026-01-01",
+            description: "Test",
+            status: .cleared,
+            code: "INV-42",
+            comment: "header note"
+        )
+        let result = TransactionFormatter.format(txn)
+        let header = result.split(separator: "\n").first.map(String.init) ?? ""
+        // Order is: date, status marker, (code), description, then "  ; comment"
+        #expect(header.hasPrefix("2026-01-01 * (INV-42) Test"))
+        #expect(header.contains("; header note"))
+    }
+
+    @Test func multiplePostingsAllAlignedSameColumn() {
+        // 4 postings with mixed account lengths must all align to the same column
+        let txn = Transaction(
+            index: 0, date: "2026-01-01", description: "Split",
+            postings: [
+                Posting(account: "expenses:a", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "10.00")!)
+                ]),
+                Posting(account: "expenses:bb", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "20.00")!)
+                ]),
+                Posting(account: "expenses:ccc", amounts: [
+                    Amount(commodity: "€", quantity: Decimal(string: "30.00")!)
+                ]),
+                Posting(account: "assets:bank")
+            ],
+            status: .unmarked
+        )
+        let result = TransactionFormatter.format(txn)
+        let lines = result.split(separator: "\n").map(String.init)
+        // First three posting lines have amounts → € must be at the same column
+        let positions = lines[1...3].map { line -> Int in
+            let idx = line.range(of: "€")!.lowerBound
+            return line.distance(from: line.startIndex, to: idx)
+        }
+        #expect(positions[0] == positions[1])
+        #expect(positions[1] == positions[2])
+    }
 }
 
 // MARK: - JournalFileResolver Tests
