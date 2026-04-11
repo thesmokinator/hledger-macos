@@ -1,5 +1,7 @@
 # hledger for Mac
 
+[![Tests](https://github.com/thesmokinator/hledger-macos/actions/workflows/test.yml/badge.svg)](https://github.com/thesmokinator/hledger-macos/actions/workflows/test.yml)
+
 A native macOS app for [hledger](https://hledger.org) plain-text accounting. Manage transactions, budgets, recurring rules, view summaries, track investments, and generate financial reports — all from a native SwiftUI interface.
 
 Built with Swift and SwiftUI. Requires macOS 26+.
@@ -134,7 +136,3 @@ open hledger-macos.xcodeproj
 ```
 
 Build and run with Xcode (Cmd+R). Run tests with Cmd+U.
-
-## License
-
-MIT
