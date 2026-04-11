@@ -1,0 +1,58 @@
+; Test journal covering multi-commodity edge cases for hledger (US format).
+;
+; This is the US-style companion to ./multicommodity.journal:
+; - $ as base currency
+; - AAPL / SPY as named-commodity examples (US-style ETFs)
+; - Cost annotations in $ with US format
+
+; --- Account with single commodity (should work fine)
+2026-01-01 * Opening Bank
+    Assets:Bank                          $12,000.00
+    Equity:Opening
+
+; --- Account with non-currency commodity (AAPL, SPY)
+2026-01-15 * Buy AAPL
+    Assets:Investments:AAPL              25 AAPL @@ $4,287.50
+    Assets:Bank
+
+2026-01-16 * Buy SPY
+    Assets:Investments:SPY               10 SPY @@ $5,124.30
+    Assets:Bank
+
+; --- Account that accumulates MULTIPLE commodities (the problematic case)
+; This wallet receives both USD and EUR
+2026-02-01 * Freelance USD
+    Assets:Wallet                        $750.00
+    Income:Freelance
+
+2026-02-15 * Freelance EUR
+    Assets:Wallet                        €400.00
+    Income:Freelance
+
+; --- Expense in foreign currency
+2026-03-01 * Hotel in Paris
+    Expenses:Travel                      €320.00
+    Assets:Bank                          $-348.00
+
+; --- Expense with multiple currencies on same account over time
+2026-03-10 * Amazon UK
+    Expenses:Shopping                    £45.00
+    Assets:Bank                          $-57.00
+
+2026-03-15 * Amazon US
+    Expenses:Shopping                    $62.00
+    Assets:Bank
+
+; --- Income from multiple sources in different currencies
+2026-04-01 * Salary USD
+    Assets:Bank                          $4,200.00
+    Income:Salary
+
+2026-04-02 * Dividend EUR
+    Assets:Bank                          €150.00
+    Income:Dividends
+
+; --- Unit cost (per-share) annotation
+2026-04-15 * Sell AAPL with unit cost
+    Assets:Bank                          $1,820.00
+    Assets:Investments:AAPL              -10 AAPL @ $182.00

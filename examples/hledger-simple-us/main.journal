@@ -1,0 +1,315 @@
+; hledger for Mac — demo journal (single file, US format)
+; Point Settings > Journal File to this file or its parent directory.
+;
+; This is the US-style companion to ../hledger-simple/main.journal:
+; - $ commodity (left-side, no space)
+; - US number format: $1,234.56 (comma thousands, dot decimal)
+; - CapitalCase account names (Assets:Checking, Expenses:Groceries)
+
+account Assets:Checking
+account Assets:Savings
+account Expenses:Food:Groceries
+account Expenses:Food:Restaurant
+account Expenses:Housing:Rent
+account Expenses:Housing:Utilities
+account Expenses:Transport
+account Expenses:Subscriptions
+account Expenses:Shopping
+account Expenses:Health
+account Expenses:Entertainment
+account Income:Salary
+account Income:Freelance
+account Liabilities:CreditCard
+account Liabilities:CarLoan
+
+; === JANUARY 2026 ===
+
+2026-01-01 * Opening balances
+    Assets:Checking                   $5,200.00
+    Assets:Savings                    $14,500.00
+    Liabilities:CarLoan               $-9,200.00
+    Equity:OpeningBalances
+
+2026-01-02 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-01-03 * Rent
+    Expenses:Housing:Rent             $1,450.00
+    Assets:Checking
+
+2026-01-04 * Trader Joe's
+    Expenses:Food:Groceries           $87.42
+    Assets:Checking
+
+2026-01-07 * Comcast internet
+    Expenses:Housing:Utilities        $79.99
+    Assets:Checking
+
+2026-01-10 * Netflix
+    Expenses:Subscriptions            $15.49
+    Assets:Checking
+
+2026-01-11 * Whole Foods
+    Expenses:Food:Groceries           $112.30
+    Assets:Checking
+
+2026-01-14 * Chipotle
+    Expenses:Food:Restaurant          $14.75
+    Assets:Checking
+
+2026-01-15 * Freelance invoice
+    Assets:Checking                   $625.00
+    Income:Freelance
+
+2026-01-16 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-01-17 * Shell gas
+    Expenses:Transport                $48.20
+    Assets:Checking
+
+2026-01-18 * Costco
+    Expenses:Food:Groceries           $186.55
+    Assets:Checking
+
+2026-01-20 * Car loan payment
+    Liabilities:CarLoan               $385.00
+    Assets:Checking
+
+2026-01-22 * Planet Fitness
+    Expenses:Health                   $24.99
+    Assets:Checking
+
+2026-01-25 * Amazon order
+    Expenses:Shopping                 $42.18
+    Liabilities:CreditCard
+
+2026-01-27 * Credit card payment
+    Liabilities:CreditCard            $42.18
+    Assets:Checking
+
+2026-01-28 * Transfer to savings
+    Assets:Savings                    $400.00
+    Assets:Checking
+
+; === FEBRUARY 2026 ===
+
+2026-02-01 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-02-02 * Rent
+    Expenses:Housing:Rent             $1,450.00
+    Assets:Checking
+
+2026-02-04 * Trader Joe's
+    Expenses:Food:Groceries           $76.20
+    Assets:Checking
+
+2026-02-06 * AT&T phone bill
+    Expenses:Housing:Utilities        $65.00
+    Assets:Checking
+
+2026-02-10 * Netflix
+    Expenses:Subscriptions            $15.49
+    Assets:Checking
+
+2026-02-10 * Spotify
+    Expenses:Subscriptions            $11.99
+    Assets:Checking
+
+2026-02-12 * Whole Foods
+    Expenses:Food:Groceries           $94.65
+    Assets:Checking
+
+2026-02-13 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-02-14 * Valentine's dinner
+    Expenses:Food:Restaurant          $112.50
+    Liabilities:CreditCard
+
+2026-02-16 * Uber rides
+    Expenses:Transport                $38.40
+    Assets:Checking
+
+2026-02-18 * Trader Joe's
+    Expenses:Food:Groceries           $68.90
+    Assets:Checking
+
+2026-02-20 * Car loan payment
+    Liabilities:CarLoan               $385.00
+    Assets:Checking
+
+2026-02-22 * Planet Fitness
+    Expenses:Health                   $24.99
+    Assets:Checking
+
+2026-02-24 * Movie night
+    Expenses:Entertainment            $32.00
+    Assets:Checking
+
+2026-02-25 * Nike sneakers
+    Expenses:Shopping                 $145.00
+    Liabilities:CreditCard
+
+2026-02-27 * Credit card payment
+    Liabilities:CreditCard            $257.50
+    Assets:Checking
+
+2026-02-28 * Transfer to savings
+    Assets:Savings                    $350.00
+    Assets:Checking
+
+; === MARCH 2026 ===
+
+2026-03-01 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-03-02 * Rent
+    Expenses:Housing:Rent             $1,450.00
+    Assets:Checking
+
+2026-03-03 * Costco
+    Expenses:Food:Groceries           $204.18
+    Assets:Checking
+
+2026-03-05 * PG&E electric
+    Expenses:Housing:Utilities        $94.30
+    Assets:Checking
+
+2026-03-07 * Sushi place
+    Expenses:Food:Restaurant          $58.00
+    Assets:Checking
+
+2026-03-10 * Netflix
+    Expenses:Subscriptions            $15.49
+    Assets:Checking
+
+2026-03-10 * Spotify
+    Expenses:Subscriptions            $11.99
+    Assets:Checking
+
+2026-03-12 * Whole Foods
+    Expenses:Food:Groceries           $103.75
+    Assets:Checking
+
+2026-03-13 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-03-15 * Freelance invoice
+    Assets:Checking                   $1,200.00
+    Income:Freelance
+
+2026-03-16 * Shell gas
+    Expenses:Transport                $52.10
+    Assets:Checking
+
+2026-03-18 * Trader Joe's
+    Expenses:Food:Groceries           $79.40
+    Assets:Checking
+
+2026-03-20 * Car loan payment
+    Liabilities:CarLoan               $385.00
+    Assets:Checking
+
+2026-03-22 * Planet Fitness
+    Expenses:Health                   $24.99
+    Assets:Checking
+
+2026-03-24 * Concert tickets
+    Expenses:Entertainment            $85.00
+    Liabilities:CreditCard
+
+2026-03-25 * Books on Amazon
+    Expenses:Shopping                 $54.20
+    Assets:Checking
+
+2026-03-27 * Credit card payment
+    Liabilities:CreditCard            $85.00
+    Assets:Checking
+
+2026-03-28 * Transfer to savings
+    Assets:Savings                    $500.00
+    Assets:Checking
+
+; === APRIL 2026 ===
+
+2026-04-01 * Bi-weekly paycheck
+    Assets:Checking                   $1,850.00
+    Income:Salary
+
+2026-04-01 * Rent
+    Expenses:Housing:Rent             $1,450.00
+    Assets:Checking
+
+2026-04-02 * Trader Joe's
+    Expenses:Food:Groceries           $91.05
+    Assets:Checking
+
+2026-04-03 * PG&E electric
+    Expenses:Housing:Utilities        $88.50
+    Assets:Checking
+
+2026-04-05 * Diner brunch
+    Expenses:Food:Restaurant          $42.00
+    Assets:Checking
+
+2026-04-07 * Whole Foods
+    Expenses:Food:Groceries           $122.30
+    Assets:Checking
+
+2026-04-10 * Netflix
+    Expenses:Subscriptions            $15.49
+    Assets:Checking
+
+2026-04-10 * Spotify
+    Expenses:Subscriptions            $11.99
+    Assets:Checking
+
+2026-04-12 * Shell gas
+    Expenses:Transport                $49.80
+    Assets:Checking
+
+2026-04-15 * Dentist visit
+    Expenses:Health                   $185.00
+    Assets:Checking
+
+2026-04-18 * Costco
+    Expenses:Food:Groceries           $217.40
+    Assets:Checking
+
+2026-04-20 * Car loan payment
+    Liabilities:CarLoan               $385.00
+    Assets:Checking
+
+2026-04-22 * Planet Fitness
+    Expenses:Health                   $24.99
+    Assets:Checking
+
+2026-04-25 * Museum membership
+    Expenses:Entertainment            $75.00
+    Assets:Checking
+
+; === EDGE CASES: comments, balance assertions, multi-commodity ===
+
+2026-04-26 * Weekly groceries  ; family shopping run
+    Expenses:Food:Groceries                         $128.45  ; organic produce
+    Assets:Checking  ; paid with debit card
+
+2026-04-27 * Mid-month paycheck with assertion
+    Assets:Checking                   $1,850.00 = $10,102.64
+    Income:Salary
+
+2026-04-28 * Freelance EUR payment  ; European client
+    Assets:Checking                   €450.00
+    Income:Freelance
+
+2026-04-29 * Amazon UK purchase
+    Expenses:Shopping                 £25.00
+    Assets:Checking                   $-32.00
