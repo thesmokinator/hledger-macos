@@ -82,7 +82,8 @@ struct CsvRawPreviewTab: View {
 
                 Divider()
 
-                // CSV table
+                // CSV table — fixed-width columns with zebra striping for
+                // readability, framed in a rounded macOS-style container.
                 if previewRows.isEmpty {
                     Text("No data to preview.")
                         .foregroundStyle(.secondary)
@@ -94,32 +95,39 @@ struct CsvRawPreviewTab: View {
                                     ForEach(firstRow.indices, id: \.self) { col in
                                         Text(firstRow[col].trimmingCharacters(in: .whitespaces))
                                             .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.secondary)
                                             .frame(width: columnWidth, alignment: .leading)
                                             .lineLimit(1)
-                                            .padding(.vertical, 4)
-                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 8)
                                     }
                                 }
-                                .background(Color.accentColor.opacity(0.1))
+                                .background(Color.secondary.opacity(0.08))
 
                                 Divider()
                             }
 
-                            ForEach(Array(previewRows.dropFirst().enumerated()), id: \.offset) { _, row in
+                            ForEach(Array(previewRows.dropFirst().enumerated()), id: \.offset) { offset, row in
                                 HStack(spacing: 0) {
                                     ForEach(row.indices, id: \.self) { col in
                                         Text(row[col].trimmingCharacters(in: .whitespaces))
-                                            .font(.caption.monospaced())
+                                            .font(.system(.caption, design: .monospaced))
                                             .frame(width: columnWidth, alignment: .leading)
                                             .lineLimit(1)
-                                            .padding(.vertical, 3)
-                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 8)
                                     }
                                 }
+                                .background(offset.isMultiple(of: 2) ? Color.clear : Color.secondary.opacity(0.04))
                             }
                         }
                     }
-                    .border(Color.secondary.opacity(0.2))
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
                 }
             }
             .padding(16)

@@ -87,14 +87,19 @@ struct CsvTransactionPreviewTab: View {
 
                 Divider()
 
-                // Transaction list
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(previewTransactions.indices, id: \.self) { index in
-                            transactionRow(index: index)
-                        }
+                // Transaction list — native List for alternating rows and macOS look,
+                // matching TransactionsView and AccountsView.
+                List {
+                    ForEach(previewTransactions.indices, id: \.self) { index in
+                        transactionRow(index: index)
+                            .listRowBackground(
+                                previewTransactions[index].isDuplicate
+                                    ? Color.orange.opacity(0.08)
+                                    : Color.clear
+                            )
                     }
                 }
+                .listStyle(.inset)
             }
         }
     }
@@ -102,23 +107,28 @@ struct CsvTransactionPreviewTab: View {
     @ViewBuilder
     private func transactionRow(index: Int) -> some View {
         let txn = previewTransactions[index]
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Toggle("", isOn: $previewTransactions[index].isSelected)
                 .labelsHidden()
-                .frame(width: 20)
+                .frame(width: 18)
 
             Text(txn.date)
-                .font(.callout.monospaced())
-                .frame(width: 90, alignment: .leading)
+                .font(.system(.callout, design: .monospaced))
+                .foregroundStyle(.secondary)
 
             Text(txn.description)
                 .font(.callout)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(txn.amount)
-                .font(.callout.monospaced())
-                .frame(width: 110, alignment: .trailing)
+            if txn.isDuplicate {
+                Text("duplicate")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
+            }
 
             Text(txn.account2.isEmpty ? txn.account1 : txn.account2)
                 .font(.caption)
@@ -126,18 +136,9 @@ struct CsvTransactionPreviewTab: View {
                 .lineLimit(1)
                 .frame(width: 160, alignment: .leading)
 
-            if txn.isDuplicate {
-                Text("duplicate")
-                    .font(.caption2)
-                    .foregroundStyle(.orange)
-                    .frame(width: 55)
-            } else {
-                Spacer()
-                    .frame(width: 55)
-            }
+            Text(txn.amount)
+                .font(.system(.callout, design: .monospaced))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
-        .background(txn.isDuplicate ? Color.orange.opacity(0.06) : Color.clear)
+        .padding(.vertical, ListMetrics.rowPadding)
     }
 }
