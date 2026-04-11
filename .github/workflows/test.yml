@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install hledger
+        run: brew install hledger
+
+      - name: Verify hledger
+        run: hledger --version
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project hledger-macos.xcodeproj \
+            -scheme hledger-macos \
+            -destination 'platform=macOS' \
+            -only-testing:hledger-macosTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-${{ github.run_id }}
+          path: TestResults.xcresult
+          retention-days: 14
