@@ -99,10 +99,7 @@ struct BudgetFormView: View {
     // MARK: - Save
 
     private func save() {
-        guard let parsed = PostingAmountParser.parse(
-            amount,
-            defaultCommodity: appState.config.defaultCommodity
-        ), parsed.quantity != 0 else {
+        guard let parsed = appState.parseFormAmount(amount), parsed.quantity != 0 else {
             errorMessage = "Invalid amount"
             return
         }

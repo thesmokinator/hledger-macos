@@ -173,10 +173,7 @@ struct RecurringFormView: View {
     private func save() {
         var postings: [Posting] = []
         for row in postingRows where !row.account.isEmpty {
-            if let amount = PostingAmountParser.parse(
-                row.amount,
-                defaultCommodity: appState.config.defaultCommodity
-            ) {
+            if let amount = appState.parseFormAmount(row.amount) {
                 postings.append(Posting(account: row.account, amounts: [amount]))
             } else {
                 // Empty or unparseable input → posting with no amount (auto-balance).

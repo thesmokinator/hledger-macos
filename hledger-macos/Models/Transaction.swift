@@ -80,7 +80,7 @@ struct Amount: Codable, Hashable, Sendable {
 
     /// Format the amount as a display string.
     func formatted() -> String {
-        let qtyStr = formatDecimal(abs(quantity), precision: style.precision)
+        let qtyStr = Self.formatDecimal(abs(quantity), style: style)
         let sign = quantity < 0 ? "-" : ""
         let space = style.commoditySpaced ? " " : ""
 
@@ -93,7 +93,11 @@ struct Amount: Codable, Hashable, Sendable {
         }
 
         if let cost = cost {
-            let costDisplay = formatDecimal(abs(cost.quantity), precision: cost.style.precision)
+            // Use the cost's OWN style — not self.style — so a multi-currency
+            // cost-annotated amount like `-5 XDWD @@ €742,55` formats the cost
+            // portion with the € commodity's decimal mark, not the XDWD one.
+            // See #129.
+            let costDisplay = Self.formatDecimal(abs(cost.quantity), style: cost.style)
             let costSpace = cost.style.commoditySpaced ? " " : ""
             let costStr: String
             switch cost.style.commoditySide {
@@ -113,11 +117,14 @@ struct Amount: Codable, Hashable, Sendable {
         AmountFormatter.format(quantity, commodity: commodity)
     }
 
-    private func formatDecimal(_ value: Decimal, precision: Int) -> String {
+    /// Format a decimal value using the supplied `AmountStyle`. Static so the
+    /// caller can pass a style that is not necessarily `self.style` — needed
+    /// to format a cost annotation that has its own commodity and style.
+    private static func formatDecimal(_ value: Decimal, style: AmountStyle) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = precision
-        formatter.maximumFractionDigits = precision
+        formatter.minimumFractionDigits = style.precision
+        formatter.maximumFractionDigits = style.precision
         formatter.decimalSeparator = style.decimalMark
 
         if let separator = style.digitGroupSeparator, !style.digitGroupSizes.isEmpty {

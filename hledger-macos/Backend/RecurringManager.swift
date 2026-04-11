@@ -40,7 +40,7 @@ enum RecurringManager {
 
     // MARK: - Parse Rules
 
-    static func parseRules(recurringPath: URL, commodityStyles: [String: AmountStyle] = [:]) -> [RecurringRule] {
+    static func parseRules(recurringPath: URL) -> [RecurringRule] {
         guard FileManager.default.fileExists(atPath: recurringPath.path),
               let content = try? String(contentsOf: recurringPath, encoding: .utf8),
               !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -93,12 +93,14 @@ enum RecurringManager {
                 if let match = line.firstMatch(of: postingPattern) {
                     let account = String(match.1).trimmingCharacters(in: .whitespaces)
                     let amountStr = String(match.2).trimmingCharacters(in: .whitespaces)
-                    let (qty, commodity) = AmountParser.parse(amountStr)
-                    let style = commodityStyles[commodity] ?? .default
-                    currentPostings.append(Posting(
-                        account: account,
-                        amounts: [Amount(commodity: commodity, quantity: qty, style: style)]
-                    ))
+                    // Use PostingAmountParser so the loaded Amount inherits its
+                    // full style (decimalMark, digitGroupSeparator, precision)
+                    // from the literal — same path as form input. See #129.
+                    if let amount = PostingAmountParser.parseSimple(amountStr) {
+                        currentPostings.append(Posting(account: account, amounts: [amount]))
+                    } else {
+                        currentPostings.append(Posting(account: account))
+                    }
                 } else {
                     // Balancing posting (no amount)
                     let account = line.trimmingCharacters(in: .whitespaces)
@@ -174,10 +176,10 @@ enum RecurringManager {
 
     // MARK: - CRUD
 
-    static func addRule(_ rule: RecurringRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func addRule(_ rule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = recurringPath(for: journalFile)
         try ensureRecurringFile(journalFile: journalFile)
-        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(recurringPath: path)
         if rules.contains(where: { $0.ruleId == rule.ruleId }) {
             throw BackendError.commandFailed("Recurring rule already exists with id: \(rule.ruleId)")
         }
@@ -185,9 +187,9 @@ enum RecurringManager {
         try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
     }
 
-    static func updateRule(ruleId: String, newRule: RecurringRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func updateRule(ruleId: String, newRule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(recurringPath: path)
         guard let index = rules.firstIndex(where: { $0.ruleId == ruleId }) else {
             throw BackendError.commandFailed("No recurring rule found with id: \(ruleId)")
         }
@@ -195,9 +197,9 @@ enum RecurringManager {
         try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
     }
 
-    static func deleteRule(ruleId: String, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func deleteRule(ruleId: String, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(recurringPath: path)
         let count = rules.count
         rules.removeAll { $0.ruleId == ruleId }
         if rules.count == count {

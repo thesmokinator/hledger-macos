@@ -246,10 +246,7 @@ struct TransactionFormView: View {
     }
 
     private func parseAmountString(_ s: String) -> [Amount] {
-        guard let amount = PostingAmountParser.parse(
-            s,
-            defaultCommodity: appState.config.defaultCommodity
-        ) else {
+        guard let amount = appState.parseFormAmount(s) else {
             return []
         }
         return [amount]

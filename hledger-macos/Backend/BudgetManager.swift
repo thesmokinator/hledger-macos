@@ -40,7 +40,7 @@ enum BudgetManager {
     // MARK: - Parse Rules
 
     /// Parse budget rules from budget.journal.
-    static func parseRules(budgetPath: URL, commodityStyles: [String: AmountStyle] = [:]) -> [BudgetRule] {
+    static func parseRules(budgetPath: URL) -> [BudgetRule] {
         guard FileManager.default.fileExists(atPath: budgetPath.path),
               let content = try? String(contentsOf: budgetPath, encoding: .utf8),
               !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -70,14 +70,16 @@ enum BudgetManager {
                     let account = String(match.1).trimmingCharacters(in: .whitespaces)
                     let amountStr = String(match.2).trimmingCharacters(in: .whitespaces)
                     let category = match.3.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
-                    let (quantity, commodity) = AmountParser.parse(amountStr)
-                    let style = commodityStyles[commodity] ?? .default
-
-                    rules.append(BudgetRule(
-                        account: account,
-                        amount: Amount(commodity: commodity, quantity: quantity, style: style),
-                        category: category
-                    ))
+                    // Use PostingAmountParser so the loaded Amount inherits its
+                    // full style (decimalMark, digitGroupSeparator, precision)
+                    // from the literal — same path as form input. See #129.
+                    if let amount = PostingAmountParser.parseSimple(amountStr) {
+                        rules.append(BudgetRule(
+                            account: account,
+                            amount: amount,
+                            category: category
+                        ))
+                    }
                 }
             }
         }
@@ -137,10 +139,10 @@ enum BudgetManager {
     // MARK: - CRUD
 
     /// Add a new budget rule.
-    static func addRule(_ rule: BudgetRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func addRule(_ rule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = budgetPath(for: journalFile)
         try ensureBudgetFile(journalFile: journalFile)
-        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(budgetPath: path)
         if rules.contains(where: { $0.account == rule.account }) {
             throw BackendError.commandFailed("Budget rule already exists for \(rule.account)")
         }
@@ -149,9 +151,9 @@ enum BudgetManager {
     }
 
     /// Update an existing budget rule.
-    static func updateRule(oldAccount: String, newRule: BudgetRule, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func updateRule(oldAccount: String, newRule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(budgetPath: path)
         guard let index = rules.firstIndex(where: { $0.account == oldAccount }) else {
             throw BackendError.commandFailed("No budget rule found for \(oldAccount)")
         }
@@ -160,9 +162,9 @@ enum BudgetManager {
     }
 
     /// Delete a budget rule by account name.
-    static func deleteRule(account: String, journalFile: URL, validator: any AccountingBackend, commodityStyles: [String: AmountStyle] = [:]) async throws {
+    static func deleteRule(account: String, journalFile: URL, validator: any AccountingBackend) async throws {
         let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path, commodityStyles: commodityStyles)
+        var rules = parseRules(budgetPath: path)
         let count = rules.count
         rules.removeAll { $0.account == account }
         if rules.count == count {
