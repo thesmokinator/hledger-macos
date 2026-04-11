@@ -99,16 +99,17 @@ struct BudgetFormView: View {
     // MARK: - Save
 
     private func save() {
-        let (qty, commodity) = AmountParser.parse(amount)
-        guard qty != 0 else {
+        guard let parsed = PostingAmountParser.parse(
+            amount,
+            defaultCommodity: appState.config.defaultCommodity
+        ), parsed.quantity != 0 else {
             errorMessage = "Invalid amount"
             return
         }
 
-        let style = appState.styleForCommodity(commodity)
         let rule = BudgetRule(
             account: account,
-            amount: Amount(commodity: commodity, quantity: qty, style: style),
+            amount: parsed,
             category: category
         )
         onSave(rule)
