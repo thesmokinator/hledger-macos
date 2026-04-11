@@ -123,27 +123,31 @@ struct BinaryDetector {
     /// Find the hledger binary.
     func findHledger(customPath: String = "") -> String? {
         // 1. User-configured custom path
-        if !customPath.isEmpty,
-           fileSystem.isExecutableFile(atPath: customPath) {
+        if !customPath.isEmpty, isExecutableRegularFile(customPath) {
             return customPath
         }
 
         // 2. Check known filesystem paths directly
-        for path in knownPaths {
-            if fileSystem.isExecutableFile(atPath: path) {
-                return path
-            }
+        for path in knownPaths where isExecutableRegularFile(path) {
+            return path
         }
 
         // 3. Search user's shell PATH (covers stack, cabal, ghcup, nix, etc.)
         for dir in loginShellPATH() {
             let candidate = (dir as NSString).appendingPathComponent("hledger")
-            if fileSystem.isExecutableFile(atPath: candidate) {
+            if isExecutableRegularFile(candidate) {
                 return candidate
             }
         }
 
         return nil
+    }
+
+    /// True only when `path` is an executable regular file.
+    /// Directories also have +x ("can list contents") so a plain
+    /// `isExecutableFile` check is not enough — see issue #121.
+    private func isExecutableRegularFile(_ path: String) -> Bool {
+        fileSystem.isExecutableFile(atPath: path) && !fileSystem.isDirectory(atPath: path)
     }
 
     /// Resolve the journal file by running `hledger files` in a login shell.

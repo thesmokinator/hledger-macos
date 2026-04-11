@@ -1048,10 +1048,19 @@ struct BinaryDetectorTests {
         #expect(result != plainFile.path)
     }
 
-    // NOTE: A test for "directory rejected as custom path" was attempted and
-    // revealed a real bug — `FileManager.isExecutableFile(atPath:)` returns
-    // true for directories (they have +x for "list contents"). Tracked as a
-    // separate bug issue. Re-add the test as part of the fix.
+    /// Re-added after the directory-acceptance bug was fixed in #121.
+    /// `FileManager.isExecutableFile(atPath:)` returns true for directories
+    /// (they have +x for "list contents"), so the detector now also checks
+    /// `isDirectory` before accepting a candidate.
+    @Test func findHledgerRejectsDirectoryAsCustomPath() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BinaryDetectorTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let result = BinaryDetector.findHledger(customPath: dir.path)
+        #expect(result != dir.path, "Directory must not be accepted as the hledger binary")
+    }
 
     @Test func findHledgerEmptyCustomPathFallsThrough() {
         // Empty custom path must fall through to the known-paths search.
@@ -1205,6 +1214,34 @@ struct BinaryDetectorInjectionTests {
 
         #expect(result == nil)
         #expect(!shell.calls.isEmpty, "Detector must attempt at least one shell call")
+    }
+
+    /// Issue #121: a candidate that is a directory (with +x set so
+    /// `isExecutableFile` returns true) must NOT be accepted as the
+    /// hledger binary. Verified across all 3 candidate-checking branches:
+    /// custom path, knownPaths, and the shell PATH fallback.
+    @Test func findHledgerRejectsDirectoriesInAllCandidateBranches() {
+        let customDir = "/some/dir"
+        let knownDir  = "/opt/homebrew/bin/hledger"  // dressed-up dir at a knownPath
+        let pathDir   = "/usr/local/bin/hledger"     // dressed-up dir from shell PATH
+
+        // Mark every candidate as both "executable" (the bug) and "directory"
+        // (the fix path). The detector must skip every one of them.
+        let fs = StubFileSystem(
+            executablePaths: [customDir, knownDir, pathDir],
+            directoryPaths:  [customDir, knownDir, pathDir]
+        )
+        let userShell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        let shell = StubShell(outputs: [
+            StubShell.key(shell: userShell, args: ["-li", "-c", "echo $PATH"]): "/usr/local/bin"
+        ])
+        let detector = BinaryDetector(fileSystem: fs, shell: shell)
+
+        // Branch 1: custom path
+        #expect(detector.findHledger(customPath: customDir) == nil)
+        // Branch 2 & 3: with no custom path, the detector falls through
+        // knownPaths and the shell PATH — both populated with directories.
+        #expect(detector.findHledger(customPath: "") == nil)
     }
 
     /// loginShellPATH parses the LAST path-like line from a multiline shell output
