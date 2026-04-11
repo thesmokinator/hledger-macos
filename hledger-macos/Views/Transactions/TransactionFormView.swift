@@ -19,14 +19,13 @@ struct TransactionFormView: View {
     @State private var postingRows: [PostingRow] = []
     @State private var isSaving = false
     @State private var errorMessage: String?
-    @State private var isPrefilling = true
     @State private var knownAccounts: [String] = []
     @State private var knownDescriptions: [String] = []
 
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
-        case year, month, day, description, code, comment
+        case code, comment
         case postingAccount(Int), postingAmount(Int)
     }
 
@@ -66,39 +65,8 @@ struct TransactionFormView: View {
 
                     // Fields
                     VStack(spacing: 14) {
-                        // Date with structured input
                         FormRow("Date:") {
-                            HStack(spacing: 4) {
-                                TextField("YYYY", text: $dateYear)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 60)
-                                    .focused($focusedField, equals: .year)
-                                    .onChange(of: dateYear) { guard !isPrefilling else { return }; filterDigits(&dateYear, max: 4) { focusedField = .month } }
-
-                                Text("-").foregroundStyle(.secondary)
-
-                                TextField("MM", text: $dateMonth)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 40)
-                                    .focused($focusedField, equals: .month)
-                                    .onChange(of: dateMonth) { guard !isPrefilling else { return }; filterDigits(&dateMonth, max: 2) { focusedField = .day } }
-
-                                Text("-").foregroundStyle(.secondary)
-
-                                TextField("DD", text: $dateDay)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 40)
-                                    .focused($focusedField, equals: .day)
-                                    .onChange(of: dateDay) { guard !isPrefilling else { return }; filterDigits(&dateDay, max: 2) { focusedField = .description } }
-
-                                if !dateYear.isEmpty || !dateMonth.isEmpty || !dateDay.isEmpty {
-                                    Image(systemName: isDateValid ? "checkmark.circle" : "xmark.circle")
-                                        .foregroundStyle(isDateValid ? .green : .red)
-                                        .font(.caption)
-                                }
-
-                                Spacer()
-                            }
+                            DateInputField(year: $dateYear, month: $dateMonth, day: $dateDay)
                         }
 
                         FormRow("Description:") {
@@ -204,20 +172,7 @@ struct TransactionFormView: View {
         }
         .frame(width: 560, height: 580)
         .task { await loadAutocompleteData() }
-        .onAppear {
-            prefill()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                isPrefilling = false
-                focusedField = .year
-            }
-        }
-    }
-
-    // MARK: - Date Filtering
-
-    private func filterDigits(_ value: inout String, max: Int, advance: (() -> Void)? = nil) {
-        value = String(value.filter(\.isNumber).prefix(max))
-        if value.count == max { advance?() }
+        .onAppear { prefill() }
     }
 
     // MARK: - Prefill
