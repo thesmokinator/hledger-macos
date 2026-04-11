@@ -68,13 +68,16 @@ Accepts a file path or a directory containing journal files (auto-detects `main.
 
 ## Examples
 
-The [`examples/`](examples/) directory contains sample journals:
+The [`examples/`](examples/) directory contains sample journals in both EU and US conventions:
 
-| Example | Description |
-|---------|-------------|
-| [`hledger-simple/`](examples/hledger-simple/) | Single-file journal with basic transactions, comments, balance assertions, multi-commodity |
-| [`hledger-multi-file/`](examples/hledger-multi-file/) | Multi-file journal with glob routing and investments |
-| [`multicommodity.journal`](examples/multicommodity.journal) | Multi-currency edge cases |
+| Example | Format | Description |
+|---------|--------|-------------|
+| [`hledger-simple/`](examples/hledger-simple/) | EU (`€1.234,56`) | Single-file journal with basic transactions, comments, balance assertions, multi-commodity |
+| [`hledger-simple-us/`](examples/hledger-simple-us/) | US (`$1,234.56`) | Same structure as `hledger-simple/` but with `$`, US number format and CapitalCase accounts |
+| [`hledger-multi-file/`](examples/hledger-multi-file/) | EU | Multi-file journal with glob routing and investments |
+| [`multicommodity.journal`](examples/multicommodity.journal) | EU base | Multi-currency edge cases (`€` + named-commodity ETFs) |
+| [`multicommodity-us.journal`](examples/multicommodity-us.journal) | US base | Multi-currency edge cases (`$` + AAPL/SPY) |
+| [`csv-import/`](examples/csv-import/) | mixed | Sample CSV files and `.rules` for the CSV import wizard |
 
 ## Keyboard Shortcuts
 
