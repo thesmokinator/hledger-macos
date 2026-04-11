@@ -93,7 +93,7 @@ struct CsvImportSheet: View {
                 noFileView
             } else {
                 TabView(selection: $selectedTab) {
-                    CsvPreviewTab(
+                    CsvRawPreviewTab(
                         csvContent: csvContent,
                         config: $config,
                         rulesFileURL: $rulesFileURL,
@@ -112,7 +112,7 @@ struct CsvImportSheet: View {
                     .tabItem { Label("2. Rules Editor", systemImage: "doc.text") }
                     .tag(1)
 
-                    CsvImportPreviewTab(
+                    CsvTransactionPreviewTab(
                         previewTransactions: $previewTransactions,
                         isLoading: isParsing,
                         errorMessage: parseError
