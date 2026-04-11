@@ -1095,6 +1095,138 @@ struct BinaryDetectorTests {
     }
 }
 
+// MARK: - BinaryDetector Injection Tests
+//
+// These tests use mock FileSystemAccess and ShellRunner to exercise paths
+// that aren't reachable in the live-environment smoke tests above.
+
+/// FileSystemAccess mock that returns canned answers from a set of executable paths.
+private struct StubFileSystem: FileSystemAccess {
+    let executablePaths: Set<String>
+    let directoryPaths: Set<String>
+
+    init(executablePaths: Set<String> = [], directoryPaths: Set<String> = []) {
+        self.executablePaths = executablePaths
+        self.directoryPaths = directoryPaths
+    }
+
+    func isExecutableFile(atPath path: String) -> Bool { executablePaths.contains(path) }
+    func isDirectory(atPath path: String) -> Bool { directoryPaths.contains(path) }
+}
+
+/// ShellRunner mock that records calls and returns canned per-shell output.
+private final class StubShell: ShellRunner, @unchecked Sendable {
+    /// Outputs keyed by `(shell, args)`. A nil value simulates failure / timeout.
+    var outputs: [String: String?]
+    /// All `(shell, args)` calls observed, in order.
+    private(set) var calls: [(shell: String, args: [String])] = []
+
+    init(outputs: [String: String?] = [:]) {
+        self.outputs = outputs
+    }
+
+    static func key(shell: String, args: [String]) -> String {
+        "\(shell)|\(args.joined(separator: " "))"
+    }
+
+    func run(shell: String, args: [String], timeout: TimeInterval) -> String? {
+        calls.append((shell, args))
+        let key = Self.key(shell: shell, args: args)
+        return outputs[key] ?? nil
+    }
+}
+
+@Suite("BinaryDetector.injection")
+struct BinaryDetectorInjectionTests {
+    /// Custom path beats both knownPaths and shell PATH when all three would match.
+    @Test func customPathHasPriorityOverKnownAndShellPATH() {
+        let custom = "/custom/hledger"
+        // Mark every plausible path as executable so the only thing under test
+        // is the priority order, not the candidate set.
+        let fs = StubFileSystem(executablePaths: [
+            custom,
+            "/opt/homebrew/bin/hledger",
+            "/usr/local/bin/hledger",
+        ])
+        // Shell would return additional candidates, but we want to confirm we
+        // never get there because the custom path wins.
+        let shell = StubShell(outputs: [
+            StubShell.key(shell: "/bin/zsh", args: ["-li", "-c", "echo $PATH"]): "/some/dir"
+        ])
+        let detector = BinaryDetector(fileSystem: fs, shell: shell)
+
+        let result = detector.findHledger(customPath: custom)
+
+        #expect(result == custom)
+        #expect(shell.calls.isEmpty, "Shell must not be invoked when custom path matches")
+    }
+
+    /// `journalPathFromHledger` falls through to /bin/bash when the user's $SHELL fails.
+    @Test func journalPathFromHledgerFallsBackToBashWhenUserShellFails() {
+        // Use the live $SHELL the test process inherited so the keys line up
+        // with what BinaryDetector will actually call.
+        let userShell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        let hledgerPath = "/usr/local/bin/hledger"
+        let args = ["-l", "-c", "\"\(hledgerPath)\" files"]
+
+        // userShell returns nil (simulated failure); whichever shell comes
+        // SECOND in the dedup chain returns the expected journal path. Build
+        // the dict imperatively to avoid duplicate-key crashes when $SHELL is
+        // already /bin/bash or /bin/zsh.
+        var outputs: [String: String?] = [:]
+        outputs[StubShell.key(shell: userShell, args: args)] = nil
+        if userShell != "/bin/bash" {
+            outputs[StubShell.key(shell: "/bin/bash", args: args)] = "/Users/test/journal.journal\n"
+        }
+        if userShell != "/bin/zsh" {
+            // Only set zsh if it's not the user shell AND bash isn't supplying
+            // the answer (so we always have one fallback that succeeds).
+            if userShell == "/bin/bash" {
+                outputs[StubShell.key(shell: "/bin/zsh", args: args)] = "/Users/test/journal.journal\n"
+            } else {
+                outputs[StubShell.key(shell: "/bin/zsh", args: args)] = "/should/not/be/used\n"
+            }
+        }
+        let shell = StubShell(outputs: outputs)
+        let detector = BinaryDetector(fileSystem: StubFileSystem(), shell: shell)
+
+        let result = detector.journalPathFromHledger(hledgerPath)
+
+        #expect(result == "/Users/test/journal.journal")
+        #expect(shell.calls.count >= 2, "Expected at least one fallback after the first failure")
+    }
+
+    /// When every shell call times out (mocked as nil), the detector returns nil.
+    @Test func journalPathFromHledgerReturnsNilWhenAllShellsTimeOut() {
+        let shell = StubShell(outputs: [:])  // every key missing → nil → simulated timeout
+        let detector = BinaryDetector(fileSystem: StubFileSystem(), shell: shell)
+
+        let result = detector.journalPathFromHledger("/usr/local/bin/hledger")
+
+        #expect(result == nil)
+        #expect(!shell.calls.isEmpty, "Detector must attempt at least one shell call")
+    }
+
+    /// loginShellPATH parses the LAST path-like line from a multiline shell output
+    /// (real shells often print motd / banner lines before the echoed PATH).
+    @Test func loginShellPATHParsesLastLineFromMultilineOutput() {
+        let userShell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        let multiline = """
+        Welcome banner
+        Last login: yesterday
+        /usr/local/bin:/opt/homebrew/bin:/usr/bin
+        """
+        let shell = StubShell(outputs: [
+            StubShell.key(shell: userShell, args: ["-li", "-c", "echo $PATH"]): multiline
+        ])
+        let detector = BinaryDetector(fileSystem: StubFileSystem(), shell: shell)
+
+        let entries = detector.loginShellPATH()
+
+        #expect(entries == ["/usr/local/bin", "/opt/homebrew/bin", "/usr/bin"])
+    }
+}
+
 // MARK: - JournalWriter Routing Tests
 
 @Suite("JournalWriter.RoutingStrategy")
