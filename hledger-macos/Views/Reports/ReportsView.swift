@@ -37,9 +37,7 @@ struct ReportsView: View {
     var body: some View {
         VStack(spacing: 0) {
             if isLoading {
-                Spacer()
-                ProgressView("Loading report...")
-                Spacer()
+                LoadingOverlay(message: "Loading report...")
             } else if let data = reportData, !data.rows.isEmpty {
                 reportContent(data)
             } else {

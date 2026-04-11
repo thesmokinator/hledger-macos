@@ -39,9 +39,7 @@ struct TransactionsView: View {
 
             // Transaction list
             if appState.isLoading {
-                Spacer()
-                ProgressView("Loading transactions...")
-                Spacer()
+                LoadingOverlay(message: "Loading transactions...")
             } else if appState.transactions.isEmpty {
                 Spacer()
                 ContentUnavailableView(

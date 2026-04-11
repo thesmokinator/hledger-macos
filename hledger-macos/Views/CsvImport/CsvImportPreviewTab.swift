@@ -18,12 +18,7 @@ struct CsvImportPreviewTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if isLoading {
-                VStack {
-                    Spacer()
-                    ProgressView("Parsing CSV with hledger...")
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                LoadingOverlay(message: "Parsing CSV with hledger...")
             } else if let error = errorMessage {
                 VStack(spacing: 8) {
                     Spacer()

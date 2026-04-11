@@ -27,9 +27,7 @@ struct AccountsView: View {
     var body: some View {
         VStack(spacing: 0) {
             if isLoading {
-                Spacer()
-                ProgressView("Loading accounts...")
-                Spacer()
+                LoadingOverlay(message: "Loading accounts...")
             } else if viewMode == "flat" {
                 flatView
             } else {
