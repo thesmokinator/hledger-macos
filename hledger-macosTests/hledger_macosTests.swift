@@ -404,6 +404,72 @@ struct PostingAmountParserTests {
         #expect(PostingAmountParser.decimalPlaces(in: "-50.00") == 2)
         #expect(PostingAmountParser.decimalPlaces(in: "-112,93") == 2)
     }
+
+    // MARK: - Issue #95 gaps: literal #83 regression and edge cases
+
+    /// Literal regression test for the exact string in issue #83:
+    /// `€` symbol prefix + comma decimal, no thousands separator.
+    /// The pre-existing `parseTotalCostEuropeanDecimal` covers a similar case
+    /// without the `€` symbol; this asserts the literal failing input.
+    @Test func parseTotalCostLiteralIssue83() {
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €742,55")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.commodity == "XDWD")
+        #expect(amount?.cost?.quantity == Decimal(string: "742.55"))
+        #expect(amount?.cost?.commodity == "€")
+        // Formatted output must use `.` (hledger-compatible), never `,`
+        let formatted = amount!.formatted()
+        #expect(formatted.contains("742.55"))
+        #expect(!formatted.contains("742,55"))
+    }
+
+    @Test func parseTotalCostExtraWhitespaceAroundOperator() {
+        // Multiple spaces around @@ are tolerated by `\s+` in the regex
+        let amount = PostingAmountParser.parse("-5 XDWD   @@   €742,55")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.cost?.quantity == Decimal(string: "742.55"))
+    }
+
+    @Test func parseTotalCostZeroValue() {
+        // Zero cost is valid: e.g. a free promotional share
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €0")
+        #expect(amount?.cost?.quantity == 0)
+        #expect(amount?.cost?.commodity == "€")
+    }
+
+    @Test func parseTotalCostZeroValueEuropeanDecimal() {
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €0,00")
+        #expect(amount?.cost?.quantity == 0)
+    }
+
+    @Test func parseTotalCostNegativeInputNormalizedToPositive() {
+        // hledger requires @@ cost to be positive even when the user types a
+        // negative number. The parser must apply `abs()` so the formatted
+        // output never contains a negative cost.
+        let amount = PostingAmountParser.parse("-5 XDWD @@ -€100,00")
+        #expect(amount?.quantity == -5)
+        #expect(amount?.cost?.quantity == Decimal(string: "100"))
+        let formatted = amount!.formatted()
+        #expect(!formatted.contains("@@ -"))
+        #expect(!formatted.contains("@@-"))
+    }
+
+    @Test func parseSimpleDirectCallReturnsNonNil() {
+        // The existing suite only tests via top-level `parse()`. Cover the
+        // public `parseSimple` entry point directly.
+        let amount = PostingAmountParser.parseSimple("€50,00")
+        #expect(amount?.quantity == 50)
+        #expect(amount?.commodity == "€")
+        #expect(amount?.cost == nil)
+    }
+
+    @Test func parseCostAnnotatedReturnsNilForPlainSimpleAmount() {
+        // The cost regex must not false-match a plain amount with no `@`.
+        // Calling `parseCostAnnotated` directly on `€50,00` should return nil,
+        // forcing callers (like `parse`) to fall back to `parseSimple`.
+        #expect(PostingAmountParser.parseCostAnnotated("€50,00") == nil)
+        #expect(PostingAmountParser.parseCostAnnotated("-1 SWDA") == nil)
+    }
 }
 
 // MARK: - AmountFormatter Tests
