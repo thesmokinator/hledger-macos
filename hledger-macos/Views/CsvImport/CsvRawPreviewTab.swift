@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct CsvPreviewTab: View {
+struct CsvRawPreviewTab: View {
     let csvContent: String
     @Binding var config: CsvRulesConfig
     @Binding var rulesFileURL: URL?

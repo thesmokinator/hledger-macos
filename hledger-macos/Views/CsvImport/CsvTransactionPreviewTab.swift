@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-struct CsvImportPreviewTab: View {
+struct CsvTransactionPreviewTab: View {
     @Binding var previewTransactions: [CsvPreviewTransaction]
     let isLoading: Bool
     let errorMessage: String?
