@@ -26,110 +26,77 @@ struct RecurringFormView: View {
     private var title: String { isEditing ? "Edit Recurring Rule" : "New Recurring Rule" }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Title
+        FormShellView(
+            title: title,
+            errorMessage: errorMessage,
+            saveDisabled: description.isEmpty || startYear.isEmpty,
+            onCancel: { dismiss() },
+            onSave: { save() }
+        ) {
+            // Fields
+            VStack(spacing: 14) {
+                FormRow("Period:") {
                     HStack {
-                        Spacer()
-                        Text(title)
-                            .font(.headline)
-                            .foregroundStyle(Color.accentColor)
-                        Spacer()
-                    }
-                    .padding(.top, Theme.Spacing.xl)
-                    .padding(.bottom, Theme.Spacing.xl)
-
-                    // Fields
-                    VStack(spacing: 14) {
-                        FormRow("Period:") {
-                            HStack {
-                                Picker("", selection: $periodExpr) {
-                                    ForEach(RecurringManager.supportedPeriods, id: \.self) { period in
-                                        Text(period.capitalized).tag(period)
-                                    }
-                                }
-                                .labelsHidden()
-                                .fixedSize()
-                                Spacer()
+                        Picker("", selection: $periodExpr) {
+                            ForEach(RecurringManager.supportedPeriods, id: \.self) { period in
+                                Text(period.capitalized).tag(period)
                             }
                         }
-
-                        FormRow("Description:") {
-                            TextField("Recurring transaction description", text: $description)
-                                .textFieldStyle(.roundedBorder)
-                        }
-
-                        FormRow("Start date:") {
-                            DateInputField(year: $startYear, month: $startMonth, day: $startDay)
-                        }
-
-                        FormRow("End date:") {
-                            DateInputField(year: $endYear, month: $endMonth, day: $endDay, optional: true)
-                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        Spacer()
                     }
-                    .padding(.horizontal, Theme.Spacing.xxl)
-
-                    // Postings
-                    VStack(alignment: .leading, spacing: 8) {
-                        Divider().padding(.vertical, Theme.Spacing.md)
-
-                        Text("Postings")
-                            .font(.subheadline.bold())
-
-                        Text("Leave one amount blank for auto-balance.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.bottom, Theme.Spacing.sm)
-
-                        ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
-                            PostingRowField(
-                                index: index,
-                                account: $postingRows[index].account,
-                                amount: $postingRows[index].amount,
-                                comment: .constant(""),
-                                suggestions: knownAccounts,
-                                showRemove: postingRows.count > 2,
-                                onRemove: { postingRows.remove(at: index) }
-                            )
-                        }
-
-                        Button {
-                            postingRows.append(PostingRow())
-                        } label: {
-                            Label("Add Posting", systemImage: "plus")
-                        }
-                        .controlSize(.small)
-                        .padding(.top, Theme.Spacing.xs)
-                    }
-                    .padding(.horizontal, Theme.Spacing.xxl)
-                    .padding(.bottom, Theme.Spacing.lg)
-                }
-            }
-
-            Divider()
-
-            // Footer
-            HStack {
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .lineLimit(2)
                 }
 
-                Spacer()
+                FormRow("Description:") {
+                    TextField("Recurring transaction description", text: $description)
+                        .textFieldStyle(.roundedBorder)
+                }
 
-                Button("Cancel") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
+                FormRow("Start date:") {
+                    DateInputField(year: $startYear, month: $startMonth, day: $startDay)
+                }
 
-                Button("Save") { save() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(description.isEmpty || startYear.isEmpty)
+                FormRow("End date:") {
+                    DateInputField(year: $endYear, month: $endMonth, day: $endDay, optional: true)
+                }
             }
             .padding(.horizontal, Theme.Spacing.xxl)
-            .padding(.vertical, Theme.Spacing.md)
+
+            // Postings
+            VStack(alignment: .leading, spacing: 8) {
+                Divider().padding(.vertical, Theme.Spacing.md)
+
+                Text("Postings")
+                    .font(.subheadline.bold())
+
+                Text("Leave one amount blank for auto-balance.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom, Theme.Spacing.sm)
+
+                ForEach(Array(postingRows.enumerated()), id: \.element.id) { index, _ in
+                    PostingRowField(
+                        index: index,
+                        account: $postingRows[index].account,
+                        amount: $postingRows[index].amount,
+                        comment: .constant(""),
+                        suggestions: knownAccounts,
+                        showRemove: postingRows.count > 2,
+                        onRemove: { postingRows.remove(at: index) }
+                    )
+                }
+
+                Button {
+                    postingRows.append(PostingRow())
+                } label: {
+                    Label("Add Posting", systemImage: "plus")
+                }
+                .controlSize(.small)
+                .padding(.top, Theme.Spacing.xs)
+            }
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.bottom, Theme.Spacing.lg)
         }
         .frame(width: 560, height: 520)
         .onAppear { prefill() }

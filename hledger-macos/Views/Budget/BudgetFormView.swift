@@ -20,67 +20,33 @@ struct BudgetFormView: View {
     private var title: String { isEditing ? "Edit Budget Rule" : "New Budget Rule" }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Title
-                    HStack {
-                        Spacer()
-                        Text(title)
-                            .font(.headline)
-                            .foregroundStyle(Color.accentColor)
-                        Spacer()
-                    }
-                    .padding(.top, Theme.Spacing.xl)
-                    .padding(.bottom, Theme.Spacing.xl)
-
-                    // Fields
-                    VStack(spacing: 14) {
-                        FormRow("Account:") {
-                            AutocompleteField(
-                                placeholder: "e.g. expenses:groceries",
-                                text: $account,
-                                suggestions: knownAccounts
-                            )
-                        }
-
-                        FormRow("Amount:") {
-                            TextField("e.g. 500.00", text: $amount)
-                                .textFieldStyle(.roundedBorder)
-                        }
-
-                        FormRow("Category:") {
-                            TextField("e.g. Food, Housing (optional)", text: $category)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                    }
-                    .padding(.horizontal, Theme.Spacing.xxl)
-                }
-            }
-
-            Divider()
-
-            // Footer
-            HStack {
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .lineLimit(2)
+        FormShellView(
+            title: title,
+            errorMessage: errorMessage,
+            saveDisabled: account.isEmpty || amount.isEmpty,
+            onCancel: { dismiss() },
+            onSave: { save() }
+        ) {
+            VStack(spacing: 14) {
+                FormRow("Account:") {
+                    AutocompleteField(
+                        placeholder: "e.g. expenses:groceries",
+                        text: $account,
+                        suggestions: knownAccounts
+                    )
                 }
 
-                Spacer()
+                FormRow("Amount:") {
+                    TextField("e.g. 500.00", text: $amount)
+                        .textFieldStyle(.roundedBorder)
+                }
 
-                Button("Cancel") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-
-                Button("Save") { save() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(account.isEmpty || amount.isEmpty)
+                FormRow("Category:") {
+                    TextField("e.g. Food, Housing (optional)", text: $category)
+                        .textFieldStyle(.roundedBorder)
+                }
             }
             .padding(.horizontal, Theme.Spacing.xxl)
-            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 480, height: 300)
         .onAppear { prefill() }
