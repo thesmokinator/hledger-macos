@@ -1,6 +1,9 @@
 # hledger for Mac
 
 [![Tests](https://github.com/thesmokinator/hledger-macos/actions/workflows/test.yml/badge.svg)](https://github.com/thesmokinator/hledger-macos/actions/workflows/test.yml)
+[![Latest Release](https://img.shields.io/github/v/release/thesmokinator/hledger-macos)](https://github.com/thesmokinator/hledger-macos/releases/latest)
+[![License](https://img.shields.io/github/license/thesmokinator/hledger-macos)](LICENSE.md)
+![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-blue)
 
 A native macOS app for [hledger](https://hledger.org) plain-text accounting. Manage transactions, budgets, recurring rules, view summaries, track investments, and generate financial reports — all from a native SwiftUI interface.
 
