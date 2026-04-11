@@ -193,6 +193,20 @@ final class AppState {
         commodityStyles[commodity] ?? .default
     }
 
+    /// Parse user-entered amount input from a form, automatically applying the
+    /// journal's commodity style so European-format commodities round-trip
+    /// correctly. **All form callsites must go through this method**, never
+    /// call `PostingAmountParser.parse(_:)` directly. See #129.
+    func parseFormAmount(_ input: String) -> Amount? {
+        PostingAmountParser.parse(
+            input,
+            defaultCommodity: config.defaultCommodity,
+            styleResolver: { [weak self] commodity in
+                self?.commodityStyles[commodity]
+            }
+        )
+    }
+
     /// Extract commodity styles from loaded transactions (zero I/O cost).
     private func extractCommodityStyles() {
         var styles: [String: AmountStyle] = [:]

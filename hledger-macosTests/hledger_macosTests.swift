@@ -472,6 +472,130 @@ struct PostingAmountParserTests {
     }
 }
 
+// MARK: - PostingAmountParser styleResolver (#129)
+//
+// Regression coverage for the European-format 100x bug. Without a
+// styleResolver, the parser builds an Amount with the default
+// `decimalMark = "."`, which makes a journal that declares
+// `commodity € 1.000,00` re-parse `€1.00` as the integer 100.
+
+@Suite("PostingAmountParser.styleResolver")
+struct PostingAmountParserStyleResolverTests {
+
+    /// Build a European-style AmountStyle for €.
+    private static func europeanEuroStyle() -> AmountStyle {
+        AmountStyle(
+            commoditySide: .left,
+            commoditySpaced: false,
+            decimalMark: ",",
+            digitGroupSeparator: ".",
+            digitGroupSizes: [3],
+            precision: 2
+        )
+    }
+
+    @Test func parseAppliesEuropeanCommodityStyleFromResolver() {
+        // The fix: when the resolver returns a style, the resulting Amount
+        // must inherit decimalMark / digitGroupSeparator / digitGroupSizes
+        // from it. Without this, Amount.formatted() writes "€1.00" which
+        // hledger then mis-parses as 100 against a `commodity € 1.000,00`
+        // declaration.
+        let resolver: PostingAmountParser.StyleResolver = { commodity in
+            commodity == "€" ? Self.europeanEuroStyle() : nil
+        }
+        let amount = PostingAmountParser.parse("1,00", defaultCommodity: "€", styleResolver: resolver)
+
+        #expect(amount?.quantity == Decimal(1))
+        #expect(amount?.commodity == "€")
+        #expect(amount?.style.decimalMark == ",")
+        #expect(amount?.style.digitGroupSeparator == ".")
+        #expect(amount?.style.digitGroupSizes == [3])
+    }
+
+    @Test func formattedAmountFromResolverRoundTripsAsEuropean() {
+        // The user-visible symptom: Amount.formatted() must produce a string
+        // hledger can round-trip against a European-format commodity. Before
+        // the fix this returned "€1.00" → mis-parsed as 100. After the fix
+        // it returns "€1,00" → parses as 1.
+        let resolver: PostingAmountParser.StyleResolver = { commodity in
+            commodity == "€" ? Self.europeanEuroStyle() : nil
+        }
+        let amount = PostingAmountParser.parse("1,00", defaultCommodity: "€", styleResolver: resolver)!
+        #expect(amount.formatted() == "€1,00")
+    }
+
+    @Test func parseAlsoNormalizesDotInputForEuropeanCommodity() {
+        // The user might type `1.00` (US-style) even when the journal is
+        // European. The resolver overrides the input-derived decimalMark
+        // so the saved string is `€1,00` regardless of how the user typed it.
+        let resolver: PostingAmountParser.StyleResolver = { commodity in
+            commodity == "€" ? Self.europeanEuroStyle() : nil
+        }
+        let amount = PostingAmountParser.parse("1.00", defaultCommodity: "€", styleResolver: resolver)!
+        #expect(amount.quantity == Decimal(1))
+        #expect(amount.style.decimalMark == ",")
+        #expect(amount.formatted() == "€1,00")
+    }
+
+    @Test func parseFallsBackToInputStyleWhenResolverReturnsNil() {
+        // For commodities not declared in the journal (resolver returns nil),
+        // the parser must keep the input-derived style so the user can still
+        // invent new commodities mid-form without bugs.
+        let resolver: PostingAmountParser.StyleResolver = { _ in nil }
+        let amount = PostingAmountParser.parse("1.00", defaultCommodity: "USD", styleResolver: resolver)!
+        #expect(amount.style.decimalMark == ".")
+        #expect(amount.style.digitGroupSeparator == nil)
+    }
+
+    @Test func parseWithoutResolverPreservesLegacyBehavior() {
+        // Backward compat: callers that don't pass a resolver get the same
+        // input-derived style as before. Tests that exercise PostingAmountParser
+        // directly (without an AppState) keep working unchanged.
+        let amount = PostingAmountParser.parse("1.00", defaultCommodity: "€")!
+        #expect(amount.style.decimalMark == ".")
+    }
+
+    @Test func resolverIsAppliedToCostAnnotatedAmounts() {
+        // The fix must also cover the cost-annotated path so that
+        // `-5 XDWD @@ €742,55` against a European € journal round-trips
+        // correctly. The cost portion is parsed via parseSimple internally
+        // so it picks up the resolver too.
+        let resolver: PostingAmountParser.StyleResolver = { commodity in
+            commodity == "€" ? Self.europeanEuroStyle() : nil
+        }
+        let amount = PostingAmountParser.parse("-5 XDWD @@ €742,55", styleResolver: resolver)
+        #expect(amount?.quantity == Decimal(-5))
+        #expect(amount?.cost?.commodity == "€")
+        #expect(amount?.cost?.style.decimalMark == ",")
+        // The full formatted representation must use the European decimal mark
+        // for the cost portion.
+        #expect(amount?.formatted().contains("€742,55") == true)
+    }
+
+    @Test func resolverDoesNotOverridePrecisionOrSide() {
+        // Only decimalMark / digitGroupSeparator / digitGroupSizes are
+        // overridden by the resolver. Side, spacing, and input-derived
+        // precision must come from the user input so the user-typed shape
+        // (1 vs 1,00 vs 1,5) is preserved in the saved file.
+        let resolver: PostingAmountParser.StyleResolver = { _ in
+            AmountStyle(
+                commoditySide: .right,           // <-- should be IGNORED
+                commoditySpaced: true,           // <-- should be IGNORED
+                decimalMark: ",",
+                digitGroupSeparator: ".",
+                digitGroupSizes: [3],
+                precision: 4                     // <-- should be IGNORED
+            )
+        }
+        let amount = PostingAmountParser.parse("1,5", defaultCommodity: "€", styleResolver: resolver)!
+        #expect(amount.style.commoditySide == .left)        // input-derived (€ is single char)
+        #expect(amount.style.commoditySpaced == false)      // input-derived
+        #expect(amount.style.precision == 1)                // input-derived (1 decimal place)
+        #expect(amount.style.decimalMark == ",")            // resolver-derived
+        #expect(amount.style.digitGroupSeparator == ".")    // resolver-derived
+    }
+}
+
 // MARK: - AmountFormatter Tests
 
 @Suite("AmountFormatter")

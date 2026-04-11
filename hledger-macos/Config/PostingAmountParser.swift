@@ -32,6 +32,12 @@ enum PostingAmountParser {
 
     // MARK: - Public API
 
+    /// Closure that resolves the journal-declared `AmountStyle` for a given commodity,
+    /// or returns `nil` if the commodity is not declared (in which case the parser keeps
+    /// its input-derived style). See `AppState.parseFormAmount(_:)` for the production
+    /// resolver and issue #129 for the bug this guards against.
+    typealias StyleResolver = (String) -> AmountStyle?
+
     /// Parse a posting amount string into an `Amount`.
     ///
     /// Tries the cost-annotated pattern first (`qty COMMODITY @@ cost`); falls
@@ -40,22 +46,36 @@ enum PostingAmountParser {
     /// - Parameters:
     ///   - input: The raw user-entered amount string.
     ///   - defaultCommodity: Commodity to use when the input has no explicit one.
+    ///   - styleResolver: Optional closure that returns the journal-declared
+    ///     `AmountStyle` for a commodity. When provided and non-nil for the
+    ///     resolved commodity, its `decimalMark`, `digitGroupSeparator`, and
+    ///     `digitGroupSizes` override the input-derived defaults so that
+    ///     `Amount.formatted()` produces a string hledger round-trips
+    ///     correctly. See #129.
     /// - Returns: An `Amount` if parsing succeeds, `nil` otherwise.
-    static func parse(_ input: String, defaultCommodity: String = "") -> Amount? {
+    static func parse(
+        _ input: String,
+        defaultCommodity: String = "",
+        styleResolver: StyleResolver? = nil
+    ) -> Amount? {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
 
-        if let amount = parseCostAnnotated(trimmed, defaultCommodity: defaultCommodity) {
+        if let amount = parseCostAnnotated(trimmed, defaultCommodity: defaultCommodity, styleResolver: styleResolver) {
             return amount
         }
-        return parseSimple(trimmed, defaultCommodity: defaultCommodity)
+        return parseSimple(trimmed, defaultCommodity: defaultCommodity, styleResolver: styleResolver)
     }
 
     /// Parse a cost-annotated amount like `-5 XDWD @@ €742,55` or `-5 XDWD @ €148.518`.
     ///
     /// Returns `nil` if the input does not match the cost pattern or if either the
     /// quantity or the cost portion cannot be parsed.
-    static func parseCostAnnotated(_ input: String, defaultCommodity: String = "") -> Amount? {
+    static func parseCostAnnotated(
+        _ input: String,
+        defaultCommodity: String = "",
+        styleResolver: StyleResolver? = nil
+    ) -> Amount? {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         guard let match = trimmed.firstMatch(of: costRegex) else { return nil }
 
@@ -67,7 +87,7 @@ enum PostingAmountParser {
         let qty = AmountParser.parseNumber(qtyStr)
         guard qty != 0 else { return nil }
 
-        guard let costAmount = parseSimple(costStr, defaultCommodity: defaultCommodity) else {
+        guard let costAmount = parseSimple(costStr, defaultCommodity: defaultCommodity, styleResolver: styleResolver) else {
             return nil
         }
 
@@ -87,11 +107,12 @@ enum PostingAmountParser {
             style: costAmount.style
         )
 
-        let style = AmountStyle(
+        var style = AmountStyle(
             commoditySide: .right,
             commoditySpaced: true,
             precision: decimalPlaces(in: qtyStr)
         )
+        applyJournalStyle(&style, for: commodity, resolver: styleResolver)
 
         return Amount(commodity: commodity, quantity: qty, style: style, cost: cost)
     }
@@ -100,7 +121,11 @@ enum PostingAmountParser {
     ///
     /// Returns `nil` for empty input or for plain `0` with no commodity (treated as
     /// "no amount", consistent with the existing TransactionFormView behaviour).
-    static func parseSimple(_ input: String, defaultCommodity: String = "") -> Amount? {
+    static func parseSimple(
+        _ input: String,
+        defaultCommodity: String = "",
+        styleResolver: StyleResolver? = nil
+    ) -> Amount? {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
 
@@ -110,7 +135,8 @@ enum PostingAmountParser {
         if qty == 0 && commodity.isEmpty { return nil }
 
         let effectiveCommodity = commodity.isEmpty ? defaultCommodity : commodity
-        let style = styleFor(commodity: effectiveCommodity, rawInput: trimmed)
+        var style = styleFor(commodity: effectiveCommodity, rawInput: trimmed)
+        applyJournalStyle(&style, for: effectiveCommodity, resolver: styleResolver)
 
         return Amount(commodity: effectiveCommodity, quantity: qty, style: style)
     }
@@ -122,8 +148,9 @@ enum PostingAmountParser {
     ///
     /// - Single-character commodities (e.g. `€`, `$`) are placed on the left with no space.
     /// - Multi-character commodities (e.g. `EUR`, `SWDA`) are placed on the right with a space.
-    /// - `decimalMark` is always `.` (the hledger default) so `Amount.formatted()`
-    ///   produces hledger-compatible output.
+    /// - `decimalMark` is always `.` (the hledger default). Callers MUST pass a
+    ///   `styleResolver` (via `applyJournalStyle`) so European-format commodities
+    ///   round-trip correctly — see #129.
     private static func styleFor(commodity: String, rawInput: String) -> AmountStyle {
         let isSymbol = commodity.count == 1
         return AmountStyle(
@@ -131,6 +158,25 @@ enum PostingAmountParser {
             commoditySpaced: !isSymbol,
             precision: decimalPlaces(in: rawInput)
         )
+    }
+
+    /// Override the input-derived `decimalMark` / `digitGroupSeparator` /
+    /// `digitGroupSizes` of `style` with the journal-declared style for
+    /// `commodity` if the resolver returns a non-nil value. Side, spacing and
+    /// input-derived precision are kept so the user-typed shape is preserved.
+    ///
+    /// This is the fix for #129: without it, an Amount written by the form
+    /// uses `decimalMark = "."` and a journal that declares
+    /// `commodity € 1.000,00` re-parses `€1.00` as `100`.
+    private static func applyJournalStyle(
+        _ style: inout AmountStyle,
+        for commodity: String,
+        resolver: StyleResolver?
+    ) {
+        guard let resolved = resolver?(commodity) else { return }
+        style.decimalMark = resolved.decimalMark
+        style.digitGroupSeparator = resolved.digitGroupSeparator
+        style.digitGroupSizes = resolved.digitGroupSizes
     }
 
     /// Return the number of decimal places in a raw number string.
