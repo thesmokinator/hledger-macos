@@ -81,9 +81,9 @@ struct CsvTransactionPreviewTab: View {
                     .disabled(duplicateCount == 0)
                 }
                 .font(.callout)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+                .padding(.horizontal, Theme.Spacing.lg)
+                .padding(.top, Theme.Spacing.md)
+                .padding(.bottom, Theme.Spacing.sm)
 
                 Divider()
 

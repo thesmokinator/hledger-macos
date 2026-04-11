@@ -21,18 +21,18 @@ struct OnboardingView: View {
             Image(systemName: "text.book.closed")
                 .font(.system(size: 56))
                 .foregroundStyle(Color.accentColor)
-                .padding(.bottom, 20)
+                .padding(.bottom, Theme.Spacing.xl)
 
             // Title
             Text("Welcome to hledger for Mac")
                 .font(.largeTitle.bold())
-                .padding(.bottom, 6)
+                .padding(.bottom, Theme.Spacing.xsPlus)
 
             // Subtitle
             Text("A macOS companion for plain text accounting")
                 .font(.body)
                 .foregroundStyle(.secondary)
-                .padding(.bottom, 32)
+                .padding(.bottom, Theme.Spacing.xxxl)
 
             // Status row
             HStack(spacing: 10) {
@@ -57,11 +57,11 @@ struct OnboardingView: View {
 
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.md)
             .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
             .frame(maxWidth: 440)
-            .padding(.bottom, 12)
+            .padding(.bottom, Theme.Spacing.md)
 
             // Advanced settings
             VStack(spacing: 0) {
@@ -82,16 +82,16 @@ struct OnboardingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
+                .padding(.horizontal, Theme.Spacing.xl)
+                .padding(.vertical, Theme.Spacing.smPlus)
 
                 if showAdvanced {
                     VStack(spacing: 10) {
                         LabeledField(label: "hledger path", text: $customHledgerPath, placeholder: "/opt/homebrew/bin/hledger")
                         LabeledField(label: "Journal file", text: $customJournalPath, placeholder: "~/.hledger.journal")
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
+                    .padding(.horizontal, Theme.Spacing.xl)
+                    .padding(.bottom, Theme.Spacing.md)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
@@ -122,19 +122,19 @@ struct OnboardingView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(isScanning || !isFound)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, Theme.Spacing.sm)
 
             if let error = appState.errorMessage {
                 Text(error)
                     .foregroundStyle(.red)
                     .font(.caption)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, Theme.Spacing.xs)
             }
 
             Spacer()
                 .frame(height: 40)
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, Theme.Spacing.huge)
         .frame(minWidth: 560, minHeight: 480)
         .onAppear {
             customHledgerPath = appState.config.hledgerBinaryPath

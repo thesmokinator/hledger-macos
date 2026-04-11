@@ -24,9 +24,9 @@ struct ReportChartOverlay: View {
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.top, Theme.Spacing.xl)
+            .padding(.bottom, Theme.Spacing.md)
 
             // Chart
             Group {
@@ -39,8 +39,8 @@ struct ReportChartOverlay: View {
                     singleSeriesChart(title: "Cash Flow")
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.bottom, Theme.Spacing.xxl)
         }
         .frame(width: 860, height: 560)
         .background(.ultraThinMaterial)

@@ -19,7 +19,7 @@ struct FormRow<Content: View>: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .frame(width: labelWidth, alignment: .trailing)
-                .padding(.top, 6)
+                .padding(.top, Theme.Spacing.xsPlus)
             content
         }
     }

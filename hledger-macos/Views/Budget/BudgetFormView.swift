@@ -31,8 +31,8 @@ struct BudgetFormView: View {
                             .foregroundStyle(Color.accentColor)
                         Spacer()
                     }
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
+                    .padding(.top, Theme.Spacing.xl)
+                    .padding(.bottom, Theme.Spacing.xl)
 
                     // Fields
                     VStack(spacing: 14) {
@@ -54,7 +54,7 @@ struct BudgetFormView: View {
                                 .textFieldStyle(.roundedBorder)
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.Spacing.xxl)
                 }
             }
 
@@ -79,8 +79,8 @@ struct BudgetFormView: View {
                     .keyboardShortcut(.defaultAction)
                     .disabled(account.isEmpty || amount.isEmpty)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.vertical, Theme.Spacing.md)
         }
         .frame(width: 480, height: 300)
         .onAppear { prefill() }

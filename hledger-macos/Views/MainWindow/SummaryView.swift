@@ -37,9 +37,9 @@ struct SummaryView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Theme.Spacing.xxl)
+            .padding(.top, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.xxl)
         }
         .navigationTitle("Summary")
         .toolbar {
@@ -106,14 +106,14 @@ struct SummaryView: View {
                     modeB: .byName
                 )
             }
-            .padding(.bottom, 2)
+            .padding(.bottom, Theme.Spacing.xxs)
 
             if items.isEmpty {
                 Text("No data for this period")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Theme.Spacing.sm)
             }
 
             let total = items.reduce(Decimal(0)) { $0 + $1.1 }
@@ -136,7 +136,7 @@ struct SummaryView: View {
                 .frame(height: 20)
             }
         }
-        .padding(16)
+        .padding(Theme.Spacing.lg)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
     }
 
@@ -161,7 +161,7 @@ struct SummaryView: View {
                     }
                 }
             }
-            .padding(.bottom, 2)
+            .padding(.bottom, Theme.Spacing.xxs)
 
             // Header
             portfolioRow(
@@ -192,7 +192,7 @@ struct SummaryView: View {
                 Text("Configure price tickers in Settings > Investments to see market values.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
-                    .padding(.top, 4)
+                    .padding(.top, Theme.Spacing.xs)
             } else if !appState.failedPriceTickers.isEmpty {
                 Label(
                     "Could not fetch prices for: \(appState.failedPriceTickers.sorted().joined(separator: ", "))",
@@ -200,15 +200,15 @@ struct SummaryView: View {
                 )
                 .font(.caption)
                 .foregroundStyle(.orange)
-                .padding(.top, 4)
+                .padding(.top, Theme.Spacing.xs)
             } else if showMarketColumns {
                 Label("Prices via Yahoo Finance (delayed)", systemImage: "info.circle")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
-                    .padding(.top, 4)
+                    .padding(.top, Theme.Spacing.xs)
             }
         }
-        .padding(16)
+        .padding(Theme.Spacing.lg)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
     }
 

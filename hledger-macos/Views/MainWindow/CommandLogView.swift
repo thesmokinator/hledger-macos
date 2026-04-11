@@ -51,8 +51,8 @@ struct CommandLogView: View {
                     Spacer()
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.md)
 
             Divider()
 
@@ -80,7 +80,7 @@ struct CommandLogView: View {
                                 .truncationMode(.middle)
                         }
                         .tag(entry)
-                        .padding(.vertical, 2)
+                        .padding(.vertical, Theme.Spacing.xxs)
                     }
                     .listStyle(.inset)
                     .frame(minWidth: 400)
@@ -108,8 +108,8 @@ struct CommandLogView: View {
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.smPlus)
         }
         .frame(width: 900, height: 500)
     }
@@ -162,7 +162,7 @@ struct CommandLogView: View {
                     detailSection("stdout", String(entry.stdout.prefix(2000)))
                 }
             }
-            .padding(16)
+            .padding(Theme.Spacing.lg)
         }
     }
 

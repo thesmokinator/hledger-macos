@@ -248,8 +248,8 @@ struct RecurringRuleRow: View {
             // Period badge
             Text(rule.periodExpr)
                 .font(.caption.weight(.medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
+                .padding(.horizontal, Theme.Spacing.sm)
+                .padding(.vertical, Theme.Spacing.xxsPlus)
                 .background(Color.accentColor.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
 
             // Description

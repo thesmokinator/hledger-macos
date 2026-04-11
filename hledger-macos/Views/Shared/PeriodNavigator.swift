@@ -31,8 +31,8 @@ struct PeriodNavigator: View {
             .buttonStyle(.borderless)
             .keyboardShortcut(.rightArrow, modifiers: [])
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Theme.Spacing.lg)
+        .padding(.top, Theme.Spacing.md)
+        .padding(.bottom, Theme.Spacing.lg)
     }
 }

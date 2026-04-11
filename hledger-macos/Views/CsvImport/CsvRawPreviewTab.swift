@@ -98,8 +98,8 @@ struct CsvRawPreviewTab: View {
                                             .foregroundStyle(.secondary)
                                             .frame(width: columnWidth, alignment: .leading)
                                             .lineLimit(1)
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, Theme.Spacing.xsPlus)
+                                            .padding(.horizontal, Theme.Spacing.sm)
                                     }
                                 }
                                 .background(Color.secondary.opacity(0.08))
@@ -114,8 +114,8 @@ struct CsvRawPreviewTab: View {
                                             .font(.system(.caption, design: .monospaced))
                                             .frame(width: columnWidth, alignment: .leading)
                                             .lineLimit(1)
-                                            .padding(.vertical, 4)
-                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, Theme.Spacing.xs)
+                                            .padding(.horizontal, Theme.Spacing.sm)
                                     }
                                 }
                                 .background(offset.isMultiple(of: 2) ? Color.clear : Color.secondary.opacity(0.04))
@@ -130,7 +130,7 @@ struct CsvRawPreviewTab: View {
                     )
                 }
             }
-            .padding(16)
+            .padding(Theme.Spacing.lg)
         }
         .onAppear { runAutoDetection() }
     }

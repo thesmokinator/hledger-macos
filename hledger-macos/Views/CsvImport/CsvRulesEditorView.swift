@@ -34,7 +34,7 @@ struct CsvRulesEditorView: View {
                 conditionalRulesSection
                 rawEditorSection
             }
-            .padding(20)
+            .padding(Theme.Spacing.xl)
         }
     }
 
@@ -62,14 +62,14 @@ struct CsvRulesEditorView: View {
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Theme.Spacing.sm)
 
                 ForEach(config.columnMappings.indices, id: \.self) { index in
                     columnMappingRow(index: index)
                 }
             }
         }
-        .padding(14)
+        .padding(Theme.Spacing.mdPlus)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
     }
 
@@ -97,8 +97,8 @@ struct CsvRulesEditorView: View {
             .labelsHidden()
             .frame(minWidth: 140)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
+        .padding(.horizontal, Theme.Spacing.sm)
+        .padding(.vertical, Theme.Spacing.xxs)
     }
 
     // MARK: - Settings
@@ -169,7 +169,7 @@ struct CsvRulesEditorView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(Theme.Spacing.mdPlus)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
     }
 
@@ -208,14 +208,14 @@ struct CsvRulesEditorView: View {
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Theme.Spacing.sm)
 
                 ForEach(config.conditionalRules) { rule in
                     conditionalRuleRow(rule)
                 }
             }
         }
-        .padding(14)
+        .padding(Theme.Spacing.mdPlus)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
         .sheet(isPresented: $showingConditionalForm) {
             ConditionalRuleFormView(
@@ -263,10 +263,10 @@ struct CsvRulesEditorView: View {
                     .foregroundStyle(.red)
             }
             .buttonStyle(.plain)
-            .padding(.leading, 8)
+            .padding(.leading, Theme.Spacing.sm)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
+        .padding(.horizontal, Theme.Spacing.sm)
+        .padding(.vertical, Theme.Spacing.xxsPlus)
     }
 
     // MARK: - Raw Editor
@@ -301,7 +301,7 @@ struct CsvRulesEditorView: View {
                     }
             }
         }
-        .padding(14)
+        .padding(Theme.Spacing.mdPlus)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
         .onChange(of: showRawEditor) {
             if showRawEditor {

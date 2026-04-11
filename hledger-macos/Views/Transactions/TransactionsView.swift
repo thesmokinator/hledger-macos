@@ -32,8 +32,8 @@ struct TransactionsView: View {
                     subtitle: SummaryCard.netSubtitle(for: appState.summaryCurrentMonth)
                 )
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.md)
 
             Divider()
 

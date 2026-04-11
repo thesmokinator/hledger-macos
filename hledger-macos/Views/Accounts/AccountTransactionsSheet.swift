@@ -81,8 +81,8 @@ struct AccountTransactionsSheet: View {
             Button("Done") { dismiss() }
                 .keyboardShortcut(.escape, modifiers: [])
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.horizontal, Theme.Spacing.xl)
+        .padding(.vertical, Theme.Spacing.mdPlus)
     }
 
     // MARK: - Content

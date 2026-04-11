@@ -318,7 +318,7 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
-            Divider().frame(width: 180).padding(.vertical, 4)
+            Divider().frame(width: 180).padding(.vertical, Theme.Spacing.xs)
 
             HStack(spacing: 16) {
                 Link("GitHub", destination: URL(string: "https://github.com/thesmokinator/hledger-macos")!)
@@ -350,8 +350,8 @@ struct SettingsView: View {
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.smPlus)
         }
     }
 
