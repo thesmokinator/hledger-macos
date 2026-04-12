@@ -50,8 +50,11 @@ struct BudgetView: View {
                 ContentUnavailableView(
                     "No Budget Rules",
                     systemImage: "chart.bar",
-                    description: Text("Add budget rules to track spending against targets.")
-                )
+                    description: Text("Set spending targets for your accounts to track budget vs. actual.")
+                ) {
+                    Button("Add Budget Rule") { addRule() }
+                        .buttonStyle(.borderedProminent)
+                }
                 Spacer()
             } else {
                 budgetList
