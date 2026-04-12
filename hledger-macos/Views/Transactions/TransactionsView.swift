@@ -59,11 +59,8 @@ struct TransactionsView: View {
                     } description: {
                         Text("There are no transactions recorded for this period.")
                     } actions: {
-                        HStack(spacing: 12) {
-                            Button("Previous Month") { appState.previousMonth() }
-                            Button("Add Transaction") { newTransaction() }
-                                .buttonStyle(.borderedProminent)
-                        }
+                        Button("Add Transaction") { newTransaction() }
+                            .buttonStyle(.borderedProminent)
                     }
                 }
                 Spacer()
