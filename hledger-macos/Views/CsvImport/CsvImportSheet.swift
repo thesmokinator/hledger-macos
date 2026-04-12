@@ -65,6 +65,19 @@ struct CsvImportSheet: View {
         previewTransactions.filter(\.isSelected).count
     }
 
+    private let stepNames = ["CSV Preview", "Rules Editor", "Import Preview"]
+
+    private var canAdvance: Bool {
+        selectedTab == 0 || (selectedTab == 1 && validationErrors.isEmpty)
+    }
+
+    private var advanceHint: String {
+        if selectedTab == 1 && !validationErrors.isEmpty {
+            return validationErrors.first ?? "Fix validation errors to continue"
+        }
+        return ""
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar
@@ -92,50 +105,58 @@ struct CsvImportSheet: View {
             if csvContent.isEmpty {
                 noFileView
             } else {
-                TabView(selection: $selectedTab) {
-                    CsvRawPreviewTab(
-                        csvContent: csvContent,
-                        config: $config,
-                        rulesFileURL: $rulesFileURL,
-                        rulesFiles: rulesFiles,
-                        companionRules: companionRules
-                    )
-                    .tabItem { Label("1. CSV Preview", systemImage: "tablecells") }
-                    .tag(0)
+                // Step indicator
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Step \(selectedTab + 1) of 3: \(stepNames[selectedTab])")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.secondary)
 
-                    CsvRulesEditorView(
-                        config: $config,
-                        csvContent: csvContent,
-                        knownAccounts: knownAccounts,
-                        knownCommodities: knownCommodities
-                    )
-                    .tabItem { Label("2. Rules Editor", systemImage: "doc.text") }
-                    .tag(1)
-
-                    CsvTransactionPreviewTab(
-                        previewTransactions: $previewTransactions,
-                        isLoading: isParsing,
-                        errorMessage: parseError
-                    )
-                    .tabItem { Label("3. Import", systemImage: "square.and.arrow.down") }
-                    .tag(2)
+                    ProgressView(value: Double(selectedTab + 1), total: 3.0)
+                        .progressViewStyle(.linear)
+                        .tint(.accentColor)
                 }
-                .onChange(of: selectedTab) {
-                    if selectedTab == 2 {
-                        Task { await parsePreview() }
+                .padding(.horizontal, Theme.Spacing.xl)
+                .padding(.bottom, Theme.Spacing.md)
+
+                Divider()
+
+                // Step content — no free tab navigation
+                Group {
+                    if selectedTab == 0 {
+                        CsvRawPreviewTab(
+                            csvContent: csvContent,
+                            config: $config,
+                            rulesFileURL: $rulesFileURL,
+                            rulesFiles: rulesFiles,
+                            companionRules: companionRules
+                        )
+                    } else if selectedTab == 1 {
+                        CsvRulesEditorView(
+                            config: $config,
+                            csvContent: csvContent,
+                            knownAccounts: knownAccounts,
+                            knownCommodities: knownCommodities
+                        )
+                    } else {
+                        CsvTransactionPreviewTab(
+                            previewTransactions: $previewTransactions,
+                            isLoading: isParsing,
+                            errorMessage: parseError
+                        )
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             Divider()
 
-            // Bottom bar — consistent with other dialogs
+            // Bottom bar
             HStack {
                 if let result = importResult {
                     Label(result, systemImage: "checkmark.circle")
                         .font(.callout)
                         .foregroundStyle(Theme.Status.good)
-                } else if !validationErrors.isEmpty && selectedTab == 2 {
+                } else if !validationErrors.isEmpty && selectedTab >= 1 {
                     Label(validationErrors.first!, systemImage: "exclamationmark.triangle")
                         .font(.caption)
                         .foregroundStyle(Theme.Status.warning)
@@ -150,12 +171,36 @@ struct CsvImportSheet: View {
                 Button("Close") { dismiss() }
                     .keyboardShortcut(.cancelAction)
 
-                Button("Import") {
-                    Task { await performImport() }
+                if csvContent.isEmpty {
+                    EmptyView()
+                } else {
+                    // Back
+                    Button("Back") {
+                        selectedTab -= 1
+                    }
+                    .disabled(selectedTab == 0)
+
+                    if selectedTab < 2 {
+                        // Next
+                        Button("Next") {
+                            selectedTab += 1
+                            if selectedTab == 2 {
+                                Task { await parsePreview() }
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!canAdvance)
+                        .help(advanceHint)
+                    } else {
+                        // Import (final step)
+                        Button("Import") {
+                            Task { await performImport() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(!isReadyToImport)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(!isReadyToImport)
             }
             .padding(.horizontal, Theme.Spacing.xl)
             .padding(.vertical, Theme.Spacing.md)
