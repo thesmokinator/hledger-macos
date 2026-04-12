@@ -134,11 +134,11 @@ struct CsvImportSheet: View {
                 if let result = importResult {
                     Label(result, systemImage: "checkmark.circle")
                         .font(.callout)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.Status.good)
                 } else if !validationErrors.isEmpty && selectedTab == 2 {
                     Label(validationErrors.first!, systemImage: "exclamationmark.triangle")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.Status.warning)
                 } else if selectedTab == 2 && selectedCount > 0 {
                     Text("\(selectedCount) transaction\(selectedCount == 1 ? "" : "s") selected")
                         .font(.callout)

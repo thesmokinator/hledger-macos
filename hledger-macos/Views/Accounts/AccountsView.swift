@@ -168,7 +168,7 @@ struct AccountsView: View {
 
     private func nodeBalanceColor(_ raw: String) -> Color {
         let (qty, _) = AmountParser.parse(raw)
-        return qty < 0 ? .red : .secondary
+        return qty < 0 ? Theme.Delta.negative : .secondary
     }
 }
 
@@ -249,6 +249,6 @@ struct AccountBalance: Identifiable {
     }
 
     var balanceColor: Color {
-        parsedAmount < 0 ? .red : .primary
+        parsedAmount < 0 ? Theme.Delta.negative : .primary
     }
 }

@@ -57,7 +57,7 @@ struct DateInputField: View {
 
             if showIndicator {
                 Image(systemName: isValid ? "checkmark.circle" : "xmark.circle")
-                    .foregroundStyle(isValid ? .green : .red)
+                    .foregroundStyle(isValid ? Theme.Status.good : Theme.Status.critical)
                     .font(.caption)
             }
 

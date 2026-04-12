@@ -38,7 +38,7 @@ struct OnboardingView: View {
             HStack(spacing: 10) {
                 Image(systemName: isFound ? "checkmark.circle.fill" : "xmark.circle")
                     .font(.system(size: 18))
-                    .foregroundStyle(isFound ? .green : .red)
+                    .foregroundStyle(isFound ? Theme.Status.good : Theme.Status.critical)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text("hledger cli")
@@ -126,7 +126,7 @@ struct OnboardingView: View {
 
             if let error = appState.errorMessage {
                 Text(error)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.Status.critical)
                     .font(.caption)
                     .padding(.bottom, Theme.Spacing.xs)
             }

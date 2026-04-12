@@ -57,14 +57,14 @@ struct ReportChartOverlay: View {
                     x: .value("Period", item.period),
                     y: .value("Amount", item.income)
                 )
-                .foregroundStyle(.green.opacity(0.8))
+                .foregroundStyle(Theme.AccountCategory.income.opacity(0.8))
                 .position(by: .value("Type", "Income"))
 
                 BarMark(
                     x: .value("Period", item.period),
                     y: .value("Amount", item.expenses)
                 )
-                .foregroundStyle(.red.opacity(0.8))
+                .foregroundStyle(Theme.AccountCategory.expense.opacity(0.8))
                 .position(by: .value("Type", "Expenses"))
             }
 
@@ -85,8 +85,8 @@ struct ReportChartOverlay: View {
             }
         }
         .chartForegroundStyleScale([
-            "Income": Color.green.opacity(0.8),
-            "Expenses": Color.red.opacity(0.8)
+            "Income": Theme.AccountCategory.income.opacity(0.8),
+            "Expenses": Theme.AccountCategory.expense.opacity(0.8)
         ])
         .chartYAxis {
             AxisMarks { value in
@@ -118,7 +118,7 @@ struct ReportChartOverlay: View {
                     x: .value("Period", item.period),
                     y: .value("Amount", item.value)
                 )
-                .foregroundStyle(item.value >= 0 ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+                .foregroundStyle(item.value >= 0 ? Theme.Delta.positive.opacity(0.8) : Theme.Delta.negative.opacity(0.8))
             }
         }
         .chartYAxis {

@@ -155,7 +155,7 @@ struct AIChatOverlay: View {
                 } label: {
                     Image(systemName: "stop.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.Status.critical)
                 }
                 .buttonStyle(.plain)
                 .help("Stop generating")

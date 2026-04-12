@@ -205,7 +205,7 @@ struct ReportsView: View {
     private func amountColor(_ amount: String, isTotal: Bool) -> Color {
         let trimmed = amount.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty || trimmed == "0" { return .gray }
-        if isNegativeAmount(trimmed) { return .red }
+        if isNegativeAmount(trimmed) { return Theme.Delta.negative }
         if isTotal { return .primary }
         return .secondary
     }

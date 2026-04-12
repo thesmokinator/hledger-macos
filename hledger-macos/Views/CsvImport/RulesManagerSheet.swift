@@ -89,7 +89,7 @@ struct RulesManagerSheet: View {
                 if let error = errorMessage {
                     Text(error)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.Status.critical)
                         .lineLimit(2)
                 }
 
