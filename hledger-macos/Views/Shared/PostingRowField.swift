@@ -16,7 +16,7 @@ struct PostingRowField: View {
     private let indexWidth: CGFloat = 30
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             // Row 1: account
             HStack(spacing: 8) {
                 Text("#\(index + 1):")
@@ -51,9 +51,10 @@ struct PostingRowField: View {
 
                 TextField("Posting comment (optional)", text: $comment)
                     .textFieldStyle(.roundedBorder)
-                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
+        .padding(Theme.Spacing.sm)
+        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
     }
 }
