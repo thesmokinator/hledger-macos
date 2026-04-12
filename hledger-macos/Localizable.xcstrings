@@ -4,16 +4,36 @@
     "" : {
 
     },
-    "-" : {
+    "#%lld:" : {
 
     },
-    "—" : {
+    "%lld" : {
 
     },
-    "·" : {
-
+    "%lld transaction%@" : {
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "new",
+                    "value": "%1$lld transaction%2$@"
+                }
+            }
+        }
+    },
+    "%lld transaction%@ selected" : {
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "new",
+                    "value": "%1$lld transaction%2$@ selected"
+                }
+            }
+        }
     },
     "(skip)" : {
+
+    },
+    "*" : {
 
     },
     "**%lld** duplicates" : {
@@ -22,42 +42,16 @@
     "**%lld** transactions parsed" : {
 
     },
-    "#%lld:" : {
-
-    },
-    "%lld" : {
-
-    },
-    "%lld transaction%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld transaction%2$@"
-          }
-        }
-      }
-    },
-    "%lld transaction%@ selected" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld transaction%2$@ selected"
-          }
-        }
-      }
-    },
-    "© 2026 Michele Broggi" : {
-
-    },
-    "⌘%lld" : {
+    "-" : {
 
     },
     "0.00" : {
 
     },
     "1. CSV Preview" : {
+
+    },
+    "12 months" : {
 
     },
     "2. Rules Editor" : {
@@ -72,13 +66,13 @@
     "6 months" : {
 
     },
-    "12 months" : {
-
-    },
     "A macOS companion for plain text accounting" : {
 
     },
     "A native macOS companion for plain text accounting" : {
+
+    },
+    "AI Assistant" : {
 
     },
     "About" : {
@@ -108,9 +102,6 @@
     "Add Posting" : {
 
     },
-    "Add recurring rules to automate periodic transactions." : {
-
-    },
     "Add Rule" : {
 
     },
@@ -118,6 +109,12 @@
 
     },
     "Add Transaction" : {
+
+    },
+    "Add budget rules to track spending against targets." : {
+
+    },
+    "Add recurring rules to automate periodic transactions." : {
 
     },
     "Add transactions to your journal to generate financial reports." : {
@@ -129,9 +126,6 @@
     "Advanced settings" : {
 
     },
-    "AI Assistant" : {
-
-    },
     "All processing happens locally on your Mac using Apple Intelligence. No financial data is sent to external servers." : {
 
     },
@@ -139,14 +133,14 @@
 
     },
     "Amount: plain number (50.00), currency prefix (%@50.00), or commodity with cost (-5 STCK @@ %@200.00). Leave one amount blank to auto-balance." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount: plain number (50.00), currency prefix (%1$@50.00), or commodity with cost (-5 STCK @@ %2$@200.00). Leave one amount blank to auto-balance."
-          }
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "new",
+                    "value": "Amount: plain number (50.00), currency prefix (%1$@50.00), or commodity with cost (-5 STCK @@ %2$@200.00). Leave one amount blank to auto-balance."
+                }
+            }
         }
-      }
     },
     "Appearance" : {
 
@@ -178,6 +172,12 @@
     "Budget" : {
 
     },
+    "CHF, SEK, BTC..." : {
+
+    },
+    "CSV Column" : {
+
+    },
     "Cancel" : {
 
     },
@@ -194,9 +194,6 @@
 
     },
     "Check the Rules Editor tab and verify your column mappings and settings." : {
-
-    },
-    "CHF, SEK, BTC..." : {
 
     },
     "Choose CSV File" : {
@@ -250,16 +247,10 @@
     "Could not fetch prices for: %@" : {
 
     },
-    "CSV Column" : {
-
-    },
     "Current month" : {
 
     },
     "Custom..." : {
-
-    },
-    "Dark" : {
 
     },
     "DD" : {
@@ -272,6 +263,9 @@
 
     },
     "DD/MM/YYYY" : {
+
+    },
+    "Dark" : {
 
     },
     "Default commodity" : {
@@ -301,22 +295,7 @@
     "Download" : {
 
     },
-    "duplicate" : {
-
-    },
     "Dynamic" : {
-
-    },
-    "e.g. 500.00" : {
-
-    },
-    "e.g. Food, Housing (optional)" : {
-
-    },
-    "e.g. grocery|supermarket" : {
-
-    },
-    "e.g. My Bank" : {
 
     },
     "Edit" : {
@@ -361,10 +340,10 @@
     "Flat" : {
 
     },
-    "Found" : {
+    "Format: YYYY-MM-DD" : {
 
     },
-    "from %@" : {
+    "Found" : {
 
     },
     "Gain/Loss" : {
@@ -383,24 +362,6 @@
 
     },
     "Go to tab 2 to configure rules, then come back here." : {
-
-    },
-    "hledger" : {
-
-    },
-    "hledger Binary" : {
-
-    },
-    "hledger cli" : {
-
-    },
-    "hledger for Mac" : {
-
-    },
-    "hledger for Mac Help" : {
-
-    },
-    "hledger.org" : {
 
     },
     "Import" : {
@@ -445,9 +406,6 @@
     "Loading..." : {
 
     },
-    "Market Value" : {
-
-    },
     "MIT License" : {
 
     },
@@ -457,16 +415,22 @@
     "MM/DD/YYYY" : {
 
     },
+    "Market Value" : {
+
+    },
+    "Monthly budget amount (e.g. 500.00)" : {
+
+    },
     "Net" : {
 
     },
     "New Rule" : {
 
     },
-    "New rules" : {
+    "New Transaction" : {
 
     },
-    "New Transaction" : {
+    "New rules" : {
 
     },
     "No %@ to show." : {
@@ -475,10 +439,28 @@
     "No Accounts" : {
 
     },
-    "No accounts found in journal." : {
+    "No Budget Rules" : {
 
     },
-    "No Budget Rules" : {
+    "No Data" : {
+
+    },
+    "No Data for Selected Period" : {
+
+    },
+    "No Data to Report" : {
+
+    },
+    "No Recurring Rules" : {
+
+    },
+    "No Transactions" : {
+
+    },
+    "No Transactions in %@" : {
+
+    },
+    "No accounts found in journal." : {
 
     },
     "No commands executed yet." : {
@@ -487,16 +469,10 @@
     "No conditional rules. Add rules to auto-categorize transactions by pattern." : {
 
     },
-    "No Data for Selected Period" : {
-
-    },
     "No data for this period" : {
 
     },
     "No data to preview." : {
-
-    },
-    "No Data to Report" : {
 
     },
     "No journal file found at this path" : {
@@ -508,25 +484,22 @@
     "No pending transactions to generate. All rules are up to date." : {
 
     },
-    "No Recurring Rules" : {
+    "No report data for the selected period." : {
 
     },
     "No rules files found" : {
 
     },
-    "No Transactions" : {
-
-    },
     "No transactions found for %@." : {
 
     },
-    "No Transactions in %@" : {
-
-    },
-    "Not found — install with `brew install hledger`" : {
+    "No transactions match your search." : {
 
     },
     "Not found at this path" : {
+
+    },
+    "Not found \u2014 install with `brew install hledger`" : {
 
     },
     "OK" : {
@@ -583,9 +556,6 @@
     "Price Tickers" : {
 
     },
-    "pricehist" : {
-
-    },
     "Prices via Yahoo Finance (delayed)" : {
 
     },
@@ -622,10 +592,10 @@
     "Rules" : {
 
     },
-    "Rules files are stored in the rules/ directory next to your journal." : {
+    "Rules Manager" : {
 
     },
-    "Rules Manager" : {
+    "Rules files are stored in the rules/ directory next to your journal." : {
 
     },
     "Sample" : {
@@ -643,13 +613,13 @@
     "Sections" : {
 
     },
-    "Select a command to view details" : {
+    "Select All" : {
 
     },
     "Select a CSV file to import" : {
 
     },
-    "Select All" : {
+    "Select a command to view details" : {
 
     },
     "Send message" : {
@@ -658,10 +628,10 @@
     "Separator: **%@**" : {
 
     },
-    "Set spending targets for your accounts to track budget vs. actual." : {
+    "Set Status" : {
 
     },
-    "Set Status" : {
+    "Set spending targets for your accounts to track budget vs. actual." : {
 
     },
     "Settings" : {
@@ -673,10 +643,10 @@
     "Show" : {
 
     },
-    "Show investments in Summary" : {
+    "Show Last 12 Months" : {
 
     },
-    "Show Last 12 Months" : {
+    "Show investments in Summary" : {
 
     },
     "Startup" : {
@@ -707,9 +677,6 @@
 
     },
     "Ticker" : {
-
-    },
-    "to %@" : {
 
     },
     "Tools" : {
@@ -743,14 +710,14 @@
 
     },
     "Version %@ is available. You're running %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Version %1$@ is available. You're running %2$@."
-          }
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "new",
+                    "value": "Version %1$@ is available. You're running %2$@."
+                }
+            }
         }
-      }
     },
     "View" : {
 
@@ -761,7 +728,16 @@
     "Welcome to hledger for Mac" : {
 
     },
-    "When enabled, an AI button appears at the bottom-left of the main window. You can also press ⌘⇧A to toggle the assistant." : {
+    "When enabled, an AI button appears at the bottom-left of the main window. You can also press \u2318\u21e7A to toggle the assistant." : {
+
+    },
+    "YYYY" : {
+
+    },
+    "YYYY-MM-DD" : {
+
+    },
+    "YYYY/MM/DD" : {
 
     },
     "Yahoo ticker" : {
@@ -773,13 +749,58 @@
     "You're running the latest version (%@)." : {
 
     },
-    "YYYY" : {
+    "duplicate" : {
 
     },
-    "YYYY-MM-DD" : {
+    "e.g. 500.00" : {
 
     },
-    "YYYY/MM/DD" : {
+    "e.g. Food, Housing (optional)" : {
+
+    },
+    "e.g. My Bank" : {
+
+    },
+    "e.g. grocery|supermarket" : {
+
+    },
+    "from %@" : {
+
+    },
+    "hledger" : {
+
+    },
+    "hledger Binary" : {
+
+    },
+    "hledger cli" : {
+
+    },
+    "hledger for Mac" : {
+
+    },
+    "hledger for Mac Help" : {
+
+    },
+    "hledger.org" : {
+
+    },
+    "pricehist" : {
+
+    },
+    "to %@" : {
+
+    },
+    "\u00a9 2026 Michele Broggi" : {
+
+    },
+    "\u00b7" : {
+
+    },
+    "\u2014" : {
+
+    },
+    "\u2318%lld" : {
 
     }
   },

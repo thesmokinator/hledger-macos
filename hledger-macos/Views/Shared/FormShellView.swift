@@ -14,6 +14,7 @@ struct FormShellView<Content: View>: View {
     let title: String
     let errorMessage: String?
     let saveDisabled: Bool
+    let saveHint: String?
     let onCancel: () -> Void
     let onSave: () -> Void
     let content: () -> Content
@@ -22,6 +23,7 @@ struct FormShellView<Content: View>: View {
         title: String,
         errorMessage: String? = nil,
         saveDisabled: Bool = false,
+        saveHint: String? = nil,
         onCancel: @escaping () -> Void,
         onSave: @escaping () -> Void,
         @ViewBuilder content: @escaping () -> Content
@@ -29,6 +31,7 @@ struct FormShellView<Content: View>: View {
         self.title = title
         self.errorMessage = errorMessage
         self.saveDisabled = saveDisabled
+        self.saveHint = saveHint
         self.onCancel = onCancel
         self.onSave = onSave
         self.content = content
@@ -73,6 +76,7 @@ struct FormShellView<Content: View>: View {
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
                     .disabled(saveDisabled)
+                    .help(saveDisabled ? (saveHint ?? "") : "")
             }
             .padding(.horizontal, Theme.Spacing.xxl)
             .padding(.vertical, Theme.Spacing.md)

@@ -19,11 +19,12 @@ struct TransactionFormContent: View {
     var body: some View {
         // Fields
         VStack(spacing: 14) {
-            FormRow("Date:") {
+            FormRow("Date:", required: true) {
                 DateInputField(year: $state.dateYear, month: $state.dateMonth, day: $state.dateDay)
+                    .help("Format: YYYY-MM-DD")
             }
 
-            FormRow("Description:") {
+            FormRow("Description:", required: true) {
                 AutocompleteField(
                     placeholder: "Transaction description",
                     text: $state.description,
