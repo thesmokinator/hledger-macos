@@ -1,52 +1,35 @@
 /// Budget file management: read/write periodic transactions in budget.journal.
 ///
 /// Ported from hledger-textual/budget.py.
+///
+/// `BudgetRuleFile` implements the `RuleFile` protocol with the budget-specific
+/// parse/format logic and key (`account`).  All shared file workflow is handled
+/// by `RuleFileManager<BudgetRuleFile>`.
+/// `BudgetManager` is a thin wrapper that preserves the existing public API.
 
 import Foundation
 
-enum BudgetManager {
-    static let budgetFilename = "budget.journal"
+// MARK: - BudgetRuleFile
 
-    // MARK: - File Path
+enum BudgetRuleFile: RuleFile {
+    typealias Rule = BudgetRule
+    typealias Key = String
 
-    /// Path to budget.journal next to the main journal.
-    static func budgetPath(for journalFile: URL) -> URL {
-        journalFile.deletingLastPathComponent().appendingPathComponent(budgetFilename)
+    static let filename = "budget.journal"
+
+    static func key(of rule: BudgetRule) -> String { rule.account }
+
+    static func duplicateError(_ key: String) -> BackendError {
+        .commandFailed("Budget rule already exists for \(key)")
     }
 
-    // MARK: - Ensure File Exists
-
-    /// Create budget.journal if missing and add include directive to main journal.
-    static func ensureBudgetFile(journalFile: URL) throws {
-        let budgetFile = budgetPath(for: journalFile)
-
-        if !FileManager.default.fileExists(atPath: budgetFile.path) {
-            try "".write(to: budgetFile, atomically: true, encoding: .utf8)
-        }
-
-        var journalText = try String(contentsOf: journalFile, encoding: .utf8)
-        let includePattern = /^\s*include\s+budget\.journal\s*$/
-        let hasInclude = journalText.split(separator: "\n").contains { line in
-            line.wholeMatch(of: includePattern) != nil
-        }
-
-        if !hasInclude {
-            let includeLine = "include \(budgetFilename)\n\n"
-            journalText = includeLine + journalText
-            try journalText.write(to: journalFile, atomically: true, encoding: .utf8)
-        }
+    static func notFoundError(_ key: String) -> BackendError {
+        .commandFailed("No budget rule found for \(key)")
     }
 
-    // MARK: - Parse Rules
+    // MARK: Parse
 
-    /// Parse budget rules from budget.journal.
-    static func parseRules(budgetPath: URL) -> [BudgetRule] {
-        guard FileManager.default.fileExists(atPath: budgetPath.path),
-              let content = try? String(contentsOf: budgetPath, encoding: .utf8),
-              !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return []
-        }
-
+    static func parseRules(from content: String) -> [BudgetRule] {
         var rules: [BudgetRule] = []
         var inPeriodic = false
         let periodicPattern = /^~\s+\S/
@@ -60,9 +43,7 @@ enum BudgetManager {
             }
 
             if inPeriodic {
-                if !line.isEmpty && !line.first!.isWhitespace {
-                    break
-                }
+                if !line.isEmpty && !line.first!.isWhitespace { break }
                 if line.firstMatch(of: balancingPattern) != nil { continue }
                 if line.trimmingCharacters(in: .whitespaces).isEmpty { continue }
 
@@ -74,11 +55,7 @@ enum BudgetManager {
                     // full style (decimalMark, digitGroupSeparator, precision)
                     // from the literal — same path as form input. See #129.
                     if let amount = PostingAmountParser.parseSimple(amountStr) {
-                        rules.append(BudgetRule(
-                            account: account,
-                            amount: amount,
-                            category: category
-                        ))
+                        rules.append(BudgetRule(account: account, amount: amount, category: category))
                     }
                 }
             }
@@ -87,9 +64,8 @@ enum BudgetManager {
         return rules
     }
 
-    // MARK: - Format Rules
+    // MARK: Format
 
-    /// Format budget rules into budget.journal content.
     static func formatRules(_ rules: [BudgetRule]) -> String {
         guard !rules.isEmpty else { return "" }
 
@@ -111,65 +87,60 @@ enum BudgetManager {
         lines.append("")
         return lines.joined(separator: "\n")
     }
+}
 
-    // MARK: - Write Rules
+// MARK: - BudgetManager (public API wrapper)
 
-    /// Write budget rules with backup/validate/restore.
-    static func writeRules(_ rules: [BudgetRule], budgetPath: URL, journalFile: URL, validator: any AccountingBackend) async throws {
-        let backup = budgetPath.appendingPathExtension("bak")
-        if FileManager.default.fileExists(atPath: budgetPath.path) {
-            try FileManager.default.copyItem(at: budgetPath, to: backup)
-        }
+/// Thin wrapper around `RuleFileManager<BudgetRuleFile>` that preserves the
+/// original `BudgetManager` call surface used by views and tests.
+enum BudgetManager {
 
-        do {
-            let content = formatRules(rules)
-            try content.write(to: budgetPath, atomically: true, encoding: .utf8)
-            try await validator.validateJournal()
-            try? FileManager.default.removeItem(at: backup)
-        } catch {
-            if FileManager.default.fileExists(atPath: backup.path) {
-                try? FileManager.default.removeItem(at: budgetPath)
-                try? FileManager.default.moveItem(at: backup, to: budgetPath)
-            }
-            try? FileManager.default.removeItem(at: backup)
-            throw BackendError.journalValidationFailed("Budget validation failed: \(error.localizedDescription)")
-        }
+    // MARK: File path
+
+    static func budgetPath(for journalFile: URL) -> URL {
+        RuleFileManager<BudgetRuleFile>.filePath(for: journalFile)
     }
 
-    // MARK: - CRUD
+    // MARK: Ensure file exists
 
-    /// Add a new budget rule.
+    static func ensureBudgetFile(journalFile: URL) throws {
+        try RuleFileManager<BudgetRuleFile>.ensureFile(journalFile: journalFile)
+    }
+
+    // MARK: Parse / format
+
+    static func parseRules(budgetPath: URL) -> [BudgetRule] {
+        RuleFileManager<BudgetRuleFile>.parseRules(at: budgetPath)
+    }
+
+    static func formatRules(_ rules: [BudgetRule]) -> String {
+        RuleFileManager<BudgetRuleFile>.formatRules(rules)
+    }
+
+    // MARK: Write
+
+    static func writeRules(
+        _ rules: [BudgetRule],
+        budgetPath: URL,
+        journalFile: URL,
+        validator: any AccountingBackend
+    ) async throws {
+        try await RuleFileManager<BudgetRuleFile>.writeRules(
+            rules, to: budgetPath, journalFile: journalFile, validator: validator
+        )
+    }
+
+    // MARK: CRUD
+
     static func addRule(_ rule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = budgetPath(for: journalFile)
-        try ensureBudgetFile(journalFile: journalFile)
-        var rules = parseRules(budgetPath: path)
-        if rules.contains(where: { $0.account == rule.account }) {
-            throw BackendError.commandFailed("Budget rule already exists for \(rule.account)")
-        }
-        rules.append(rule)
-        try await writeRules(rules, budgetPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<BudgetRuleFile>.addRule(rule, journalFile: journalFile, validator: validator)
     }
 
-    /// Update an existing budget rule.
     static func updateRule(oldAccount: String, newRule: BudgetRule, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path)
-        guard let index = rules.firstIndex(where: { $0.account == oldAccount }) else {
-            throw BackendError.commandFailed("No budget rule found for \(oldAccount)")
-        }
-        rules[index] = newRule
-        try await writeRules(rules, budgetPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<BudgetRuleFile>.updateRule(key: oldAccount, newRule: newRule, journalFile: journalFile, validator: validator)
     }
 
-    /// Delete a budget rule by account name.
     static func deleteRule(account: String, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = budgetPath(for: journalFile)
-        var rules = parseRules(budgetPath: path)
-        let count = rules.count
-        rules.removeAll { $0.account == account }
-        if rules.count == count {
-            throw BackendError.commandFailed("No budget rule found for \(account)")
-        }
-        try await writeRules(rules, budgetPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<BudgetRuleFile>.deleteRule(key: account, journalFile: journalFile, validator: validator)
     }
 }
