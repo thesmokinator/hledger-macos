@@ -39,9 +39,10 @@ struct SummaryCard: View {
             .font(.system(size: 28, weight: .bold, design: .rounded))
             .frame(height: 34)
 
-            Text(subtitle ?? " ")
+            Text(subtitle ?? "")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .frame(minHeight: 20, alignment: .top)
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding(.vertical, Theme.Spacing.lg)
