@@ -29,6 +29,7 @@ struct TransactionFormView: View {
             title: formState.title,
             errorMessage: formState.errorMessage,
             saveDisabled: formState.isSaving || !formState.isDateValid,
+            saveHint: formState.saveHint,
             onCancel: { dismiss() },
             onSave: { Task { await performSave() } }
         ) {
