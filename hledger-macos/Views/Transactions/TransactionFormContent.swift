@@ -69,7 +69,7 @@ struct TransactionFormContent: View {
                 .padding(.bottom, Theme.Spacing.xs)
 
             Label {
-                Text("Default commodity: ") + Text(defaultCommodity).bold()
+                Text("Default commodity: **\(defaultCommodity)**")
             } icon: {
                 Image(systemName: "tag")
             }

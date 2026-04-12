@@ -7,6 +7,7 @@ import Charts
 struct ReportChartOverlay: View {
     let reportType: ReportType
     let data: ReportData
+    let commodity: String
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -213,9 +214,16 @@ struct ReportChartOverlay: View {
     }
 
     private func formatAxisValue(_ value: Double) -> String {
-        if abs(value) >= 1000 {
-            return "\(Int(value / 1000))k"
+        let symbol = commodity
+        let abs = Swift.abs(value)
+        let formatted: String
+        if abs >= 1_000_000 {
+            formatted = "\(Int(value / 1_000_000))M"
+        } else if abs >= 1000 {
+            formatted = "\(Int(value / 1000))k"
+        } else {
+            formatted = "\(Int(value))"
         }
-        return "\(Int(value))"
+        return "\(symbol)\(formatted)"
     }
 }

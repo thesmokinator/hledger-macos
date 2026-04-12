@@ -74,6 +74,7 @@ struct BudgetView: View {
                     Label("Export", systemImage: "arrow.down.doc")
                 }
                 .disabled(mergedRows.isEmpty)
+                .help(mergedRows.isEmpty ? "No budget data to export" : "")
 
                 Button { addRule() } label: {
                     Label("Add Rule", systemImage: "plus")
