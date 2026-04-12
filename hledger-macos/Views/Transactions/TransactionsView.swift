@@ -45,20 +45,20 @@ struct TransactionsView: View {
                 if !appState.searchQuery.isEmpty {
                     ContentUnavailableView.search(text: appState.searchQuery)
                 } else if (appState.journalStats?.transactionCount ?? 0) == 0 {
-                    ContentUnavailableView(
-                        "Journal is Empty",
-                        systemImage: "doc.badge.plus",
-                        description: Text("Add your first transaction to start tracking your finances.")
-                    ) {
+                    ContentUnavailableView {
+                        Label("Journal is Empty", systemImage: "doc.badge.plus")
+                    } description: {
+                        Text("Add your first transaction to start tracking your finances.")
+                    } actions: {
                         Button("Add Transaction") { newTransaction() }
                             .buttonStyle(.borderedProminent)
                     }
                 } else {
-                    ContentUnavailableView(
-                        "No Transactions in \(appState.periodLabel)",
-                        systemImage: "calendar.badge.exclamationmark",
-                        description: Text("There are no transactions recorded for this period.")
-                    ) {
+                    ContentUnavailableView {
+                        Label("No Transactions in \(appState.periodLabel)", systemImage: "calendar.badge.exclamationmark")
+                    } description: {
+                        Text("There are no transactions recorded for this period.")
+                    } actions: {
                         HStack(spacing: 12) {
                             Button("Previous Month") { appState.previousMonth() }
                             Button("Add Transaction") { newTransaction() }

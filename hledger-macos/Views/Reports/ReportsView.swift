@@ -49,11 +49,11 @@ struct ReportsView: View {
                         description: Text("Add transactions to your journal to generate financial reports.")
                     )
                 } else {
-                    ContentUnavailableView(
-                        "No Data for Selected Period",
-                        systemImage: "calendar.badge.exclamationmark",
-                        description: Text("Try a longer period range or check that transactions exist for this date range.")
-                    ) {
+                    ContentUnavailableView {
+                        Label("No Data for Selected Period", systemImage: "calendar.badge.exclamationmark")
+                    } description: {
+                        Text("Try a longer period range or check that transactions exist for this date range.")
+                    } actions: {
                         Button("Show Last 12 Months") { periodRange = .twelveMonths }
                             .buttonStyle(.borderedProminent)
                     }
