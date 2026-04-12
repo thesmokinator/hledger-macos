@@ -1,52 +1,36 @@
 /// Recurring transactions file management: read/write periodic rules in recurring.journal.
 ///
 /// Ported from hledger-textual/recurring.py.
+///
+/// `RecurringRuleFile` implements the `RuleFile` protocol with the recurring-specific
+/// parse/format logic and key (`ruleId`).  All shared file workflow is handled
+/// by `RuleFileManager<RecurringRuleFile>`.
+/// `RecurringManager` is a thin wrapper that preserves the existing public API
+/// and also provides the transaction-generation helpers unique to recurring rules.
 
 import Foundation
 
-enum RecurringManager {
-    static let recurringFilename = "recurring.journal"
+// MARK: - RecurringRuleFile
 
-    static let supportedPeriods = [
-        "daily", "weekly", "biweekly", "monthly", "bimonthly", "quarterly", "yearly"
-    ]
+enum RecurringRuleFile: RuleFile {
+    typealias Rule = RecurringRule
+    typealias Key = String
 
-    // MARK: - File Path
+    static let filename = "recurring.journal"
 
-    static func recurringPath(for journalFile: URL) -> URL {
-        journalFile.deletingLastPathComponent().appendingPathComponent(recurringFilename)
+    static func key(of rule: RecurringRule) -> String { rule.ruleId }
+
+    static func duplicateError(_ key: String) -> BackendError {
+        .commandFailed("Recurring rule already exists with id: \(key)")
     }
 
-    // MARK: - Ensure File Exists
-
-    static func ensureRecurringFile(journalFile: URL) throws {
-        let recurringFile = recurringPath(for: journalFile)
-
-        if !FileManager.default.fileExists(atPath: recurringFile.path) {
-            try "".write(to: recurringFile, atomically: true, encoding: .utf8)
-        }
-
-        var journalText = try String(contentsOf: journalFile, encoding: .utf8)
-        let hasInclude = journalText.split(separator: "\n").contains { line in
-            line.trimmingCharacters(in: .whitespaces).hasPrefix("include \(recurringFilename)")
-        }
-
-        if !hasInclude {
-            let includeLine = "include \(recurringFilename)\n\n"
-            journalText = includeLine + journalText
-            try journalText.write(to: journalFile, atomically: true, encoding: .utf8)
-        }
+    static func notFoundError(_ key: String) -> BackendError {
+        .commandFailed("No recurring rule found with id: \(key)")
     }
 
-    // MARK: - Parse Rules
+    // MARK: Parse
 
-    static func parseRules(recurringPath: URL) -> [RecurringRule] {
-        guard FileManager.default.fileExists(atPath: recurringPath.path),
-              let content = try? String(contentsOf: recurringPath, encoding: .utf8),
-              !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return []
-        }
-
+    static func parseRules(from content: String) -> [RecurringRule] {
         let headerPattern = /^~\s+(\S+)(?:\s+from\s+(\d{4}-\d{2}-\d{2}))?(?:\s+to\s+(\d{4}-\d{2}-\d{2}))?\s*(?:;\s*rule-id:(\S+)(?:\s+(.+))?)?\s*$/
         let postingPattern = /^\s{4,}(\S.+?)\s{2,}(\S+)\s*$/
 
@@ -102,7 +86,6 @@ enum RecurringManager {
                         currentPostings.append(Posting(account: account))
                     }
                 } else {
-                    // Balancing posting (no amount)
                     let account = line.trimmingCharacters(in: .whitespaces)
                     if !account.isEmpty {
                         currentPostings.append(Posting(account: account))
@@ -115,7 +98,7 @@ enum RecurringManager {
         return rules
     }
 
-    // MARK: - Format Rules
+    // MARK: Format
 
     static func formatRules(_ rules: [RecurringRule]) -> String {
         guard !rules.isEmpty else { return "" }
@@ -150,65 +133,70 @@ enum RecurringManager {
 
         return blocks.joined(separator: "\n\n") + "\n"
     }
+}
 
-    // MARK: - Write Rules
+// MARK: - RecurringManager (public API wrapper)
 
-    static func writeRules(_ rules: [RecurringRule], recurringPath: URL, journalFile: URL, validator: any AccountingBackend) async throws {
-        let backup = recurringPath.appendingPathExtension("bak")
-        if FileManager.default.fileExists(atPath: recurringPath.path) {
-            try FileManager.default.copyItem(at: recurringPath, to: backup)
-        }
+/// Thin wrapper around `RuleFileManager<RecurringRuleFile>` that preserves the
+/// original `RecurringManager` call surface used by views and tests.
+/// Transaction-generation helpers (`generateOccurrences`, `computePending`,
+/// `generateTransactions`) are unique to recurring rules and remain here.
+enum RecurringManager {
 
-        do {
-            let content = formatRules(rules)
-            try content.write(to: recurringPath, atomically: true, encoding: .utf8)
-            try await validator.validateJournal()
-            try? FileManager.default.removeItem(at: backup)
-        } catch {
-            if FileManager.default.fileExists(atPath: backup.path) {
-                try? FileManager.default.removeItem(at: recurringPath)
-                try? FileManager.default.moveItem(at: backup, to: recurringPath)
-            }
-            try? FileManager.default.removeItem(at: backup)
-            throw BackendError.journalValidationFailed("Recurring validation failed: \(error.localizedDescription)")
-        }
+    static let supportedPeriods = [
+        "daily", "weekly", "biweekly", "monthly", "bimonthly", "quarterly", "yearly"
+    ]
+
+    // MARK: File path
+
+    static func recurringPath(for journalFile: URL) -> URL {
+        RuleFileManager<RecurringRuleFile>.filePath(for: journalFile)
     }
 
-    // MARK: - CRUD
+    // MARK: Ensure file exists
+
+    static func ensureRecurringFile(journalFile: URL) throws {
+        try RuleFileManager<RecurringRuleFile>.ensureFile(journalFile: journalFile)
+    }
+
+    // MARK: Parse / format
+
+    static func parseRules(recurringPath: URL) -> [RecurringRule] {
+        RuleFileManager<RecurringRuleFile>.parseRules(at: recurringPath)
+    }
+
+    static func formatRules(_ rules: [RecurringRule]) -> String {
+        RuleFileManager<RecurringRuleFile>.formatRules(rules)
+    }
+
+    // MARK: Write
+
+    static func writeRules(
+        _ rules: [RecurringRule],
+        recurringPath: URL,
+        journalFile: URL,
+        validator: any AccountingBackend
+    ) async throws {
+        try await RuleFileManager<RecurringRuleFile>.writeRules(
+            rules, to: recurringPath, journalFile: journalFile, validator: validator
+        )
+    }
+
+    // MARK: CRUD
 
     static func addRule(_ rule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = recurringPath(for: journalFile)
-        try ensureRecurringFile(journalFile: journalFile)
-        var rules = parseRules(recurringPath: path)
-        if rules.contains(where: { $0.ruleId == rule.ruleId }) {
-            throw BackendError.commandFailed("Recurring rule already exists with id: \(rule.ruleId)")
-        }
-        rules.append(rule)
-        try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<RecurringRuleFile>.addRule(rule, journalFile: journalFile, validator: validator)
     }
 
     static func updateRule(ruleId: String, newRule: RecurringRule, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path)
-        guard let index = rules.firstIndex(where: { $0.ruleId == ruleId }) else {
-            throw BackendError.commandFailed("No recurring rule found with id: \(ruleId)")
-        }
-        rules[index] = newRule
-        try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<RecurringRuleFile>.updateRule(key: ruleId, newRule: newRule, journalFile: journalFile, validator: validator)
     }
 
     static func deleteRule(ruleId: String, journalFile: URL, validator: any AccountingBackend) async throws {
-        let path = recurringPath(for: journalFile)
-        var rules = parseRules(recurringPath: path)
-        let count = rules.count
-        rules.removeAll { $0.ruleId == ruleId }
-        if rules.count == count {
-            throw BackendError.commandFailed("No recurring rule found with id: \(ruleId)")
-        }
-        try await writeRules(rules, recurringPath: path, journalFile: journalFile, validator: validator)
+        try await RuleFileManager<RecurringRuleFile>.deleteRule(key: ruleId, journalFile: journalFile, validator: validator)
     }
 
-    // MARK: - Transaction Generation
+    // MARK: Transaction Generation
 
     /// Generate occurrence dates for a rule from start to today.
     static func generateOccurrences(start: Date, period: String, end: Date) -> [Date] {
@@ -274,7 +262,6 @@ enum RecurringManager {
 
         let allDates = generateOccurrences(start: start, period: rule.periodExpr, end: end)
 
-        // Load already-generated transactions tagged with this rule's ID
         let generated: [Transaction]
         do {
             generated = try await backend.loadTransactions(query: "tag:rule-id=\(rule.ruleId)", reversed: false)
