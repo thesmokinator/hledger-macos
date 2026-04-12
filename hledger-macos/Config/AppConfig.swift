@@ -97,6 +97,12 @@ final class AppConfig {
         set { UserDefaults.standard.set(newValue, forKey: "aiEnabled") }
     }
 
+    /// Whether Developer Mode is enabled (shows Command Log and other debug surfaces).
+    var developerMode: Bool {
+        get { UserDefaults.standard.object(forKey: "developerMode") as? Bool ?? false }
+        set { UserDefaults.standard.set(newValue, forKey: "developerMode") }
+    }
+
     /// Default report type: "is" (Income Statement), "bs" (Balance Sheet), "cf" (Cash Flow).
     var defaultReportType: String {
         get { UserDefaults.standard.string(forKey: "defaultReportType") ?? "is" }
