@@ -54,13 +54,8 @@ struct ReportsView: View {
                         systemImage: "calendar.badge.exclamationmark",
                         description: Text("Try a longer period range or check that transactions exist for this date range.")
                     ) {
-                        Picker("Period", selection: $periodRange) {
-                            ForEach(PeriodRange.allCases) { range in
-                                Text(range.label).tag(range)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .fixedSize()
+                        Button("Show Last 12 Months") { periodRange = .twelveMonths }
+                            .buttonStyle(.borderedProminent)
                     }
                 }
                 Spacer()
