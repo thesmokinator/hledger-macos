@@ -99,12 +99,16 @@ struct TransactionsView: View {
         .navigationTitle("Transactions")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await appState.reload() } } label: {
+                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
+                }
+
                 // Time filter
                 Menu {
                     Picker("Show", selection: $timeFilter) {
                         Label("All", systemImage: "calendar.badge.clock").tag("all")
                         Label("Actual only", systemImage: "calendar").tag("actual")
-                        Label("Future only", systemImage: "clock.badge.plus").tag("future")
+                        Label("Future only", systemImage: "calendar.badge.plus").tag("future")
                     }
                     .pickerStyle(.inline)
                 } label: {
@@ -123,10 +127,6 @@ struct TransactionsView: View {
                         .foregroundStyle(isStatusFiltered ? Color.accentColor : Color.primary)
                 }
                 .help("Filter by cleared status")
-
-                Button { Task { await appState.reload() } } label: {
-                    Label("Reload", systemImage: "arrow.triangle.2.circlepath")
-                }
 
                 Menu {
                     Button { showingCsvImport = true } label: {
@@ -269,7 +269,7 @@ struct TransactionsView: View {
     private var timeFilterIcon: String {
         switch timeFilter {
         case "actual": return "calendar"
-        case "future": return "clock.badge.plus"
+        case "future": return "calendar.badge.plus"
         default:       return "clock"
         }
     }
