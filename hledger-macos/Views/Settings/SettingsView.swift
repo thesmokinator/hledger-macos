@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var pricehistPath = ""
     @State private var tickerRows: [TickerRow] = []
     @State private var aiEnabled = false
+    @State private var developerMode = false
 
     @State private var resolvedPath: String?
     @State private var isScanning = false
@@ -275,11 +276,18 @@ struct SettingsView: View {
                 }
 
                 Section("Usage") {
-                    Text("When enabled, an AI button appears at the bottom-left of the main window. You can also press \u{2318}\u{21E7}A to toggle the assistant.")
+                    Text("When enabled, an AI button appears at the bottom-left of the main window. You can also press ⌘⇧A to toggle the assistant.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
                     Text("The assistant can answer questions about your journal: account balances, spending patterns, transaction summaries, and more.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Developer") {
+                    Toggle("Developer Mode", isOn: $developerMode)
+                    Text("Shows the Command Log (⌘⌥L) in the Help menu, exposing raw CLI commands and output. Intended for troubleshooting.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -376,6 +384,7 @@ struct SettingsView: View {
         barChartMode = appState.config.barChartMode
         investmentsEnabled = appState.config.investmentsEnabled
         aiEnabled = appState.config.aiEnabled
+        developerMode = appState.config.developerMode
         pricehistPath = appState.config.pricehistBinaryPath
         tickerRows = appState.config.priceTickers.map { TickerRow(commodity: $0.key, ticker: $0.value) }
         if tickerRows.isEmpty { tickerRows.append(TickerRow()) }
@@ -416,6 +425,7 @@ struct SettingsView: View {
         appState.config.barChartMode = barChartMode
         appState.config.investmentsEnabled = investmentsEnabled
         appState.config.aiEnabled = aiEnabled
+        appState.config.developerMode = developerMode
         appState.config.pricehistBinaryPath = pricehistPath
         var tickers: [String: String] = [:]
         for row in tickerRows where !row.commodity.isEmpty && !row.ticker.isEmpty {

@@ -185,6 +185,7 @@ struct AppCommands: Commands {
                 showingCommandLog = true
             }
             .keyboardShortcut("l", modifiers: [.command, .option])
+            .disabled(!appState.config.developerMode)
         }
 
         SidebarCommands()
