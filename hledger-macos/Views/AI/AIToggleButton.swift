@@ -29,6 +29,7 @@ struct AIToggleButton: View {
         }
         .buttonStyle(.plain)
         .help(isShowingChat ? "Close AI Assistant" : "AI Assistant")
+        .accessibilityLabel(isShowingChat ? "Close AI Assistant" : "Open AI Assistant")
         .opacity(isAvailable ? 1 : 0.5)
         .disabled(!isAvailable)
     }

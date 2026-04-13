@@ -22,6 +22,7 @@ struct AccountRow: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, Theme.Spacing.xsPlus)
+                .accessibilityLabel("View transactions for \(label)")
             }
             Text(label)
                 .font(labelBold ? labelFont.bold() : labelFont)

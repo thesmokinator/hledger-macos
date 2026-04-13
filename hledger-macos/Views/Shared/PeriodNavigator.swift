@@ -16,6 +16,7 @@ struct PeriodNavigator: View {
             }
             .buttonStyle(.borderless)
             .keyboardShortcut(.leftArrow, modifiers: [])
+            .accessibilityLabel("Previous month")
 
             Spacer()
 
@@ -30,6 +31,7 @@ struct PeriodNavigator: View {
             }
             .buttonStyle(.borderless)
             .keyboardShortcut(.rightArrow, modifiers: [])
+            .accessibilityLabel("Next month")
         }
         .padding(.horizontal, Theme.Spacing.lg)
         .padding(.top, Theme.Spacing.md)

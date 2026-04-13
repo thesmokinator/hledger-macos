@@ -48,5 +48,16 @@ struct SummaryCard: View {
         .padding(.vertical, Theme.Spacing.lg)
         .padding(.horizontal, Theme.Spacing.xl)
         .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        guard let summary else { return "\(title): loading" }
+        var text = "\(title): \(AmountFormatter.format(summary[keyPath: value], commodity: summary.commodity))"
+        if let sub = subtitle, !sub.trimmingCharacters(in: .whitespaces).isEmpty {
+            text += ", \(sub)"
+        }
+        return text
     }
 }

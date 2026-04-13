@@ -52,6 +52,7 @@ struct AIChatOverlay: View {
                 }
                 .buttonStyle(.plain)
                 .help("Clear conversation")
+                .accessibilityLabel("Clear conversation")
             }
 
             Button {
@@ -65,6 +66,7 @@ struct AIChatOverlay: View {
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
+            .accessibilityLabel("Close AI Assistant")
         }
         .padding(.horizontal, Theme.Spacing.lg)
         .padding(.vertical, Theme.Spacing.md)
@@ -200,6 +202,7 @@ struct AIChatOverlay: View {
                 }
                 .buttonStyle(.plain)
                 .help("Stop generating")
+                .accessibilityLabel("Stop generating")
             } else {
                 Button {
                     sendMessage()
@@ -211,6 +214,7 @@ struct AIChatOverlay: View {
                 .buttonStyle(.plain)
                 .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .help("Send message")
+                .accessibilityLabel("Send message")
             }
         }
         .padding(.horizontal, Theme.Spacing.lg)

@@ -165,6 +165,7 @@ struct TransactionsView: View {
             }
             .frame(width: 0, height: 0)
             .opacity(0)
+            .accessibilityHidden(true)
         }
         .onChange(of: appState.showingNewTransaction) {
             if appState.showingNewTransaction {
@@ -326,17 +327,20 @@ struct TransactionRowView: View {
                     .font(.caption2)
                     .foregroundStyle(Theme.Status.warning)
                     .frame(width: 14)
+                    .accessibilityHidden(true)
             } else {
                 Text(transaction.status.symbol)
                     .font(.system(.callout, design: .monospaced))
                     .foregroundStyle(statusColor)
                     .frame(width: 14)
+                    .accessibilityHidden(true)
             }
 
             Text(transaction.typeIndicator)
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(typeColor)
                 .frame(width: 14)
+                .accessibilityHidden(true)
 
             Text(transaction.date)
                 .font(.system(.callout, design: .monospaced))
@@ -366,6 +370,30 @@ struct TransactionRowView: View {
                 .foregroundStyle(isFuture ? .secondary : amountColor)
         }
         .padding(.vertical, ListMetrics.rowPadding)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var parts: [String] = []
+        if isFuture {
+            parts.append("Scheduled")
+        } else {
+            switch transaction.status {
+            case .cleared: parts.append("Cleared")
+            case .pending: parts.append("Pending")
+            case .unmarked: parts.append("Unmarked")
+            }
+        }
+        switch transaction.typeIndicator {
+        case "I": parts.append("income")
+        case "E": parts.append("expense")
+        default: break
+        }
+        parts.append(transaction.date)
+        if !transaction.description.isEmpty { parts.append(transaction.description) }
+        parts.append(transaction.totalAmount)
+        return parts.joined(separator: ", ")
     }
 
     private var statusColor: Color {
