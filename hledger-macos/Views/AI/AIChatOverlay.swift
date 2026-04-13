@@ -14,6 +14,9 @@ struct AIChatOverlay: View {
         VStack(spacing: 0) {
             header
             Divider()
+            if let error = assistant.errorMessage {
+                errorBanner(error)
+            }
             messageList
             Divider()
             inputBar
@@ -24,6 +27,7 @@ struct AIChatOverlay: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .shadow(color: .black.opacity(0.2), radius: 12, x: -4, y: 0)
         .transition(.move(edge: .trailing).combined(with: .opacity))
+        .animation(.easeInOut(duration: 0.2), value: assistant.errorMessage)
         .onAppear { isInputFocused = true }
     }
 
@@ -64,6 +68,43 @@ struct AIChatOverlay: View {
         }
         .padding(.horizontal, Theme.Spacing.lg)
         .padding(.vertical, Theme.Spacing.md)
+    }
+
+    // MARK: - Error Banner
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .font(.callout)
+
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button("Retry") {
+                assistant.retryLast(appState: appState)
+            }
+            .font(.caption.bold())
+            .buttonStyle(.borderless)
+            .foregroundStyle(.tint)
+
+            Button {
+                assistant.errorMessage = nil
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Theme.Spacing.lg)
+        .padding(.vertical, Theme.Spacing.sm)
+        .background(.orange.opacity(0.12))
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     // MARK: - Message List
