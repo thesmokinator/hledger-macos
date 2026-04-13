@@ -14,6 +14,7 @@ struct SidebarView: View {
                 Text("\u{2318}\(section.shortcutNumber)")
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
             }
             .tag(section)
         }

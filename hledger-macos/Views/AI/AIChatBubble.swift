@@ -54,5 +54,6 @@ struct AIChatBubble: View {
             }
         }
         .padding(.leading, Theme.Spacing.md)
+        .accessibilityHidden(true)
     }
 }

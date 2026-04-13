@@ -19,16 +19,19 @@ struct PostingRowField: View {
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 30, alignment: .trailing)
+                    .accessibilityHidden(true)
 
                 AutocompleteField(
                     placeholder: "e.g. expenses:food",
                     text: $account,
                     suggestions: suggestions
                 )
+                .accessibilityLabel("Posting \(index + 1) account")
 
                 TextField("0.00", text: $amount)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 130)
+                    .accessibilityLabel("Posting \(index + 1) amount")
 
                 if showRemove {
                     Button {
@@ -37,6 +40,7 @@ struct PostingRowField: View {
                         Image(systemName: "minus.circle").foregroundStyle(.red)
                     }
                     .buttonStyle(.borderless)
+                    .accessibilityLabel("Remove posting \(index + 1)")
                 }
             }
 
@@ -47,6 +51,7 @@ struct PostingRowField: View {
                         .textFieldStyle(.roundedBorder)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("Posting \(index + 1) comment")
                 }
             }
         }

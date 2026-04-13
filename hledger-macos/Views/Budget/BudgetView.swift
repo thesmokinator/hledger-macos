@@ -88,6 +88,7 @@ struct BudgetView: View {
             }
             .frame(width: 0, height: 0)
             .opacity(0)
+            .accessibilityHidden(true)
         }
         .task(id: appState.dataVersion) { await loadData() }
         .onChange(of: currentPeriod) { Task { await loadData() } }
@@ -283,6 +284,7 @@ struct BudgetHeaderRow: View {
         .font(.caption.weight(.medium))
         .foregroundStyle(.secondary)
         .padding(.vertical, ListMetrics.rowPadding)
+        .accessibilityHidden(true)
     }
 }
 
@@ -325,5 +327,15 @@ struct BudgetRowView: View {
                 .frame(width: 60, alignment: .trailing)
         }
         .padding(.vertical, ListMetrics.rowPadding)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        let usageStatus: String
+        if row.usagePct > 100 { usageStatus = "over budget" }
+        else if row.usagePct > 75 { usageStatus = "near limit" }
+        else { usageStatus = "within budget" }
+        return "\(row.rule.account): budgeted \(AmountFormatter.format(row.budget, commodity: row.commodity)), actual \(AmountFormatter.format(row.actual, commodity: row.commodity)), remaining \(AmountFormatter.format(row.remaining, commodity: row.commodity)), \((row.usagePct / 100).formatted(.percent.precision(.fractionLength(0)))) used, \(usageStatus)"
     }
 }
