@@ -91,11 +91,11 @@ struct ConditionalRuleFormView: View {
 
     private func save() {
         guard !pattern.isEmpty else {
-            errorMessage = "Pattern is required"
+            errorMessage = String(localized: "Pattern is required")
             return
         }
         guard !account.isEmpty else {
-            errorMessage = "Account is required"
+            errorMessage = String(localized: "Account is required")
             return
         }
 

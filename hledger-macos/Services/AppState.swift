@@ -154,12 +154,12 @@ final class AppState {
         )
 
         guard let journalURL else {
-            errorMessage = "No journal file found. Configure one in Settings or create ~/.hledger.journal."
+            errorMessage = String(localized: "No journal file found. Configure one in Settings or create ~/.hledger.journal.")
             return
         }
 
         guard let hledgerPath = detectionResult?.hledgerPath else {
-            errorMessage = "hledger binary not found."
+            errorMessage = String(localized: "hledger binary not found.")
             return
         }
 

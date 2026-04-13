@@ -76,7 +76,7 @@ struct BudgetFormView: View {
 
     private func save() {
         guard let parsed = appState.parseFormAmount(amount), parsed.quantity != 0 else {
-            errorMessage = "Invalid amount"
+            errorMessage = String(localized: "Invalid amount")
             return
         }
 
