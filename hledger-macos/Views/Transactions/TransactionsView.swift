@@ -11,6 +11,12 @@ struct TransactionsView: View {
     @State private var transactionToDelete: Transaction?
     @State private var showingCsvImport = false
 
+    // Persistent filters (reactive via @AppStorage)
+    @AppStorage("transactionTimeFilter") private var timeFilter: String = "all"
+    @AppStorage("txFilterShowCleared") private var showCleared: Bool = true
+    @AppStorage("txFilterShowPending") private var showPending: Bool = true
+    @AppStorage("txFilterShowUnmarked") private var showUnmarked: Bool = true
+
     @FocusState private var listFocused: Bool
 
     var body: some View {
@@ -40,76 +46,53 @@ struct TransactionsView: View {
             // Transaction list
             if appState.isLoading {
                 LoadingOverlay(message: "Loading transactions...")
-            } else if appState.transactions.isEmpty {
-                Spacer()
-                if !appState.searchQuery.isEmpty {
-                    ContentUnavailableView.search(text: appState.searchQuery)
-                } else if (appState.journalStats?.transactionCount ?? 0) == 0 {
-                    ContentUnavailableView {
-                        Label("Journal is Empty", systemImage: "doc.badge.plus")
-                    } description: {
-                        Text("Add your first transaction to start tracking your finances.")
-                    } actions: {
-                        Button("Add Transaction") { newTransaction() }
-                            .buttonStyle(.borderedProminent)
-                    }
-                } else {
-                    ContentUnavailableView {
-                        Label("No Transactions in \(appState.periodLabel)", systemImage: "calendar.badge.exclamationmark")
-                    } description: {
-                        Text("There are no transactions recorded for this period.")
-                    } actions: {
-                        Button("Add Transaction") { newTransaction() }
-                            .buttonStyle(.borderedProminent)
-                    }
-                }
-                Spacer()
             } else {
-                let todayStr = {
-                    let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                    return f.string(from: Date())
-                }()
-                let futureTransactions = appState.transactions.filter { $0.date > todayStr }
-                let pastTransactions = appState.transactions.filter { $0.date <= todayStr }
-
-                List(selection: $selectedTransaction) {
-                    ForEach(futureTransactions) { transaction in
-                        transactionRow(transaction)
+                let transactions = filteredTransactions
+                if transactions.isEmpty {
+                    Spacer()
+                    if isFiltered {
+                        ContentUnavailableView {
+                            Label("No Transactions", systemImage: "line.3.horizontal.decrease.circle")
+                        } description: {
+                            Text("No transactions match the current filters.")
+                        } actions: {
+                            Button("Clear Filters") { clearFilters() }
+                                .buttonStyle(.bordered)
+                        }
+                    } else if !appState.searchQuery.isEmpty {
+                        ContentUnavailableView.search(text: appState.searchQuery)
+                    } else if (appState.journalStats?.transactionCount ?? 0) == 0 {
+                        ContentUnavailableView {
+                            Label("Journal is Empty", systemImage: "doc.badge.plus")
+                        } description: {
+                            Text("Add your first transaction to start tracking your finances.")
+                        } actions: {
+                            Button("Add Transaction") { newTransaction() }
+                                .buttonStyle(.borderedProminent)
+                        }
+                    } else {
+                        ContentUnavailableView {
+                            Label("No Transactions in \(appState.periodLabel)", systemImage: "calendar.badge.exclamationmark")
+                        } description: {
+                            Text("There are no transactions recorded for this period.")
+                        } actions: {
+                            Button("Add Transaction") { newTransaction() }
+                                .buttonStyle(.borderedProminent)
+                        }
                     }
-
-                    if !futureTransactions.isEmpty && !pastTransactions.isEmpty {
-                        Divider()
-                            .listRowSeparator(.hidden)
-                            .frame(height: 4)
+                    Spacer()
+                } else {
+                    let today = todayString
+                    List(selection: $selectedTransaction) {
+                        transactionListContent(filteredTransactions, today: today)
                     }
-
-                    ForEach(pastTransactions) { transaction in
-                        transactionRow(transaction)
-                    }
+                    .listStyle(.inset)
+                    .focused($listFocused)
                 }
-                .listStyle(.inset)
-                .focused($listFocused)
             }
         }
         .searchable(text: $state.searchQuery, prompt: "Search: desc:, acct:, amt:, tag:, status:")
-        .searchSuggestions {
-            if appState.searchQuery.isEmpty {
-                Section("Filters") {
-                    searchSuggestion("desc:", label: "Description", icon: "text.quote")
-                    searchSuggestion("acct:", label: "Account", icon: "building.columns")
-                    searchSuggestion("amt:>", label: "Amount greater than", icon: "number")
-                    searchSuggestion("amt:<", label: "Amount less than", icon: "number")
-                    searchSuggestion("tag:", label: "Tag", icon: "tag")
-                    searchSuggestion("status:*", label: "Cleared", icon: "checkmark.circle")
-                    searchSuggestion("status:!", label: "Pending", icon: "exclamationmark.circle")
-                }
-                Section("Shortcuts") {
-                    searchSuggestion("d:", label: "desc: (short)", icon: "text.quote")
-                    searchSuggestion("ac:", label: "acct: (short)", icon: "building.columns")
-                    searchSuggestion("am:", label: "amt: (short)", icon: "number")
-                }
-            }
-        }
+        .searchSuggestions { searchSuggestionsContent }
         .onSubmit(of: .search) {
             Task { await appState.loadTransactions() }
         }
@@ -119,6 +102,31 @@ struct TransactionsView: View {
                 Button { Task { await appState.reload() } } label: {
                     Label("Reload", systemImage: "arrow.triangle.2.circlepath")
                 }
+
+                // Time filter
+                Menu {
+                    Picker("Show", selection: $timeFilter) {
+                        Label("All", systemImage: "calendar.badge.clock").tag("all")
+                        Label("Actual only", systemImage: "calendar").tag("actual")
+                        Label("Future only", systemImage: "calendar.badge.plus").tag("future")
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label(timeFilterLabel, systemImage: timeFilterIcon)
+                        .foregroundStyle(timeFilter == "all" ? Color.primary : Color.accentColor)
+                }
+                .help("Filter by date (f)")
+
+                // Status filter
+                Menu {
+                    Toggle("Cleared ✓", isOn: $showCleared)
+                    Toggle("Pending !", isOn: $showPending)
+                    Toggle("Unmarked", isOn: $showUnmarked)
+                } label: {
+                    Label("Status Filter", systemImage: statusFilterIcon)
+                        .foregroundStyle(isStatusFiltered ? Color.accentColor : Color.primary)
+                }
+                .help("Filter by cleared status")
 
                 Menu {
                     Button { showingCsvImport = true } label: {
@@ -162,6 +170,8 @@ struct TransactionsView: View {
                     .keyboardShortcut("t", modifiers: .command)
                 Button("") { selectFirstTransaction() }
                     .keyboardShortcut(.tab, modifiers: [])
+                Button("") { cycleTimeFilter() }
+                    .keyboardShortcut("f", modifiers: [])
             }
             .frame(width: 0, height: 0)
             .opacity(0)
@@ -213,10 +223,99 @@ struct TransactionsView: View {
         _ = await (txns, summary)
     }
 
+    // MARK: - Filtering
+
+    private var todayString: String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Date())
+    }
+
+    private var filteredTransactions: [Transaction] {
+        let today = todayString
+        return appState.transactions.filter { txn in
+            let statusOK: Bool
+            switch txn.status {
+            case .cleared:  statusOK = showCleared
+            case .pending:  statusOK = showPending
+            case .unmarked: statusOK = showUnmarked
+            }
+            let timeOK: Bool
+            switch timeFilter {
+            case "actual":  timeOK = txn.date <= today
+            case "future":  timeOK = txn.date > today
+            default:        timeOK = true
+            }
+            return statusOK && timeOK
+        }
+    }
+
+    private var isFiltered: Bool {
+        timeFilter != "all" || !showCleared || !showPending || !showUnmarked
+    }
+
+    private var isStatusFiltered: Bool {
+        !showCleared || !showPending || !showUnmarked
+    }
+
+    private var timeFilterLabel: String {
+        switch timeFilter {
+        case "actual": return "Actual"
+        case "future": return "Future"
+        default:       return "All"
+        }
+    }
+
+    private var timeFilterIcon: String {
+        switch timeFilter {
+        case "actual": return "calendar"
+        case "future": return "calendar.badge.plus"
+        default:       return "clock"
+        }
+    }
+
+    private var statusFilterIcon: String {
+        (!showCleared || !showPending || !showUnmarked)
+            ? "line.3.horizontal.decrease.circle.fill"
+            : "line.3.horizontal.decrease.circle"
+    }
+
+    private func clearFilters() {
+        timeFilter = "all"
+        showCleared = true
+        showPending = true
+        showUnmarked = true
+    }
+
+    private func cycleTimeFilter() {
+        switch timeFilter {
+        case "all":    timeFilter = "actual"
+        case "actual": timeFilter = "future"
+        default:       timeFilter = "all"
+        }
+    }
+
     private func selectFirstTransaction() {
         if let first = appState.transactions.first {
             selectedTransaction = first
             listFocused = true
+        }
+    }
+
+    @ViewBuilder
+    private func transactionListContent(_ transactions: [Transaction], today: String) -> some View {
+        if timeFilter == "all" {
+            let future = transactions.filter { $0.date > today }
+            let past   = transactions.filter { $0.date <= today }
+            ForEach(future) { transactionRow($0) }
+            if !future.isEmpty && !past.isEmpty {
+                Divider()
+                    .listRowSeparator(.hidden)
+                    .frame(height: 4)
+            }
+            ForEach(past) { transactionRow($0) }
+        } else {
+            ForEach(transactions) { transactionRow($0) }
         }
     }
 
@@ -238,6 +337,28 @@ struct TransactionsView: View {
                 Divider()
                 Button("Delete", role: .destructive) { confirmDelete(transaction) }
             }
+    }
+
+    // MARK: - Search Suggestions
+
+    @ViewBuilder
+    private var searchSuggestionsContent: some View {
+        if appState.searchQuery.isEmpty {
+            Section("Filters") {
+                searchSuggestion("desc:", label: "Description", icon: "text.quote")
+                searchSuggestion("acct:", label: "Account", icon: "building.columns")
+                searchSuggestion("amt:>", label: "Amount greater than", icon: "number")
+                searchSuggestion("amt:<", label: "Amount less than", icon: "number")
+                searchSuggestion("tag:", label: "Tag", icon: "tag")
+                searchSuggestion("status:*", label: "Cleared", icon: "checkmark.circle")
+                searchSuggestion("status:!", label: "Pending", icon: "exclamationmark.circle")
+            }
+            Section("Shortcuts") {
+                searchSuggestion("d:", label: "desc: (short)", icon: "text.quote")
+                searchSuggestion("ac:", label: "acct: (short)", icon: "building.columns")
+                searchSuggestion("am:", label: "amt: (short)", icon: "number")
+            }
+        }
     }
 
     // MARK: - Search Suggestion Helper
