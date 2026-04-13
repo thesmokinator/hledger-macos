@@ -34,7 +34,7 @@ struct PostingRowField: View {
                     Button {
                         onRemove()
                     } label: {
-                        Image(systemName: "minus.circle").foregroundStyle(.red)
+                        Image(systemName: "minus.circle").foregroundStyle(Theme.Status.critical)
                     }
                     .buttonStyle(.borderless)
                 }

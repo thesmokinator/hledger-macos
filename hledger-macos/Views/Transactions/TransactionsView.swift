@@ -24,11 +24,11 @@ struct TransactionsView: View {
 
             // Income / Expenses cards (always visible)
             HStack(spacing: 16) {
-                SummaryCard(title: "Income", summary: appState.summaryCurrentMonth, value: \.income, color: .green)
-                SummaryCard(title: "Expenses", summary: appState.summaryCurrentMonth, value: \.expenses, color: .red)
+                SummaryCard(title: "Income", summary: appState.summaryCurrentMonth, value: \.income, color: Theme.AccountCategory.income)
+                SummaryCard(title: "Expenses", summary: appState.summaryCurrentMonth, value: \.expenses, color: Theme.AccountCategory.expense)
                 SummaryCard(
                     title: "Net", summary: appState.summaryCurrentMonth, value: \.net,
-                    color: (appState.summaryCurrentMonth?.net ?? 0) >= 0 ? .green : .red,
+                    color: (appState.summaryCurrentMonth?.net ?? 0) >= 0 ? Theme.Delta.positive : Theme.Delta.negative,
                     subtitle: SummaryCard.netSubtitle(for: appState.summaryCurrentMonth)
                 )
             }
@@ -308,7 +308,7 @@ struct TransactionRowView: View {
             if isFuture {
                 Image(systemName: "clock")
                     .font(.caption2)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.Status.warning)
                     .frame(width: 14)
             } else {
                 Text(transaction.status.symbol)
@@ -325,7 +325,7 @@ struct TransactionRowView: View {
             Text(transaction.date)
                 .font(.system(.callout, design: .monospaced))
                 .italic(isFuture)
-                .foregroundStyle(isFuture ? .orange : .secondary)
+                .foregroundStyle(isFuture ? Theme.Status.warning : .secondary)
 
             HStack(spacing: 4) {
                 Text(transaction.description.isEmpty ? "no description" : transaction.description)
@@ -354,21 +354,21 @@ struct TransactionRowView: View {
 
     private var statusColor: Color {
         switch transaction.status {
-        case .cleared: return .green
-        case .pending: return .orange
+        case .cleared: return Theme.Status.good
+        case .pending: return Theme.Status.warning
         case .unmarked: return .secondary
         }
     }
 
     private var typeColor: Color {
         switch transaction.typeIndicator {
-        case "I": return .green
-        case "E": return .red
+        case "I": return Theme.AccountCategory.income
+        case "E": return Theme.AccountCategory.expense
         default: return .secondary
         }
     }
 
     private var amountColor: Color {
-        transaction.typeIndicator == "I" ? .green : .primary
+        transaction.typeIndicator == "I" ? Theme.Delta.positive : .primary
     }
 }

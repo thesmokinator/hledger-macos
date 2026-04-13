@@ -128,11 +128,11 @@ struct SettingsView: View {
 
                     if let resolved = resolvedPath {
                         Label(resolved, systemImage: "checkmark.circle")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.Status.good)
                             .font(.caption)
                     } else if !journalPath.isEmpty {
                         Label("No journal file found at this path", systemImage: "xmark.circle")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Theme.Status.critical)
                             .font(.caption)
                     }
                     Text("Accepts .journal / .hledger / .j files, or a directory containing one.")
@@ -157,7 +157,7 @@ struct SettingsView: View {
 
                     if let path = appState.detectionResult?.hledgerPath {
                         Label("Detected: \(path)", systemImage: "checkmark.circle")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.Status.good)
                             .font(.caption)
                     }
                 }
@@ -183,11 +183,11 @@ struct SettingsView: View {
 
                         if PriceService.isValid(path: pricehistPath) {
                             Label("Found", systemImage: "checkmark.circle")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Theme.Status.good)
                                 .font(.caption)
                         } else if !pricehistPath.isEmpty {
                             Label("Not found at this path", systemImage: "xmark.circle")
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.Status.critical)
                                 .font(.caption)
                         }
                         Text("Required for market values. Install: pipx install pricehist (or pip install pricehist)")
@@ -205,7 +205,7 @@ struct SettingsView: View {
                                             tickerRows.remove(at: index)
                                         } label: {
                                             Image(systemName: "minus.circle")
-                                                .foregroundStyle(.red)
+                                                .foregroundStyle(Theme.Status.critical)
                                         }
                                         .buttonStyle(.borderless)
                                     }
@@ -248,16 +248,16 @@ struct SettingsView: View {
                                 .font(.caption)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Theme.Status.warning)
                         }
 
                         if AppleFoundationModelProvider.isAvailable {
                             Label("Using Apple Intelligence (built-in)", systemImage: "checkmark.circle")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Theme.Status.good)
                                 .font(.caption)
                         } else {
                             Label("Apple Intelligence is not available on this device", systemImage: "xmark.circle")
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.Status.critical)
                                 .font(.caption)
                         }
                     }
@@ -270,7 +270,7 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     } icon: {
                         Image(systemName: "lock.shield")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.Status.good)
                     }
                 }
 
@@ -340,7 +340,7 @@ struct SettingsView: View {
                 if saved {
                     Text("Saved")
                         .font(.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.Status.good)
                         .transition(.opacity)
                 }
                 Spacer()

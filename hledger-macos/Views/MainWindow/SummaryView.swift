@@ -23,17 +23,17 @@ struct SummaryView: View {
 
                 // Income & Expenses side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
-                    breakdownSection(title: "Income", items: appState.incomeBreakdown, color: .green)
+                    breakdownSection(title: "Income", items: appState.incomeBreakdown, color: Theme.AccountCategory.income)
                         .frame(maxWidth: .infinity)
-                    breakdownSection(title: "Expenses", items: appState.expenseBreakdown, color: .red)
+                    breakdownSection(title: "Expenses", items: appState.expenseBreakdown, color: Theme.AccountCategory.expense)
                         .frame(maxWidth: .infinity)
                 }
 
                 // Assets & Liabilities side by side (always visible)
                 HStack(alignment: .top, spacing: 20) {
-                    breakdownSection(title: "Assets", items: appState.assets, color: .blue)
+                    breakdownSection(title: "Assets", items: appState.assets, color: Theme.AccountCategory.asset)
                         .frame(maxWidth: .infinity)
-                    breakdownSection(title: "Liabilities", items: appState.liabilities, color: .orange)
+                    breakdownSection(title: "Liabilities", items: appState.liabilities, color: Theme.AccountCategory.liability)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -74,11 +74,11 @@ struct SummaryView: View {
 
     private var summaryCards: some View {
         HStack(spacing: 16) {
-            SummaryCard(title: "Income", summary: appState.summaryAllTime, value: \.income, color: .green)
-            SummaryCard(title: "Expenses", summary: appState.summaryAllTime, value: \.expenses, color: .red)
+            SummaryCard(title: "Income", summary: appState.summaryAllTime, value: \.income, color: Theme.AccountCategory.income)
+            SummaryCard(title: "Expenses", summary: appState.summaryAllTime, value: \.expenses, color: Theme.AccountCategory.expense)
             SummaryCard(
                 title: "Net", summary: appState.summaryAllTime, value: \.net,
-                color: (appState.summaryAllTime?.net ?? 0) >= 0 ? .green : .red,
+                color: (appState.summaryAllTime?.net ?? 0) >= 0 ? Theme.Delta.positive : Theme.Delta.negative,
                 subtitle: SummaryCard.netSubtitle(for: appState.summaryAllTime)
             )
         }
@@ -199,9 +199,8 @@ struct SummaryView: View {
                     systemImage: "exclamationmark.triangle"
                 )
                 .font(.caption)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Theme.Status.warning)
                 .padding(.top, Theme.Spacing.xs)
-            } else if showMarketColumns {
                 Label("Prices via Yahoo Finance (delayed)", systemImage: "info.circle")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -232,7 +231,7 @@ struct SummaryView: View {
         guard let market = row.marketValue else { return Text("—").foregroundStyle(.tertiary) }
         return Text(formatAmount(market, commodity: row.bookCommodity))
             .font(.system(.callout, design: .monospaced))
-            .foregroundStyle(market > row.bookValue ? .green : market < row.bookValue ? .red : .primary)
+            .foregroundStyle(market > row.bookValue ? Theme.Delta.positive : market < row.bookValue ? Theme.Delta.negative : .primary)
     }
 
     private func gainLossText(_ row: PortfolioRow) -> Text {
@@ -240,7 +239,7 @@ struct SummaryView: View {
         let gain = market - row.bookValue
         return Text(formatAmount(gain, commodity: row.bookCommodity))
             .font(.system(.callout, design: .monospaced))
-            .foregroundStyle(gain >= 0 ? .green : .red)
+            .foregroundStyle(gain >= 0 ? Theme.Delta.positive : Theme.Delta.negative)
     }
 
     // MARK: - Helpers

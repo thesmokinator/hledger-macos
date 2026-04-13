@@ -260,7 +260,7 @@ struct CsvRulesEditorView: View {
             } label: {
                 Image(systemName: "trash")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.Status.critical)
             }
             .buttonStyle(.plain)
             .padding(.leading, Theme.Spacing.sm)
@@ -289,7 +289,7 @@ struct CsvRulesEditorView: View {
                 if let error = rawParseError {
                     Label(error, systemImage: "exclamationmark.triangle")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.Status.warning)
                 }
 
                 TextEditor(text: $rawText)

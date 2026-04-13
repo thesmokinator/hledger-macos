@@ -67,7 +67,7 @@ struct CommandLogView: View {
                     List(filteredEntries.reversed(), selection: $selectedEntry) { entry in
                         HStack(spacing: 8) {
                             Image(systemName: entry.isError ? "xmark.circle.fill" : "checkmark.circle.fill")
-                                .foregroundStyle(entry.isError ? .red : .green)
+                                .foregroundStyle(entry.isError ? Theme.Status.critical : Theme.Status.good)
                                 .font(.caption)
 
                             Text(entry.timestampFormatted)
@@ -150,12 +150,12 @@ struct CommandLogView: View {
                 detailSection("Command", entry.command)
 
                 HStack(spacing: 16) {
-                    detailLabel("Exit Code", "\(entry.exitCode)", color: entry.isError ? .red : .green)
+                    detailLabel("Exit Code", "\(entry.exitCode)", color: entry.isError ? Theme.Status.critical : Theme.Status.good)
                     detailLabel("Time", entry.timestampFormatted, color: .secondary)
                 }
 
                 if !entry.stderr.isEmpty {
-                    detailSection("stderr", entry.stderr, color: .red)
+                    detailSection("stderr", entry.stderr, color: Theme.Status.critical)
                 }
 
                 if !entry.stdout.isEmpty {

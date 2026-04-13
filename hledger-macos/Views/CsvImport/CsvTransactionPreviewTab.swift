@@ -23,7 +23,7 @@ struct CsvTransactionPreviewTab: View {
                 VStack(spacing: 8) {
                     Spacer()
                     Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.Status.critical)
                         .font(.callout)
                     Text("Check the Rules Editor tab and verify your column mappings and settings.")
                         .font(.caption)
@@ -57,7 +57,7 @@ struct CsvTransactionPreviewTab: View {
                             Text("**\(duplicateCount)** duplicates")
                         } icon: {
                             Image(systemName: "doc.on.doc")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Theme.Status.warning)
                         }
                     }
 
@@ -94,7 +94,7 @@ struct CsvTransactionPreviewTab: View {
                         transactionRow(index: index)
                             .listRowBackground(
                                 previewTransactions[index].isDuplicate
-                                    ? Color.orange.opacity(0.08)
+                                    ? Theme.Status.warning.opacity(0.08)
                                     : Color.clear
                             )
                     }
@@ -124,10 +124,10 @@ struct CsvTransactionPreviewTab: View {
             if txn.isDuplicate {
                 Text("duplicate")
                     .font(.caption2)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.Status.warning)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
+                    .background(Theme.Status.warning.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
             }
 
             Text(txn.account2.isEmpty ? txn.account1 : txn.account2)

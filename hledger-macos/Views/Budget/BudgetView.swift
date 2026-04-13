@@ -292,9 +292,9 @@ struct BudgetRowView: View {
     let row: MergedBudgetRow
 
     private var usageColor: Color {
-        if row.usagePct > 100 { return .red }
-        if row.usagePct > 75 { return .orange }
-        return .green
+        if row.usagePct > 100 { return Theme.Status.critical }
+        if row.usagePct > 75 { return Theme.Status.warning }
+        return Theme.Status.good
     }
 
     var body: some View {
@@ -316,7 +316,7 @@ struct BudgetRowView: View {
 
             Text(AmountFormatter.format(row.remaining, commodity: row.commodity))
                 .font(.system(.callout, design: .monospaced))
-                .foregroundStyle(row.remaining >= 0 ? .green : .red)
+                .foregroundStyle(row.remaining >= 0 ? Theme.Delta.positive : Theme.Delta.negative)
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
             Text((row.usagePct / 100).formatted(.percent.precision(.fractionLength(0))))
