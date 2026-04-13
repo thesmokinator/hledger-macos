@@ -117,6 +117,22 @@ struct Amount: Codable, Hashable, Sendable {
         AmountFormatter.format(quantity, commodity: commodity)
     }
 
+    /// Format for use in a form input field.
+    /// Uses the system locale (same as the transaction list display) so the
+    /// decimal separator is always consistent — e.g. "€185,00" on it_IT regardless
+    /// of whether the journal stored the amount as "€185" or "€185,00".
+    func formattedForEditing() -> String {
+        let sign = quantity < 0 ? "-" : ""
+        let absStr = AmountFormatter.format(abs(quantity), commodity: commodity)
+        var result = "\(sign)\(absStr)"
+        if let cost = cost {
+            let costSign = cost.quantity < 0 ? "-" : ""
+            let absCostStr = AmountFormatter.format(abs(cost.quantity), commodity: cost.commodity)
+            result += " @@ \(costSign)\(absCostStr)"
+        }
+        return result
+    }
+
     /// Format a decimal value using the supplied `AmountStyle`. Static so the
     /// caller can pass a style that is not necessarily `self.style` — needed
     /// to format a cost annotation that has its own commodity and style.

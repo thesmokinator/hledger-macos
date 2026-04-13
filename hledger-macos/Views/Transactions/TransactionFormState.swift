@@ -86,7 +86,7 @@ final class TransactionFormState {
             postingRows = txn.postings.map {
                 PostingRow(
                     account: $0.account,
-                    amount: $0.amounts.first.map { $0.formatted() } ?? "",
+                    amount: $0.amounts.first.map { $0.formattedForEditing() } ?? "",
                     comment: $0.comment,
                     balanceAssertion: $0.balanceAssertion
                 )
