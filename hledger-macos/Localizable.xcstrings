@@ -84,6 +84,9 @@
     "Account" : {
 
     },
+    "Account is required" : {
+
+    },
     "Accounts" : {
 
     },
@@ -158,6 +161,12 @@
 
     },
     "Assign to" : {
+
+    },
+    "At least 2 postings required" : {
+
+    },
+    "Back" : {
 
     },
     "Bar charts" : {
@@ -277,10 +286,16 @@
     "Default commodity: %@" : {
 
     },
+    "Default commodity: **%@**" : {
+
+    },
     "Delete" : {
 
     },
     "Delete %@?" : {
+
+    },
+    "Delete failed: %@" : {
 
     },
     "Deselect Duplicates" : {
@@ -323,6 +338,9 @@
 
     },
     "Export as PDF" : {
+
+    },
+    "Failed to save: %@" : {
 
     },
     "Fetching prices..." : {
@@ -374,6 +392,9 @@
 
     },
     "Import CSV" : {
+
+    },
+    "Invalid amount" : {
 
     },
     "Invalid date" : {
@@ -442,6 +463,9 @@
     "New rules" : {
 
     },
+    "Next" : {
+
+    },
     "Next month" : {
 
     },
@@ -472,7 +496,13 @@
     "No Transactions in %@" : {
 
     },
+    "No accounting backend available." : {
+
+    },
     "No accounts found in journal." : {
+
+    },
+    "No budget data to export" : {
 
     },
     "No commands executed yet." : {
@@ -490,6 +520,9 @@
     "No journal file found at this path" : {
 
     },
+    "No journal file found. Configure one in Settings or create ~/.hledger.journal." : {
+
+    },
     "No matching accounts." : {
 
     },
@@ -499,6 +532,9 @@
     "No report data for the selected period." : {
 
     },
+    "No report data to export" : {
+
+    },
     "No rules files found" : {
 
     },
@@ -506,6 +542,9 @@
 
     },
     "No transactions match your search." : {
+
+    },
+    "No transactions to export" : {
 
     },
     "Not found at this path" : {
@@ -547,6 +586,9 @@
     "Pattern" : {
 
     },
+    "Pattern is required" : {
+
+    },
     "Pending" : {
 
     },
@@ -569,6 +611,9 @@
 
     },
     "Posting comment" : {
+
+    },
+    "Posting comment (optional)" : {
 
     },
     "Postings" : {
@@ -616,6 +661,9 @@
     "Required for market values. Install: pipx install pricehist (or pip install pricehist)" : {
 
     },
+    "Retry" : {
+
+    },
     "Rows: **%lld**" : {
 
     },
@@ -626,6 +674,9 @@
 
     },
     "Rules files are stored in the rules/ directory next to your journal." : {
+
+    },
+    "Run a report first to view the chart" : {
 
     },
     "Sample" : {
@@ -681,6 +732,16 @@
     },
     "Startup" : {
 
+    },
+    "Step %lld of 3: %@" : {
+        "localizations": {
+            "en": {
+                "stringUnit": {
+                    "state": "new",
+                    "value": "Step %1$lld of 3: %2$@"
+                }
+            }
+        }
     },
     "Stop generating" : {
 
@@ -812,6 +873,9 @@
     "hledger Binary" : {
 
     },
+    "hledger binary not found." : {
+
+    },
     "hledger cli" : {
 
     },
@@ -819,6 +883,9 @@
 
     },
     "hledger for Mac Help" : {
+
+    },
+    "hledger not found. Please install it or specify the path." : {
 
     },
     "hledger.org" : {

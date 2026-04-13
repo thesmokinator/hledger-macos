@@ -159,7 +159,7 @@ struct RecurringFormView: View {
         }
 
         guard postings.count >= 2 else {
-            errorMessage = "At least 2 postings required"
+            errorMessage = String(localized: "At least 2 postings required")
             return
         }
 

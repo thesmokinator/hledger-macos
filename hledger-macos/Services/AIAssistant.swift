@@ -24,7 +24,7 @@ final class AIAssistant {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         guard let backend = appState.activeBackend else {
-            errorMessage = "No accounting backend available."
+            errorMessage = String(localized: "No accounting backend available.")
             return
         }
 
