@@ -47,11 +47,14 @@ struct BudgetView: View {
                 LoadingOverlay(message: "Loading budget...")
             } else if rules.isEmpty {
                 Spacer()
-                ContentUnavailableView(
-                    "No Budget Rules",
-                    systemImage: "chart.bar",
-                    description: Text("Add budget rules to track spending against targets.")
-                )
+                ContentUnavailableView {
+                    Label("No Budget Rules", systemImage: "chart.bar")
+                } description: {
+                    Text("Set spending targets for your accounts to track budget vs. actual.")
+                } actions: {
+                    Button("Add Budget Rule") { addRule() }
+                        .buttonStyle(.borderedProminent)
+                }
                 Spacer()
             } else {
                 budgetList

@@ -42,13 +42,27 @@ struct TransactionsView: View {
                 LoadingOverlay(message: "Loading transactions...")
             } else if appState.transactions.isEmpty {
                 Spacer()
-                ContentUnavailableView(
-                    "No Transactions",
-                    systemImage: "doc.text",
-                    description: Text(appState.searchQuery.isEmpty
-                        ? "No transactions found for \(appState.periodLabel)."
-                        : "No transactions match your search.")
-                )
+                if !appState.searchQuery.isEmpty {
+                    ContentUnavailableView.search(text: appState.searchQuery)
+                } else if (appState.journalStats?.transactionCount ?? 0) == 0 {
+                    ContentUnavailableView {
+                        Label("Journal is Empty", systemImage: "doc.badge.plus")
+                    } description: {
+                        Text("Add your first transaction to start tracking your finances.")
+                    } actions: {
+                        Button("Add Transaction") { newTransaction() }
+                            .buttonStyle(.borderedProminent)
+                    }
+                } else {
+                    ContentUnavailableView {
+                        Label("No Transactions in \(appState.periodLabel)", systemImage: "calendar.badge.exclamationmark")
+                    } description: {
+                        Text("There are no transactions recorded for this period.")
+                    } actions: {
+                        Button("Add Transaction") { newTransaction() }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
                 Spacer()
             } else {
                 let todayStr = {

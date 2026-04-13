@@ -42,11 +42,22 @@ struct ReportsView: View {
                 reportContent(data)
             } else {
                 Spacer()
-                ContentUnavailableView(
-                    "No Data",
-                    systemImage: "doc.text.magnifyingglass",
-                    description: Text("No report data for the selected period.")
-                )
+                if (appState.journalStats?.transactionCount ?? 0) == 0 {
+                    ContentUnavailableView(
+                        "No Data to Report",
+                        systemImage: "doc.text.magnifyingglass",
+                        description: Text("Add transactions to your journal to generate financial reports.")
+                    )
+                } else {
+                    ContentUnavailableView {
+                        Label("No Data for Selected Period", systemImage: "calendar.badge.exclamationmark")
+                    } description: {
+                        Text("Try a longer period range or check that transactions exist for this date range.")
+                    } actions: {
+                        Button("Show Last 12 Months") { periodRange = .twelveMonths }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
                 Spacer()
             }
         }

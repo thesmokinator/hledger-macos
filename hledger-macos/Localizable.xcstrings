@@ -102,7 +102,7 @@
     "Add" : {
 
     },
-    "Add budget rules to track spending against targets." : {
+    "Add Budget Rule" : {
 
     },
     "Add Posting" : {
@@ -115,6 +115,15 @@
 
     },
     "Add Ticker" : {
+
+    },
+    "Add Transaction" : {
+
+    },
+    "Add transactions to your journal to generate financial reports." : {
+
+    },
+    "Add your first transaction to start tracking your finances." : {
 
     },
     "Advanced settings" : {
@@ -412,6 +421,9 @@
     "Journal file changed" : {
 
     },
+    "Journal is Empty" : {
+
+    },
     "Keyboard Shortcuts" : {
 
     },
@@ -475,13 +487,16 @@
     "No conditional rules. Add rules to auto-categorize transactions by pattern." : {
 
     },
-    "No Data" : {
+    "No Data for Selected Period" : {
 
     },
     "No data for this period" : {
 
     },
     "No data to preview." : {
+
+    },
+    "No Data to Report" : {
 
     },
     "No journal file found at this path" : {
@@ -496,9 +511,6 @@
     "No Recurring Rules" : {
 
     },
-    "No report data for the selected period." : {
-
-    },
     "No rules files found" : {
 
     },
@@ -508,7 +520,7 @@
     "No transactions found for %@." : {
 
     },
-    "No transactions match your search." : {
+    "No Transactions in %@" : {
 
     },
     "Not found — install with `brew install hledger`" : {
@@ -563,6 +575,9 @@
 
     },
     "Postings" : {
+
+    },
+    "Previous Month" : {
 
     },
     "Price Tickers" : {
@@ -643,6 +658,9 @@
     "Separator: **%@**" : {
 
     },
+    "Set spending targets for your accounts to track budget vs. actual." : {
+
+    },
     "Set Status" : {
 
     },
@@ -656,6 +674,9 @@
 
     },
     "Show investments in Summary" : {
+
+    },
+    "Show Last 12 Months" : {
 
     },
     "Startup" : {
@@ -679,6 +700,9 @@
     "Theme" : {
 
     },
+    "There are no transactions recorded for this period." : {
+
+    },
     "This account has balances in multiple currencies. Only the default currency is shown here. See Accounts for full details." : {
 
     },
@@ -695,6 +719,9 @@
 
     },
     "Tree" : {
+
+    },
+    "Try a longer period range or check that transactions exist for this date range." : {
 
     },
     "Type" : {
