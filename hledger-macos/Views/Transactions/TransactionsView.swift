@@ -80,24 +80,7 @@ struct TransactionsView: View {
             }
         }
         .searchable(text: $state.searchQuery, prompt: "Search: desc:, acct:, amt:, tag:, status:")
-        .searchSuggestions {
-            if appState.searchQuery.isEmpty {
-                Section("Filters") {
-                    searchSuggestion("desc:", label: "Description", icon: "text.quote")
-                    searchSuggestion("acct:", label: "Account", icon: "building.columns")
-                    searchSuggestion("amt:>", label: "Amount greater than", icon: "number")
-                    searchSuggestion("amt:<", label: "Amount less than", icon: "number")
-                    searchSuggestion("tag:", label: "Tag", icon: "tag")
-                    searchSuggestion("status:*", label: "Cleared", icon: "checkmark.circle")
-                    searchSuggestion("status:!", label: "Pending", icon: "exclamationmark.circle")
-                }
-                Section("Shortcuts") {
-                    searchSuggestion("d:", label: "desc: (short)", icon: "text.quote")
-                    searchSuggestion("ac:", label: "acct: (short)", icon: "building.columns")
-                    searchSuggestion("am:", label: "amt: (short)", icon: "number")
-                }
-            }
-        }
+        .searchSuggestions { searchSuggestionsContent }
         .onSubmit(of: .search) {
             Task { await appState.loadTransactions() }
         }
@@ -339,6 +322,28 @@ struct TransactionsView: View {
                 Divider()
                 Button("Delete", role: .destructive) { confirmDelete(transaction) }
             }
+    }
+
+    // MARK: - Search Suggestions
+
+    @ViewBuilder
+    private var searchSuggestionsContent: some View {
+        if appState.searchQuery.isEmpty {
+            Section("Filters") {
+                searchSuggestion("desc:", label: "Description", icon: "text.quote")
+                searchSuggestion("acct:", label: "Account", icon: "building.columns")
+                searchSuggestion("amt:>", label: "Amount greater than", icon: "number")
+                searchSuggestion("amt:<", label: "Amount less than", icon: "number")
+                searchSuggestion("tag:", label: "Tag", icon: "tag")
+                searchSuggestion("status:*", label: "Cleared", icon: "checkmark.circle")
+                searchSuggestion("status:!", label: "Pending", icon: "exclamationmark.circle")
+            }
+            Section("Shortcuts") {
+                searchSuggestion("d:", label: "desc: (short)", icon: "text.quote")
+                searchSuggestion("ac:", label: "acct: (short)", icon: "building.columns")
+                searchSuggestion("am:", label: "amt: (short)", icon: "number")
+            }
+        }
     }
 
     // MARK: - Search Suggestion Helper
