@@ -16,7 +16,6 @@ struct SortToggleButton: View {
 
     var body: some View {
         if let a = modeA, let b = modeB {
-            // Mode toggle: two predefined sort modes
             Button {
                 ascending.toggle()
             } label: {
@@ -26,8 +25,8 @@ struct SortToggleButton: View {
             }
             .buttonStyle(.borderless)
             .help(ascending ? a.label : b.label)
+            .accessibilityLabel(ascending ? a.label : b.label)
         } else {
-            // Direction toggle: ASC/DESC
             Button {
                 ascending.toggle()
             } label: {
@@ -37,6 +36,7 @@ struct SortToggleButton: View {
             }
             .buttonStyle(.borderless)
             .help(ascending ? descLabel : ascLabel)
+            .accessibilityLabel(ascending ? descLabel : ascLabel)
         }
     }
 }
