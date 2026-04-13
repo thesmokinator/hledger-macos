@@ -97,6 +97,20 @@ final class AIAssistant {
         }
     }
 
+    /// Retry the last user message after an error.
+    func retryLast(appState: AppState) {
+        // Drop the failed assistant bubble
+        if let i = messages.lastIndex(where: { $0.role == .assistant }) {
+            messages.remove(at: i)
+        }
+        // Grab and drop the last user message (send() will re-add it)
+        guard let lastUserIndex = messages.lastIndex(where: { $0.role == .user }) else { return }
+        let lastUserContent = messages[lastUserIndex].content
+        messages.remove(at: lastUserIndex)
+        errorMessage = nil
+        send(lastUserContent, appState: appState)
+    }
+
     /// Clear conversation history.
     func clearChat() {
         stop()
