@@ -130,7 +130,7 @@ struct RulesManagerSheet: View {
                             try CsvRulesManager.writeRulesFile(savedConfig, to: url)
                             refreshList()
                         } catch {
-                            errorMessage = "Failed to save: \(error.localizedDescription)"
+                            errorMessage = String(localized: "Failed to save: \(error.localizedDescription)")
                         }
                     }
                 )
@@ -183,7 +183,7 @@ struct RulesManagerSheet: View {
             try FileManager.default.removeItem(at: rule.url)
             refreshList()
         } catch {
-            errorMessage = "Delete failed: \(error.localizedDescription)"
+            errorMessage = String(localized: "Delete failed: \(error.localizedDescription)")
         }
         ruleToDelete = nil
     }

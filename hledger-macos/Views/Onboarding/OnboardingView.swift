@@ -166,7 +166,7 @@ struct OnboardingView: View {
         await appState.rescan()
         isScanning = false
         if appState.detectionResult?.isFound != true {
-            appState.errorMessage = "hledger not found. Please install it or specify the path."
+            appState.errorMessage = String(localized: "hledger not found. Please install it or specify the path.")
         }
     }
 
