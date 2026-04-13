@@ -64,6 +64,7 @@ struct ReportsView: View {
                     Label("Export", systemImage: "arrow.down.doc")
                 }
                 .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+                .help(reportData == nil || reportData?.rows.isEmpty == true ? "No report data to export" : "")
 
                 Button {
                     showingChart = true
@@ -71,6 +72,7 @@ struct ReportsView: View {
                     Label("Chart", systemImage: "chart.bar")
                 }
                 .disabled(reportData == nil || reportData?.rows.isEmpty == true)
+                .help(reportData == nil || reportData?.rows.isEmpty == true ? "Run a report first to view the chart" : "")
 
                 Menu {
                     ForEach(ReportType.allCases, id: \.self) { type in
@@ -129,7 +131,11 @@ struct ReportsView: View {
         }
         .sheet(isPresented: $showingChart) {
             if let data = reportData {
-                ReportChartOverlay(reportType: reportType, data: data)
+                ReportChartOverlay(
+                    reportType: reportType,
+                    data: data,
+                    commodity: appState.config.defaultCommodity
+                )
             }
         }
         .sheet(item: $drillDown) { item in

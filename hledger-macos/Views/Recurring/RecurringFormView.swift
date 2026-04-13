@@ -25,11 +25,20 @@ struct RecurringFormView: View {
     private var isEditing: Bool { editingRule != nil }
     private var title: String { isEditing ? "Edit Recurring Rule" : "New Recurring Rule" }
 
+    private var saveHint: String {
+        var missing: [String] = []
+        if description.isEmpty { missing.append("a description") }
+        if startYear.isEmpty { missing.append("a start date") }
+        guard !missing.isEmpty else { return "" }
+        return "Required: \(missing.joined(separator: ", "))"
+    }
+
     var body: some View {
         FormShellView(
             title: title,
             errorMessage: errorMessage,
             saveDisabled: description.isEmpty || startYear.isEmpty,
+            saveHint: saveHint,
             onCancel: { dismiss() },
             onSave: { save() }
         ) {
@@ -48,13 +57,14 @@ struct RecurringFormView: View {
                     }
                 }
 
-                FormRow("Description:") {
+                FormRow("Description:", required: true) {
                     TextField("Recurring transaction description", text: $description)
                         .textFieldStyle(.roundedBorder)
                 }
 
-                FormRow("Start date:") {
+                FormRow("Start date:", required: true) {
                     DateInputField(year: $startYear, month: $startMonth, day: $startDay)
+                        .help("Format: YYYY-MM-DD")
                 }
 
                 FormRow("End date:") {
@@ -149,7 +159,7 @@ struct RecurringFormView: View {
         }
 
         guard postings.count >= 2 else {
-            errorMessage = "At least 2 postings required"
+            errorMessage = String(localized: "At least 2 postings required")
             return
         }
 

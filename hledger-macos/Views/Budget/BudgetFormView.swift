@@ -16,6 +16,14 @@ struct BudgetFormView: View {
     @State private var category = ""
     @State private var errorMessage: String?
 
+    private var saveHint: String {
+        var missing: [String] = []
+        if account.isEmpty { missing.append("an account") }
+        if amount.isEmpty { missing.append("an amount") }
+        guard !missing.isEmpty else { return "" }
+        return "Required: \(missing.joined(separator: ", "))"
+    }
+
     private var isEditing: Bool { editingRule != nil }
     private var title: String { isEditing ? "Edit Budget Rule" : "New Budget Rule" }
 
@@ -24,11 +32,12 @@ struct BudgetFormView: View {
             title: title,
             errorMessage: errorMessage,
             saveDisabled: account.isEmpty || amount.isEmpty,
+            saveHint: saveHint,
             onCancel: { dismiss() },
             onSave: { save() }
         ) {
             VStack(spacing: 14) {
-                FormRow("Account:") {
+                FormRow("Account:", required: true) {
                     AutocompleteField(
                         placeholder: "e.g. expenses:groceries",
                         text: $account,
@@ -36,9 +45,10 @@ struct BudgetFormView: View {
                     )
                 }
 
-                FormRow("Amount:") {
+                FormRow("Amount:", required: true) {
                     TextField("e.g. 500.00", text: $amount)
                         .textFieldStyle(.roundedBorder)
+                        .help("Monthly budget amount (e.g. 500.00)")
                 }
 
                 FormRow("Category:") {
@@ -66,7 +76,7 @@ struct BudgetFormView: View {
 
     private func save() {
         guard let parsed = appState.parseFormAmount(amount), parsed.quantity != 0 else {
-            errorMessage = "Invalid amount"
+            errorMessage = String(localized: "Invalid amount")
             return
         }
 

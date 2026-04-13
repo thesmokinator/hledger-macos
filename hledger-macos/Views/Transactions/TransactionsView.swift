@@ -117,11 +117,13 @@ struct TransactionsView: View {
                         Label("Export as CSV", systemImage: "arrow.down.doc")
                     }
                     .disabled(appState.transactions.isEmpty)
+                    .help(appState.transactions.isEmpty ? "No transactions to export" : "")
 
                     Button { ExportService.exportTransactions(appState.transactions, format: .pdf) } label: {
                         Label("Export as PDF", systemImage: "doc.richtext")
                     }
                     .disabled(appState.transactions.isEmpty)
+                    .help(appState.transactions.isEmpty ? "No transactions to export" : "")
                 } label: {
                     Label("Import & Export", systemImage: "doc.badge.gearshape")
                 }
