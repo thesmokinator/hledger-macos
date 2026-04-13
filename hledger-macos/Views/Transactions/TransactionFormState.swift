@@ -63,6 +63,14 @@ final class TransactionFormState {
         return f.date(from: dateString) != nil
     }
 
+    var saveHint: String {
+        var missing: [String] = []
+        if !isDateValid { missing.append("a valid date (YYYY-MM-DD)") }
+        if description.isEmpty { missing.append("a description") }
+        guard !missing.isEmpty else { return "" }
+        return "Required: \(missing.joined(separator: ", "))"
+    }
+
     // MARK: - Prefill
 
     func prefill() {

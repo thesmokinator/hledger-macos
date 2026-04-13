@@ -19,11 +19,12 @@ struct TransactionFormContent: View {
     var body: some View {
         // Fields
         VStack(spacing: 14) {
-            FormRow("Date:") {
+            FormRow("Date:", required: true) {
                 DateInputField(year: $state.dateYear, month: $state.dateMonth, day: $state.dateDay)
+                    .help("Format: YYYY-MM-DD")
             }
 
-            FormRow("Description:") {
+            FormRow("Description:", required: true) {
                 AutocompleteField(
                     placeholder: "Transaction description",
                     text: $state.description,
@@ -59,21 +60,22 @@ struct TransactionFormContent: View {
         .padding(.horizontal, Theme.Spacing.xxl)
 
         // Postings
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Divider().padding(.vertical, Theme.Spacing.md)
-
-            Text("Postings")
-                .font(.subheadline.bold())
 
             Text("Amount: plain number (50.00), currency prefix (\(defaultCommodity)50.00), or commodity with cost (-5 STCK @@ \(defaultCommodity)200.00). Leave one amount blank to auto-balance.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.bottom, Theme.Spacing.xs)
 
-            Text("Default commodity: \(defaultCommodity)")
-                .font(.caption.italic())
-                .foregroundStyle(.tertiary)
-                .padding(.bottom, Theme.Spacing.sm)
+            Label {
+                Text("Default commodity: ") + Text(defaultCommodity).bold()
+            } icon: {
+                Image(systemName: "tag")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.bottom, Theme.Spacing.sm)
 
             ForEach(Array(state.postingRows.enumerated()), id: \.element.id) { index, _ in
                 PostingRowField(
