@@ -268,6 +268,9 @@
     "Dark" : {
 
     },
+    "Day" : {
+
+    },
     "Default commodity" : {
 
     },
@@ -373,6 +376,9 @@
     "Import CSV" : {
 
     },
+    "Invalid date" : {
+
+    },
     "Investments" : {
 
     },
@@ -418,6 +424,9 @@
     "Market Value" : {
 
     },
+    "Month" : {
+
+    },
     "Monthly budget amount (e.g. 500.00)" : {
 
     },
@@ -431,6 +440,9 @@
 
     },
     "New rules" : {
+
+    },
+    "Next month" : {
 
     },
     "No %@ to show." : {
@@ -505,6 +517,9 @@
     "OK" : {
 
     },
+    "Open AI Assistant" : {
+
+    },
     "Open on launch" : {
 
     },
@@ -544,6 +559,15 @@
     "Portfolio" : {
 
     },
+    "Posting %lld account" : {
+
+    },
+    "Posting %lld amount" : {
+
+    },
+    "Posting %lld comment" : {
+
+    },
     "Posting comment" : {
 
     },
@@ -551,6 +575,9 @@
 
     },
     "Previous Month" : {
+
+    },
+    "Previous month" : {
 
     },
     "Price Tickers" : {
@@ -578,6 +605,9 @@
 
     },
     "Remaining" : {
+
+    },
+    "Remove posting %lld" : {
 
     },
     "Reports" : {
@@ -706,6 +736,9 @@
     "Using Apple Intelligence (built-in)" : {
 
     },
+    "Valid date" : {
+
+    },
     "Version %@" : {
 
     },
@@ -725,6 +758,9 @@
     "View Release" : {
 
     },
+    "View transactions for %@" : {
+
+    },
     "Welcome to hledger for Mac" : {
 
     },
@@ -741,6 +777,9 @@
 
     },
     "Yahoo ticker" : {
+
+    },
+    "Year" : {
 
     },
     "Year to date" : {

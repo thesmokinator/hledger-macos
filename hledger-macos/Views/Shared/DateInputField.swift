@@ -37,6 +37,7 @@ struct DateInputField: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 60)
                 .focused($focused, equals: .year)
+                .accessibilityLabel("Year")
                 .onChange(of: year) { guard !skipAdvance else { return }; filter(&year, max: 4) { focused = .month } }
 
             Text("-").foregroundStyle(.secondary)
@@ -45,6 +46,7 @@ struct DateInputField: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 40)
                 .focused($focused, equals: .month)
+                .accessibilityLabel("Month")
                 .onChange(of: month) { guard !skipAdvance else { return }; filter(&month, max: 2) { focused = .day } }
 
             Text("-").foregroundStyle(.secondary)
@@ -53,12 +55,14 @@ struct DateInputField: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 40)
                 .focused($focused, equals: .day)
+                .accessibilityLabel("Day")
                 .onChange(of: day) { guard !skipAdvance else { return }; filter(&day, max: 2, advance: nil) }
 
             if showIndicator {
                 Image(systemName: isValid ? "checkmark.circle" : "xmark.circle")
                     .foregroundStyle(isValid ? Theme.Status.good : Theme.Status.critical)
                     .font(.caption)
+                    .accessibilityLabel(isValid ? "Valid date" : "Invalid date")
             }
 
             Spacer()

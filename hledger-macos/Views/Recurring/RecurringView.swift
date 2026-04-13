@@ -67,6 +67,7 @@ struct RecurringView: View {
             }
             .frame(width: 0, height: 0)
             .opacity(0)
+            .accessibilityHidden(true)
         }
         .task(id: appState.dataVersion) { await loadData() }
         .overlay(alignment: .bottom) {
@@ -313,5 +314,18 @@ struct RecurringRuleRow: View {
             }
         }
         .padding(.vertical, ListMetrics.rowPadding)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var parts: [String] = [rule.periodExpr]
+        parts.append(rule.description.isEmpty ? "No description" : rule.description)
+        let accounts = rule.postings.map(\.account).filter { !$0.isEmpty }
+        if !accounts.isEmpty { parts.append(accounts.joined(separator: " to ")) }
+        if let amount = rule.postings.first(where: { !$0.amounts.isEmpty })?.amounts.first {
+            parts.append(AmountFormatter.format(amount.quantity, commodity: amount.commodity))
+        }
+        return parts.joined(separator: ", ")
     }
 }
