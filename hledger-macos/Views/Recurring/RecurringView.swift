@@ -17,6 +17,7 @@ struct RecurringView: View {
     @State private var showingGenerateConfirm = false
     @State private var pendingSummary: [(RecurringRule, Int)] = []
     @FocusState private var listFocused: Bool
+    @State private var generateToast: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,6 +69,19 @@ struct RecurringView: View {
             .opacity(0)
         }
         .task(id: appState.dataVersion) { await loadData() }
+        .overlay(alignment: .bottom) {
+            if let toast = generateToast {
+                Text(toast)
+                    .font(.callout)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.sm)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.bottom, Theme.Spacing.xl)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .id(toast)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: generateToast)
         .onChange(of: appState.showingNewRecurringRule) {
             if appState.showingNewRecurringRule {
                 appState.showingNewRecurringRule = false
@@ -93,12 +107,7 @@ struct RecurringView: View {
             Button("Cancel", role: .cancel) {}
             Button("Generate") { Task { await generateAll() } }
         } message: {
-            let total = pendingSummary.reduce(0) { $0 + $1.1 }
-            if total == 0 {
-                Text("No pending transactions to generate. All rules are up to date.")
-            } else {
-                Text(generateSummaryText())
-            }
+            Text(generateSummaryText())
         }
     }
 
@@ -188,7 +197,16 @@ struct RecurringView: View {
         }
         pendingSummary = summary
         isGenerating = false
-        showingGenerateConfirm = true
+
+        if summary.isEmpty {
+            generateToast = "All recurring rules are up to date"
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                generateToast = nil
+            }
+        } else {
+            showingGenerateConfirm = true
+        }
     }
 
     private func generateSummaryText() -> String {
@@ -217,6 +235,15 @@ struct RecurringView: View {
         }
 
         isGenerating = false
+
+        let msg = totalGenerated == 0
+            ? "All recurring rules are up to date"
+            : "Generated \(totalGenerated) transaction\(totalGenerated == 1 ? "" : "s")"
+        generateToast = msg
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            generateToast = nil
+        }
     }
 
     private func performDelete() async {

@@ -13,18 +13,23 @@
     "·" : {
 
     },
+    "(skip)" : {
+
+    },
+    "*" : {
+
+    },
+    "**%lld** duplicates" : {
+
+    },
+    "**%lld** transactions parsed" : {
+
+    },
     "#%lld:" : {
 
     },
-    "%@ %@ %@\n%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@ %3$@\n%4$@"
-          }
-        }
-      }
+    "%lld" : {
+
     },
     "%lld transaction%@" : {
       "localizations" : {
@@ -32,6 +37,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld transaction%2$@"
+          }
+        }
+      }
+    },
+    "%lld transaction%@ selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld transaction%2$@ selected"
           }
         }
       }
@@ -45,7 +60,16 @@
     "0.00" : {
 
     },
+    "1. CSV Preview" : {
+
+    },
+    "2. Rules Editor" : {
+
+    },
     "3 months" : {
+
+    },
+    "3. Import" : {
 
     },
     "6 months" : {
@@ -76,6 +100,9 @@
 
     },
     "Actual" : {
+
+    },
+    "Add" : {
 
     },
     "Add budget rules to track spending against targets." : {
@@ -130,6 +157,9 @@
     "Asset" : {
 
     },
+    "Assign to" : {
+
+    },
     "Bar charts" : {
 
     },
@@ -145,6 +175,9 @@
     "Cancel" : {
 
     },
+    "Change File" : {
+
+    },
     "Chart" : {
 
     },
@@ -154,7 +187,13 @@
     "Check for Updates..." : {
 
     },
+    "Check the Rules Editor tab and verify your column mappings and settings." : {
+
+    },
     "CHF, SEK, BTC..." : {
+
+    },
+    "Choose CSV File" : {
 
     },
     "Clear" : {
@@ -172,10 +211,25 @@
     "Clone" : {
 
     },
+    "Close" : {
+
+    },
     "Close AI Assistant" : {
 
     },
+    "Column Mapping" : {
+
+    },
+    "Columns: **%lld**" : {
+
+    },
     "Command Log" : {
+
+    },
+    "Companion rules" : {
+
+    },
+    "Conditional Rules" : {
 
     },
     "Configure price tickers in Settings > Investments to see market values." : {
@@ -185,6 +239,12 @@
 
     },
     "Could not check for updates: %@" : {
+
+    },
+    "Could not fetch prices for: %@" : {
+
+    },
+    "CSV Column" : {
 
     },
     "Current month" : {
@@ -199,6 +259,15 @@
     "DD" : {
 
     },
+    "DD-MM-YYYY" : {
+
+    },
+    "DD.MM.YYYY" : {
+
+    },
+    "DD/MM/YYYY" : {
+
+    },
     "Default commodity" : {
 
     },
@@ -208,13 +277,10 @@
     "Delete" : {
 
     },
-    "Delete Budget Rule?" : {
+    "Delete %@?" : {
 
     },
-    "Delete Recurring Rule?" : {
-
-    },
-    "Delete Transaction?" : {
+    "Deselect Duplicates" : {
 
     },
     "Detect" : {
@@ -229,6 +295,9 @@
     "Download" : {
 
     },
+    "duplicate" : {
+
+    },
     "Dynamic" : {
 
     },
@@ -236,6 +305,12 @@
 
     },
     "e.g. Food, Housing (optional)" : {
+
+    },
+    "e.g. grocery|supermarket" : {
+
+    },
+    "e.g. My Bank" : {
 
     },
     "Edit" : {
@@ -280,6 +355,9 @@
     "Flat" : {
 
     },
+    "Format: YYYY-MM-DD" : {
+
+    },
     "Found" : {
 
     },
@@ -301,6 +379,9 @@
     "GitHub" : {
 
     },
+    "Go to tab 2 to configure rules, then come back here." : {
+
+    },
     "hledger" : {
 
     },
@@ -317,6 +398,15 @@
 
     },
     "hledger.org" : {
+
+    },
+    "Import" : {
+
+    },
+    "Import & Export" : {
+
+    },
+    "Import CSV" : {
 
     },
     "Investments" : {
@@ -343,25 +433,10 @@
     "Light" : {
 
     },
-    "Loading accounts..." : {
-
-    },
-    "Loading budget..." : {
-
-    },
-    "Loading report..." : {
-
-    },
-    "Loading rules..." : {
-
-    },
-    "Loading transactions..." : {
+    "Load a CSV file to see column mappings." : {
 
     },
     "Loading..." : {
-
-    },
-    "Market data provided by pricehist via Yahoo Finance. Prices may be delayed." : {
 
     },
     "Market Value" : {
@@ -373,13 +448,22 @@
     "MM" : {
 
     },
+    "MM/DD/YYYY" : {
+
+    },
+    "Monthly budget amount (e.g. 500.00)" : {
+
+    },
     "Net" : {
 
     },
-    "New Transaction" : {
+    "New Rule" : {
 
     },
-    "New..." : {
+    "New rules" : {
+
+    },
+    "New Transaction" : {
 
     },
     "No %@ to show." : {
@@ -397,10 +481,16 @@
     "No commands executed yet." : {
 
     },
+    "No conditional rules. Add rules to auto-categorize transactions by pattern." : {
+
+    },
     "No Data" : {
 
     },
     "No data for this period" : {
+
+    },
+    "No data to preview." : {
 
     },
     "No journal file found at this path" : {
@@ -416,6 +506,9 @@
 
     },
     "No report data for the selected period." : {
+
+    },
+    "No rules files found" : {
 
     },
     "No Transactions" : {
@@ -439,6 +532,9 @@
     "Open on launch" : {
 
     },
+    "Optional" : {
+
+    },
     "Optional comment" : {
 
     },
@@ -455,6 +551,9 @@
 
     },
     "Paths" : {
+
+    },
+    "Pattern" : {
 
     },
     "Pending" : {
@@ -481,10 +580,16 @@
     "pricehist" : {
 
     },
+    "Prices via Yahoo Finance (delayed)" : {
+
+    },
     "Privacy" : {
 
     },
     "Qty" : {
+
+    },
+    "Raw Editor" : {
 
     },
     "Recurring" : {
@@ -499,23 +604,25 @@
     "Remaining" : {
 
     },
-    "Remove budget for %@?" : {
-
-    },
-    "Remove recurring rule \"%@\" (%@)?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove recurring rule \"%1$@\" (%2$@)?"
-          }
-        }
-      }
-    },
     "Reports" : {
 
     },
     "Required for market values. Install: pipx install pricehist (or pip install pricehist)" : {
+
+    },
+    "Rows: **%lld**" : {
+
+    },
+    "Rules" : {
+
+    },
+    "Rules files are stored in the rules/ directory next to your journal." : {
+
+    },
+    "Rules Manager" : {
+
+    },
+    "Sample" : {
 
     },
     "Save" : {
@@ -533,13 +640,28 @@
     "Select a command to view details" : {
 
     },
+    "Select a CSV file to import" : {
+
+    },
+    "Select All" : {
+
+    },
     "Send message" : {
+
+    },
+    "Separator: **%@**" : {
 
     },
     "Set Status" : {
 
     },
+    "Settings" : {
+
+    },
     "Shortcuts" : {
+
+    },
+    "Show" : {
 
     },
     "Show investments in Summary" : {
@@ -634,6 +756,12 @@
 
     },
     "YYYY" : {
+
+    },
+    "YYYY-MM-DD" : {
+
+    },
+    "YYYY/MM/DD" : {
 
     }
   },

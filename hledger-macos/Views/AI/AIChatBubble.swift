@@ -47,12 +47,30 @@ struct AIChatBubble: View {
     private var streamingIndicator: some View {
         HStack(spacing: 3) {
             ForEach(0..<3) { i in
-                Circle()
-                    .fill(.secondary)
-                    .frame(width: 4, height: 4)
-                    .opacity(0.6)
+                AnimatedDot(delay: Double(i) * 0.2)
             }
         }
         .padding(.leading, Theme.Spacing.md)
+    }
+}
+
+private struct AnimatedDot: View {
+    let delay: Double
+    @State private var scale: CGFloat = 0.6
+
+    var body: some View {
+        Circle()
+            .fill(.secondary)
+            .frame(width: 4, height: 4)
+            .scaleEffect(scale)
+            .onAppear {
+                withAnimation(
+                    .easeInOut(duration: 0.5)
+                    .repeatForever(autoreverses: true)
+                    .delay(delay)
+                ) {
+                    scale = 1.0
+                }
+            }
     }
 }
